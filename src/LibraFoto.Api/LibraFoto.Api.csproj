@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <UserSecretsId>cd24c9ef-0ac3-4d89-a5fa-5e50c11e615d</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0-*" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.0-*">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.23.0" />
+    <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\LibraFoto.ServiceDefaults\LibraFoto.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\LibraFoto.Modules.Display\LibraFoto.Modules.Display.csproj" />
+    <ProjectReference Include="..\LibraFoto.Modules.Admin\LibraFoto.Modules.Admin.csproj" />
+    <ProjectReference Include="..\LibraFoto.Modules.Storage\LibraFoto.Modules.Storage.csproj" />
+    <ProjectReference Include="..\LibraFoto.Modules.Media\LibraFoto.Modules.Media.csproj" />
+    <ProjectReference Include="..\LibraFoto.Modules.Auth\LibraFoto.Modules.Auth.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="logs\" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,33 @@
+@use '@angular/material' as mat;
+
+// Import Google Fonts (Poppins & Roboto)
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&family=Roboto:wght@300;400;500&display=swap');
+
+// Include the common styles for Angular Material.
+@include mat.core();
+
+// Define the M3 theme using available tonal palettes
+// We use Violet for "Deep Purple" vibe and Orange/Yellow for "Amber" vibe.
+$librafoto-theme: mat.define-theme((
+  color: (
+    theme-type: light,
+    primary: mat.$violet-palette,
+    tertiary: mat.$orange-palette
+  ),
+  typography: (
+    brand-family: 'Poppins, sans-serif',
+    plain-family: 'Roboto, sans-serif',
+    bold-weight: 500,
+    medium-weight: 400,
+    regular-weight: 300
+  ),
+  density: (
+    scale: 0
+  )
+));
+
+// Apply the theme to the root
+:root {
+  @include mat.all-component-themes($librafoto-theme);
+}
+

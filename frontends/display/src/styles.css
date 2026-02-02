@@ -1,0 +1,393 @@
+/* LibraFoto Display Frontend Styles */
+/* Designed for fullscreen slideshow on digital picture frames */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: #000;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
+}
+
+#slideshow {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+#slide-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+#slide-container img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: opacity 1s ease-in-out;
+}
+
+#slide-container img.hidden {
+  opacity: 0;
+}
+
+#slide-container img.visible {
+  opacity: 1;
+}
+
+/* Blurred Background (for contain mode) */
+#blur-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 0;
+}
+
+#blur-background.hidden {
+  display: none;
+}
+
+#blur-background img {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(1);
+  min-width: 100%;
+  min-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: cover;
+  filter: blur(30px) brightness(0.8);
+}
+
+#blur-background img.hidden {
+  opacity: 0;
+}
+
+#blur-background img.visible {
+  opacity: 1;
+}
+
+#blur-background img.fade-in {
+  animation: fadeIn 1s ease-in-out forwards;
+}
+
+#blur-background img.fade-out {
+  animation: fadeOut 1s ease-in-out forwards;
+}
+
+/* Loading Indicator */
+#loading-indicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  color: #fff;
+  z-index: 100;
+}
+
+#loading-indicator.hidden {
+  display: none;
+}
+
+.loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 3px solid rgba(255, 255, 255, 0.2);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.loading-text {
+  font-size: 1.2rem;
+  font-weight: 300;
+  opacity: 0.9;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Error Indicator */
+#error-indicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-width: 80%;
+  padding: 30px 40px;
+  background: rgba(0, 0, 0, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  color: #fff;
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: 300;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+#error-indicator.hidden {
+  display: none;
+}
+
+.error-message {
+  font-size: 1.2rem;
+  font-weight: 300;
+}
+
+.error-message::before {
+  content: "⚠️";
+  display: block;
+  font-size: 3rem;
+  margin-bottom: 15px;
+}
+
+/* QR Code in Error Indicator */
+.error-qr-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.error-qr-code {
+  width: 200px;
+  height: 200px;
+  border-radius: 8px;
+  background: #fff;
+  padding: 10px;
+}
+
+.error-qr-label {
+  font-size: 1rem;
+  font-weight: 400;
+  opacity: 0.9;
+}
+
+.error-qr-url {
+  font-size: 0.85rem;
+  font-weight: 300;
+  opacity: 0.7;
+  word-break: break-all;
+  max-width: 300px;
+}
+
+/* QR Code Overlay (shown on startup) */
+#qr-overlay {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  padding: 15px;
+  background: rgba(0, 0, 0, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  color: #fff;
+  text-align: center;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  opacity: 1;
+  transition: opacity 0.5s ease-out;
+}
+
+#qr-overlay.hidden {
+  display: none;
+}
+
+#qr-overlay.fade-out {
+  opacity: 0;
+}
+
+#qr-overlay .qr-image {
+  width: 150px;
+  height: 150px;
+  border-radius: 8px;
+  background: #fff;
+  padding: 8px;
+}
+
+#qr-overlay .qr-label {
+  font-size: 0.9rem;
+  font-weight: 400;
+  opacity: 0.9;
+}
+
+#qr-overlay .qr-url {
+  font-size: 0.75rem;
+  font-weight: 300;
+  opacity: 0.7;
+  word-break: break-all;
+  max-width: 200px;
+}
+
+#qr-overlay .qr-countdown {
+  font-size: 0.7rem;
+  font-weight: 300;
+  opacity: 0.5;
+}
+
+/* Transitions */
+.fade-in {
+  animation: fadeIn 1s ease-in-out forwards;
+}
+
+.fade-out {
+  animation: fadeOut 1s ease-in-out forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* Slide transition */
+.slide-in-left {
+  animation: slideInLeft 1s ease-in-out forwards;
+}
+
+.slide-out-left {
+  animation: slideOutLeft 1s ease-in-out forwards;
+}
+
+@keyframes slideInLeft {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutLeft {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+}
+
+/* Ken Burns effect - subtle pan and zoom */
+.ken-burns {
+  animation: kenBurns var(--slide-duration, 10s) ease-in-out forwards;
+}
+
+@keyframes kenBurns {
+  0% {
+    transform: scale(1) translate(0, 0);
+  }
+  100% {
+    transform: scale(1.05)
+      translate(var(--ken-burns-x, -1%), var(--ken-burns-y, -1%));
+  }
+}
+
+/* Ken Burns fade in - combines fade with Ken Burns start */
+.ken-burns-fade-in {
+  animation: kenBurnsFadeIn var(--transition-duration, 1s) ease-in-out forwards;
+}
+
+@keyframes kenBurnsFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(1) translate(0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translate(0, 0);
+  }
+}
+
+/* Video support */
+#video-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 5;
+}
+
+#video-container.hidden {
+  display: none;
+}
+
+.video-player {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background-color: #000;
+}
+
+video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Hide cursor when idle (add via JS) */
+body.cursor-hidden {
+  cursor: none;
+}
+
+/* Print styles - hide everything */
+@media print {
+  body {
+    display: none;
+  }
+}

@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="LibraFoto Digital Picture Frame" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <title>LibraFoto</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body>
+    <div id="slideshow">
+      <!-- Loading Indicator -->
+      <div id="loading-indicator">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Loading your photos...</div>
+      </div>
+
+      <!-- Error Indicator -->
+      <div id="error-indicator" class="hidden"></div>
+
+      <!-- Blurred Background (for contain mode) -->
+      <div id="blur-background" class="hidden">
+        <img id="blur-background-current-img" src="" alt="" class="visible" />
+        <img id="blur-background-next-img" src="" alt="" class="hidden" />
+      </div>
+
+      <!-- Slide Container -->
+      <div id="slide-container">
+        <img id="current-slide" src="" alt="Current photo" />
+        <img id="next-slide" src="" alt="Next photo" class="hidden" />
+      </div>
+
+      <!-- Video Container -->
+      <div id="video-container" class="hidden"></div>
+
+      <!-- QR Code Overlay (shown on startup) -->
+      <div id="qr-overlay" class="hidden"></div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

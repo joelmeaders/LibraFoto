@@ -1,0 +1,33 @@
+<Solution>
+  <!-- Orchestration -->
+  <Folder Name="/src/Orchestration/">
+    <Project Path="src/LibraFoto.AppHost/LibraFoto.AppHost.csproj" />
+    <Project Path="src/LibraFoto.ServiceDefaults/LibraFoto.ServiceDefaults.csproj" />
+  </Folder>
+
+  <!-- API -->
+  <Folder Name="/src/API/">
+    <Project Path="src/LibraFoto.Api/LibraFoto.Api.csproj" />
+  </Folder>
+
+  <!-- Modules -->
+  <Folder Name="/src/Modules/">
+    <Project Path="src/LibraFoto.Modules.Display/LibraFoto.Modules.Display.csproj" />
+    <Project Path="src/LibraFoto.Modules.Admin/LibraFoto.Modules.Admin.csproj" />
+    <Project Path="src/LibraFoto.Modules.Storage/LibraFoto.Modules.Storage.csproj" />
+    <Project Path="src/LibraFoto.Modules.Media/LibraFoto.Modules.Media.csproj" />
+    <Project Path="src/LibraFoto.Modules.Auth/LibraFoto.Modules.Auth.csproj" />
+  </Folder>
+
+  <!-- Shared -->
+  <Folder Name="/src/Shared/">
+    <Project Path="src/LibraFoto.Data/LibraFoto.Data.csproj" />
+    <Project Path="src/LibraFoto.Shared/LibraFoto.Shared.csproj" />
+  </Folder>
+
+  <!-- Tests -->
+  <Folder Name="/tests/">
+    <Project Path="tests/LibraFoto.Tests/LibraFoto.Tests.csproj" />
+    <Project Path="tests/LibraFoto.GooglePhotos.Tests/LibraFoto.GooglePhotos.Tests.csproj" />
+  </Folder>
+</Solution>

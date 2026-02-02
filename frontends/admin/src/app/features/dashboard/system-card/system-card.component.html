@@ -1,0 +1,117 @@
+<mat-card class="system-card">
+  <mat-card-header>
+    <mat-icon mat-card-avatar class="system-icon">settings_system_daydream</mat-icon>
+    <mat-card-title>System Status</mat-card-title>
+    <mat-card-subtitle>
+      @if (systemInfo()?.updateAvailable) {
+        <span class="update-badge">
+          <mat-icon>update</mat-icon>
+          Update Available
+        </span>
+      } @else {
+        <span class="up-to-date">Up to date</span>
+      }
+    </mat-card-subtitle>
+  </mat-card-header>
+
+  <mat-card-content>
+    @if (isLoading()) {
+      <div class="loading">
+        <mat-spinner diameter="32"></mat-spinner>
+      </div>
+    } @else if (error()) {
+      <div class="error-message">
+        <mat-icon>error</mat-icon>
+        <span>{{ error() }}</span>
+        <button mat-button color="primary" (click)="refreshInfo()">Retry</button>
+      </div>
+    } @else if (systemInfo(); as info) {
+      <div class="info-grid">
+        <div class="info-item">
+          <span class="label">Version</span>
+          <span class="value">
+            {{ info.version }}
+            @if (info.commitHash) {
+              <span class="commit-hash">({{ info.commitHash }})</span>
+            }
+          </span>
+        </div>
+        <div class="info-item">
+          <span class="label">Uptime</span>
+          <span class="value">{{ formatUptime(info.uptime) }}</span>
+        </div>
+        <div class="info-item">
+          <span class="label">Environment</span>
+          <span class="value environment-badge" [class.production]="info.environment === 'Production'">
+            {{ info.environment }}
+          </span>
+        </div>
+        @if (info.isDocker) {
+          <div class="info-item">
+            <span class="label">Runtime</span>
+            <span class="value">
+              <mat-icon class="docker-icon">cloud</mat-icon>
+              Docker
+            </span>
+          </div>
+        }
+      </div>
+
+      @if (info.updateAvailable && info.latestVersion) {
+        <div class="update-info">
+          <div class="update-header">
+            <mat-icon>new_releases</mat-icon>
+            <span>Version {{ info.latestVersion }} is available</span>
+          </div>
+          @if (info.commitsBehind && info.commitsBehind > 0) {
+            <div class="commits-behind">
+              {{ info.commitsBehind }} commit{{ info.commitsBehind > 1 ? 's' : '' }} behind
+            </div>
+          }
+          @if (info.changelog && info.changelog.length > 0) {
+            <div class="changelog">
+              <span class="changelog-title">Recent changes:</span>
+              <ul>
+                @for (entry of info.changelog.slice(0, 3); track entry) {
+                  <li>{{ entry }}</li>
+                }
+              </ul>
+            </div>
+          }
+        </div>
+      }
+    }
+  </mat-card-content>
+
+  <mat-card-actions>
+    <button
+      mat-button
+      (click)="checkUpdates()"
+      [disabled]="isLoading() || isCheckingUpdates() || isUpdating()">
+      @if (isCheckingUpdates()) {
+        <mat-spinner diameter="18"></mat-spinner>
+      } @else {
+        <mat-icon>refresh</mat-icon>
+      }
+      Check for Updates
+    </button>
+
+    @if (systemInfo()?.updateAvailable) {
+      <button
+        mat-raised-button
+        color="warn"
+        (click)="triggerUpdate()"
+        [disabled]="isLoading() || isCheckingUpdates() || isUpdating()">
+        @if (isUpdating()) {
+          <mat-spinner diameter="18"></mat-spinner>
+          Updating...
+        } @else {
+          <ng-container>
+            <mat-icon>system_update</mat-icon>
+            Update &amp; Restart
+          </ng-container>
+        }
+      </button>
+    }
+  </mat-card-actions>
+</mat-card>
