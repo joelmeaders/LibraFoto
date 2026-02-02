@@ -8,7 +8,7 @@ var builder = DistributedApplication.CreateBuilder(args);
 var db = builder.AddSqlite("LibraFotoDb");
 
 // Run API as a container (tests your Dockerfile)
-var api = builder.AddDockerfile("api", "../LibraFoto.Api")
+var api = builder.AddDockerfile("api", "../docker/Dockerfile.api")
     .WithReference(db)
     .WithHttpEndpoint(port: 5179, targetPort: 8080, name: "http")
     .WithEnvironment("ASPNETCORE_ENVIRONMENT", "Development")

@@ -217,7 +217,7 @@ check_repo_files() {
         return 1
     fi
     
-    if [[ ! -f "$script_dir/src/LibraFoto.Api/Dockerfile" ]]; then
+    if [[ ! -f "$script_dir/docker/Dockerfile.api" ]]; then
         log_error "Source files not found"
         log_info "Please ensure you have cloned the complete repository"
         return 1

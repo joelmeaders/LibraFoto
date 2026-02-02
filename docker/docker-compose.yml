@@ -5,7 +5,7 @@ services:
     container_name: librafoto-api
     build:
       context: ..
-      dockerfile: src/LibraFoto.Api/Dockerfile
+      dockerfile: docker/Dockerfile.api
       args:
         - VERSION=${VERSION:-dev}
     # Internal only - accessed via proxy at /api
