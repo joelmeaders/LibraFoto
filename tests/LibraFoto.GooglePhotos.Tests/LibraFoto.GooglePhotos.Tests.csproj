@@ -18,7 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\LibraFoto.Modules.Storage\LibraFoto.Modules.Storage.csproj" />
+    <ProjectReference Include="..\..\apps\api\LibraFoto.Modules.Storage\LibraFoto.Modules.Storage.csproj" />
   </ItemGroup>
 
 </Project>

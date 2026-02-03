@@ -28,21 +28,21 @@ Thank you for your interest in contributing to LibraFoto! This guide covers the 
 # Clone and start full stack
 git clone https://github.com/librafoto/librafoto
 cd librafoto
-dotnet run --project src/LibraFoto.AppHost  # Starts API + frontends + Aspire dashboard
+dotnet run --project apps/api/LibraFoto.AppHost  # Starts API + frontends + Aspire dashboard
 ```
 
 ### Running Tests
 
 ```bash
 # Backend tests (TUnit)
-dotnet test LibraFoto.slnx
+dotnet test apps/api/LibraFoto.slnx
 
 # Frontend tests (Vitest)
-cd frontends/admin && npm test
-cd frontends/display && npm test
+cd apps/admin && npm test
+cd apps/display && npm test
 
 # E2E tests (Playwright)
-cd frontends/e2e && npm test
+cd tests/e2e && npm test
 ```
 
 ---
@@ -110,13 +110,13 @@ Every push and pull request triggers CI validation. **All checks must pass** bef
 ### 2. Code Formatting
 
 ```bash
-dotnet format --solution LibraFoto.slnx --verify-no-changes
+dotnet format --solution apps/api/LibraFoto.slnx --verify-no-changes
 ```
 
 Run locally before pushing:
 
 ```bash
-dotnet format --solution LibraFoto.slnx
+dotnet format --solution apps/api/LibraFoto.slnx
 ```
 
 ### 3. Build
@@ -124,7 +124,7 @@ dotnet format --solution LibraFoto.slnx
 All projects must compile without errors:
 
 ```bash
-dotnet build LibraFoto.slnx --configuration Release
+dotnet build apps/api/LibraFoto.slnx --configuration Release
 ```
 
 ### 4. Test Coverage (80% Minimum)
@@ -141,13 +141,13 @@ Run coverage locally:
 
 ```bash
 # Backend
-dotnet test LibraFoto.slnx --collect:"XPlat Code Coverage"
+dotnet test apps/api/LibraFoto.slnx --collect:"XPlat Code Coverage"
 
 # Admin frontend
-cd frontends/admin && npm run test:coverage
+cd apps/admin && npm run test:coverage
 
 # Display frontend
-cd frontends/display && npm run test:coverage
+cd apps/display && npm run test:coverage
 ```
 
 ---
@@ -187,9 +187,9 @@ LibraFoto.Modules.{Name}/
 ### Before Submitting
 
 1. **Version**: Ensure `.version` has a prerelease suffix
-2. **Format**: Run `dotnet format --solution LibraFoto.slnx`
-3. **Build**: Run `dotnet build LibraFoto.slnx`
-4. **Tests**: Run `dotnet test LibraFoto.slnx` and frontend tests
+2. **Format**: Run `dotnet format --solution apps/api/LibraFoto.slnx`
+3. **Build**: Run `dotnet build apps/api/LibraFoto.slnx`
+4. **Tests**: Run `dotnet test apps/api/LibraFoto.slnx` and frontend tests
 5. **Coverage**: Verify ≥80% coverage on new code
 
 ### PR Checklist

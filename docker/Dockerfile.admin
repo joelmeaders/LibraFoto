@@ -5,10 +5,10 @@ FROM --platform=$BUILDPLATFORM node:22-alpine AS build
 ARG VERSION=dev
 
 WORKDIR /app
-COPY frontends/admin/package*.json ./
+COPY apps/admin/package*.json ./
 RUN --mount=type=cache,target=/root/.npm \
     npm ci
-COPY frontends/admin/ ./
+COPY apps/admin/ ./
 # Build with base href for reverse proxy
 RUN npm run build -- --base-href=/admin/
 

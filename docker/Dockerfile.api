@@ -8,23 +8,23 @@ ARG VERSION=dev
 WORKDIR /src
 
 # Copy project files
-COPY ["src/LibraFoto.Api/LibraFoto.Api.csproj", "src/LibraFoto.Api/"]
-COPY ["src/LibraFoto.ServiceDefaults/LibraFoto.ServiceDefaults.csproj", "src/LibraFoto.ServiceDefaults/"]
-COPY ["src/LibraFoto.Modules.Display/LibraFoto.Modules.Display.csproj", "src/LibraFoto.Modules.Display/"]
-COPY ["src/LibraFoto.Modules.Admin/LibraFoto.Modules.Admin.csproj", "src/LibraFoto.Modules.Admin/"]
-COPY ["src/LibraFoto.Modules.Storage/LibraFoto.Modules.Storage.csproj", "src/LibraFoto.Modules.Storage/"]
-COPY ["src/LibraFoto.Modules.Media/LibraFoto.Modules.Media.csproj", "src/LibraFoto.Modules.Media/"]
-COPY ["src/LibraFoto.Modules.Auth/LibraFoto.Modules.Auth.csproj", "src/LibraFoto.Modules.Auth/"]
-COPY ["src/LibraFoto.Data/LibraFoto.Data.csproj", "src/LibraFoto.Data/"]
-COPY ["src/LibraFoto.Shared/LibraFoto.Shared.csproj", "src/LibraFoto.Shared/"]
+COPY ["apps/api/LibraFoto.Api/LibraFoto.Api.csproj", "apps/api/LibraFoto.Api/"]
+COPY ["apps/api/LibraFoto.ServiceDefaults/LibraFoto.ServiceDefaults.csproj", "apps/api/LibraFoto.ServiceDefaults/"]
+COPY ["apps/api/LibraFoto.Modules.Display/LibraFoto.Modules.Display.csproj", "apps/api/LibraFoto.Modules.Display/"]
+COPY ["apps/api/LibraFoto.Modules.Admin/LibraFoto.Modules.Admin.csproj", "apps/api/LibraFoto.Modules.Admin/"]
+COPY ["apps/api/LibraFoto.Modules.Storage/LibraFoto.Modules.Storage.csproj", "apps/api/LibraFoto.Modules.Storage/"]
+COPY ["apps/api/LibraFoto.Modules.Media/LibraFoto.Modules.Media.csproj", "apps/api/LibraFoto.Modules.Media/"]
+COPY ["apps/api/LibraFoto.Modules.Auth/LibraFoto.Modules.Auth.csproj", "apps/api/LibraFoto.Modules.Auth/"]
+COPY ["apps/api/LibraFoto.Data/LibraFoto.Data.csproj", "apps/api/LibraFoto.Data/"]
+COPY ["apps/api/LibraFoto.Shared/LibraFoto.Shared.csproj", "apps/api/LibraFoto.Shared/"]
 
 RUN --mount=type=cache,target=/root/.nuget/packages \
-    dotnet restore "src/LibraFoto.Api/LibraFoto.Api.csproj" -a $TARGETARCH
+    dotnet restore "apps/api/LibraFoto.Api/LibraFoto.Api.csproj" -a $TARGETARCH
 
 # Copy source
 COPY . .
 
-WORKDIR "/src/src/LibraFoto.Api"
+WORKDIR "/src/apps/api/LibraFoto.Api"
 RUN dotnet build "LibraFoto.Api.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 # Publish stage

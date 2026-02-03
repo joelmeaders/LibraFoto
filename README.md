@@ -1,8 +1,8 @@
-# LibraFoto 📸
+# LibraFoto
 
 A self-hosted digital picture frame application for Raspberry Pi and similar devices. Transform any display into a beautiful slideshow showcasing your memories from local storage or cloud services (Google Photos/Drive, OneDrive).
 
-## ✨ Key Features
+## Key Features
 
 - **Beautiful Slideshow Display** - Fullscreen photo/video display with configurable transitions and overlays (date/time/location)
 - **Multi-Source Storage** - Local uploads, Google Photos, Google Drive, and OneDrive (planned)
@@ -13,7 +13,7 @@ A self-hosted digital picture frame application for Raspberry Pi and similar dev
 
 ---
 
-## 🚀 Installation
+## Installation
 
 ### Raspberry Pi (Recommended)
 
@@ -46,7 +46,7 @@ docker compose up -d
 
 Access at: http://localhost/display/ (slideshow) and http://localhost/admin/ (management)
 
-## 🔄 Updating
+## Updating
 
 Check for and apply updates:
 
@@ -60,7 +60,7 @@ The update script automatically backs up your data, pulls changes, rebuilds cont
 
 > **Note**: Use `bash update.sh` not `sh update.sh` — the scripts require bash.
 
-## �️ Uninstalling
+## Uninstalling
 
 Remove LibraFoto while preserving your photos and database:
 
@@ -82,7 +82,7 @@ By default, your data directory is preserved. To completely remove LibraFoto aft
 rm -rf ~/LibraFoto  # Adjust path as needed
 ```
 
-## �🛠️ Development
+## Development
 
 ### Quick Start
 
@@ -97,12 +97,27 @@ aspire run  # Starts API + frontends + Aspire dashboard
 ### Testing
 
 - **Unit**: TUnit (backend), Vitest (frontends)
-- **E2E**: Playwright - see [frontends/e2e/README.md](frontends/e2e/README.md)
+- **E2E**: Playwright - see [tests/e2e/README.md](tests/e2e/README.md)
+- **Shell**: shUnit2 tests for install/update/uninstall and scripts in `tests/shell`
+
+Run shell tests:
 
 ```bash
-dotnet test LibraFoto.slnx      # Backend tests
-cd frontends/admin && npm test  # Admin frontend tests
-cd frontends/display && npm test  # Display frontend tests
+bash tests/shell/run-tests.sh
+```
+
+shUnit2 must be installed and discoverable (e.g., `shunit2` on PATH or `SHUNIT2_PATH` set).
+
+On Windows, run the shell tests inside WSL (Ubuntu recommended):
+
+```bash
+wsl -d Ubuntu -- bash -lc "cd '/mnt/d/Just or fun/LibraFoto/LibraFoto' && bash tests/shell/run-tests.sh"
+```
+
+```bash
+dotnet test apps/api/LibraFoto.slnx      # Backend tests
+cd apps/admin && npm test  # Admin frontend tests
+cd apps/display && npm test  # Display frontend tests
 ```
 
 ### Documentation

@@ -93,13 +93,13 @@ jobs:
             ${{ runner.os }}-nuget-
 
       - name: Restore dependencies
-        run: dotnet restore --solution LibraFoto.slnx
+        run: dotnet restore --solution apps/api/LibraFoto.slnx
 
       - name: Check formatting
-        run: dotnet format --solution LibraFoto.slnx --verify-no-changes --verbosity diagnostic
+        run: dotnet format --solution apps/api/LibraFoto.slnx --verify-no-changes --verbosity diagnostic
 
       - name: Build solution
-        run: dotnet build --solution LibraFoto.slnx --no-restore --configuration Release
+        run: dotnet build --solution apps/api/LibraFoto.slnx --no-restore --configuration Release
 
   test-backend:
     name: Test Backend
@@ -124,7 +124,7 @@ jobs:
 
       - name: Run backend tests with coverage
         run: |
-          dotnet test --solution LibraFoto.slnx --configuration Release \
+          dotnet test --solution apps/api/LibraFoto.slnx --configuration Release \
             --logger "trx;LogFileName=test-results.trx" \
             --results-directory ./TestResults \
             --collect:"XPlat Code Coverage" \
@@ -178,6 +178,22 @@ jobs:
           path: ./TestResults/CoverageReport/
 
   # =============================================================================
+  # Shell Script Tests (shUnit2)
+  # =============================================================================
+  test-shell:
+    name: Test Shell Scripts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install shUnit2
+        run: sudo apt-get update && sudo apt-get install -y shunit2
+
+      - name: Run shell tests
+        run: bash tests/shell/run-tests.sh
+
+  # =============================================================================
   # Admin Frontend Build & Test
   # =============================================================================
   build-admin:
@@ -185,7 +201,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: frontends/admin
+        working-directory: apps/admin
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -195,7 +211,7 @@ jobs:
         with:
           node-version: "22"
           cache: "npm"
-          cache-dependency-path: frontends/admin/package-lock.json
+          cache-dependency-path: apps/admin/package-lock.json
 
       - name: Install dependencies
         run: npm ci
@@ -207,7 +223,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: admin-dist
-          path: frontends/admin/dist/
+          path: apps/admin/dist/
 
   test-admin:
     name: Test Admin Frontend
@@ -215,7 +231,7 @@ jobs:
     needs: build-admin
     defaults:
       run:
-        working-directory: frontends/admin
+        working-directory: apps/admin
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -225,7 +241,7 @@ jobs:
         with:
           node-version: "22"
           cache: "npm"
-          cache-dependency-path: frontends/admin/package-lock.json
+          cache-dependency-path: apps/admin/package-lock.json
 
       - name: Install dependencies
         run: npm ci
@@ -238,7 +254,7 @@ jobs:
         if: always()
         with:
           name: admin-coverage
-          path: frontends/admin/coverage/
+          path: apps/admin/coverage/
 
   # =============================================================================
   # Display Frontend Build & Test
@@ -248,7 +264,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: frontends/display
+        working-directory: apps/display
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -258,7 +274,7 @@ jobs:
         with:
           node-version: "22"
           cache: "npm"
-          cache-dependency-path: frontends/display/package-lock.json
+          cache-dependency-path: apps/display/package-lock.json
 
       - name: Install dependencies
         run: npm ci
@@ -270,7 +286,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: display-dist
-          path: frontends/display/dist/
+          path: apps/display/dist/
 
   test-display:
     name: Test Display Frontend
@@ -278,7 +294,7 @@ jobs:
     needs: build-display
     defaults:
       run:
-        working-directory: frontends/display
+        working-directory: apps/display
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -288,7 +304,7 @@ jobs:
         with:
           node-version: "22"
           cache: "npm"
-          cache-dependency-path: frontends/display/package-lock.json
+          cache-dependency-path: apps/display/package-lock.json
 
       - name: Install dependencies
         run: npm ci
@@ -301,7 +317,7 @@ jobs:
         if: always()
         with:
           name: display-coverage
-          path: frontends/display/coverage/
+          path: apps/display/coverage/
 
   # =============================================================================
   # CI Summary

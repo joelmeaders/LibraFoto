@@ -20,20 +20,20 @@
 
 1. Research → Understand existing patterns before coding
 2. Implement → Follow module/endpoint patterns below
-3. Test → Run `dotnet test LibraFoto.slnx` and fix failures
-4. Build → Verify `dotnet build LibraFoto.slnx` succeeds
+3. Test → Run `dotnet test apps/api/LibraFoto.slnx` and fix failures
+4. Build → Verify `dotnet build apps/api/LibraFoto.slnx` succeeds
 
 ## Architecture Overview
 
 **Modular monolith** in .NET 10 with clear module boundaries:
 
 ```
-src/
-├── LibraFoto.Api/           # Host: Program.cs startup, global middleware
-├── LibraFoto.Data/          # EF Core + SQLite, migrations, entities
-├── LibraFoto.Shared/        # DTOs: PagedResult<T>, ApiError, PaginationInfo
+apps/api/
+├── LibraFoto.Api/              # Host: Program.cs startup, global middleware
+├── LibraFoto.Data/             # EF Core + SQLite, migrations, entities
+├── LibraFoto.Shared/           # DTOs: PagedResult<T>, ApiError, PaginationInfo
 ├── LibraFoto.ServiceDefaults/  # Aspire: AddServiceDefaults(), MapDefaultEndpoints()
-└── LibraFoto.Modules.*/     # Each module: Endpoints/, Services/, Models/
+└── LibraFoto.Modules.*/        # Each module: Endpoints/, Services/, Models/
     ├── Admin/               # Photo/album/tag management
     ├── Auth/                # JWT auth, users, guest links
     ├── Display/             # Slideshow, display settings
@@ -41,28 +41,28 @@ src/
     └── Storage/             # IStorageProvider implementations (Local, GooglePhotos)
 ```
 
-**Frontends**: Display = Vite/TS (`frontends/display`), Admin = Angular 21 + Material (`frontends/admin`). Nginx proxies `/api/*` in production.
+**Frontends**: Display = Vite/TS (`apps/display`), Admin = Angular 21 + Material (`apps/admin`). Nginx proxies `/api/*` in production.
 
 ## Development Workflows
 
 ```bash
 # Start full stack (API + frontends + Aspire dashboard)
-dotnet run --project src/LibraFoto.AppHost
+dotnet run --project apps/api/LibraFoto.AppHost
 
 # Build solution
-dotnet build LibraFoto.slnx
+dotnet build apps/api/LibraFoto.slnx
 
 # Run migrations
-dotnet ef database update --project src/LibraFoto.Data --startup-project src/LibraFoto.Api
+dotnet ef database update --project apps/api/LibraFoto.Data --startup-project apps/api/LibraFoto.Api
 
 # Frontend dev servers (if running independently)
-cd frontends/display && npm run dev   # Port 3000
-cd frontends/admin && npm start       # Port 4200
+cd apps/display && npm run dev   # Port 3000
+cd apps/admin && npm start       # Port 4200
 ```
 
 ## Module Pattern
 
-Each module follows this structure (see [AdminModule.cs](src/LibraFoto.Modules.Admin/AdminModule.cs)):
+Each module follows this structure (see [AdminModule.cs](apps/api/LibraFoto.Modules.Admin/AdminModule.cs)):
 
 ```csharp
 // Registration: Add{ModuleName}Module
@@ -85,7 +85,7 @@ In `Program.cs`: call `builder.AddServiceDefaults()` before `Build()`, then `app
 
 ## API Endpoint Pattern
 
-See [PhotoEndpoints.cs](src/LibraFoto.Modules.Admin/Endpoints/PhotoEndpoints.cs):
+See [PhotoEndpoints.cs](apps/api/LibraFoto.Modules.Admin/Endpoints/PhotoEndpoints.cs):
 
 ```csharp
 var group = app.MapGroup("/photos").WithTags("Photos");
@@ -107,7 +107,7 @@ Use `TypedResults.Ok(...)`, `TypedResults.NotFound()`, `TypedResults.NoContent()
 
 ## Storage Provider Pattern
 
-Implement [IStorageProvider](src/LibraFoto.Modules.Storage/Interfaces/IStorageProvider.cs) for new storage backends:
+Implement [IStorageProvider](apps/api/LibraFoto.Modules.Storage/Interfaces/IStorageProvider.cs) for new storage backends:
 
 ```csharp
 public interface IStorageProvider
@@ -124,24 +124,24 @@ public interface IStorageProvider
 }
 ```
 
-See [LocalStorageProvider.cs](src/LibraFoto.Modules.Storage/Providers/LocalStorageProvider.cs) and [GooglePhotosProvider.cs](src/LibraFoto.Modules.Storage/Providers/GooglePhotosProvider.cs) for implementations.
+See [LocalStorageProvider.cs](apps/api/LibraFoto.Modules.Storage/Providers/LocalStorageProvider.cs) and [GooglePhotosProvider.cs](apps/api/LibraFoto.Modules.Storage/Providers/GooglePhotosProvider.cs) for implementations.
 
 ## Testing
 
 ```bash
 # Backend tests (TUnit)
-dotnet test LibraFoto.slnx
+dotnet test apps/api/LibraFoto.slnx
 
 # Frontend unit tests
-cd frontends/display && npm test   # Vitest
-cd frontends/admin && npm test     # Angular test runner
+cd apps/display && npm test   # Vitest
+cd apps/admin && npm test     # Angular test runner
 
 # E2E tests (Playwright) - starts API automatically
-cd frontends/e2e && npm test
+cd tests/e2e && npm test
 
 # E2E against manually-started API
-$env:ENABLE_TEST_ENDPOINTS="true"; dotnet run --project src/LibraFoto.Api
-$env:SKIP_WEB_SERVER="true"; cd frontends/e2e && npm test
+$env:ENABLE_TEST_ENDPOINTS="true"; dotnet run --project apps/api/LibraFoto.Api
+$env:SKIP_WEB_SERVER="true"; cd tests/e2e && npm test
 ```
 
 Backend tests use TUnit with NSubstitute for mocking. Use in-memory SQLite for database tests:
@@ -163,7 +163,7 @@ AppHost is **dev-only**. Production uses Docker DNS for service discovery. See [
 
 ## Coding Standards
 
-- Build after changes: `dotnet build LibraFoto.slnx`
+- Build after changes: `dotnet build apps/api/LibraFoto.slnx`
 - Write unit tests for new functionality—test behavior, not framework code.
 - Run tests after changes and fix any failures.
 - Use records for DTOs (see `LibraFoto.Shared/DTOs/`).
@@ -193,7 +193,7 @@ export class PhotoListComponent {
 }
 ```
 
-Key files: [api.service.ts](frontends/admin/src/app/core/services/api.service.ts), [app.config.ts](frontends/admin/src/app/app.config.ts)
+Key files: [api.service.ts](apps/admin/src/app/core/services/api.service.ts), [app.config.ts](apps/admin/src/app/app.config.ts)
 
 ### Display Frontend (Vanilla TypeScript)
 
@@ -209,7 +209,7 @@ export class Slideshow {
 }
 ```
 
-Key files: [main.ts](frontends/display/src/main.ts), [slideshow.ts](frontends/display/src/slideshow.ts), [api-client.ts](frontends/display/src/api-client.ts)
+Key files: [main.ts](apps/display/src/main.ts), [slideshow.ts](apps/display/src/slideshow.ts), [api-client.ts](apps/display/src/api-client.ts)
 
 ## Environment Variables
 

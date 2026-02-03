@@ -19,11 +19,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\LibraFoto.Modules.Storage\LibraFoto.Modules.Storage.csproj" />
-    <ProjectReference Include="..\..\src\LibraFoto.Modules.Admin\LibraFoto.Modules.Admin.csproj" />
-    <ProjectReference Include="..\..\src\LibraFoto.Modules.Media\LibraFoto.Modules.Media.csproj" />
-    <ProjectReference Include="..\..\src\LibraFoto.Modules.Display\LibraFoto.Modules.Display.csproj" />
-    <ProjectReference Include="..\..\src\LibraFoto.Data\LibraFoto.Data.csproj" />
+    <ProjectReference Include="..\..\apps\api\LibraFoto.Modules.Storage\LibraFoto.Modules.Storage.csproj" />
+    <ProjectReference Include="..\..\apps\api\LibraFoto.Modules.Admin\LibraFoto.Modules.Admin.csproj" />
+    <ProjectReference Include="..\..\apps\api\LibraFoto.Modules.Media\LibraFoto.Modules.Media.csproj" />
+    <ProjectReference Include="..\..\apps\api\LibraFoto.Modules.Display\LibraFoto.Modules.Display.csproj" />
+    <ProjectReference Include="..\..\apps\api\LibraFoto.Data\LibraFoto.Data.csproj" />
   </ItemGroup>
 
 </Project>

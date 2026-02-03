@@ -123,7 +123,7 @@ These tests do **NOT** perform actual Google API calls. They validate:
 - Interface compliance
 - Error handling
 
-For integration tests with real Google Photos API, see `frontends/e2e/tests/` (Playwright E2E tests).
+For integration tests with real Google Photos API, see `tests/e2e/tests/` (Playwright E2E tests).
 
 ## Continuous Testing
 
