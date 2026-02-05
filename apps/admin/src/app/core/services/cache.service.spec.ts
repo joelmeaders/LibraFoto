@@ -97,7 +97,7 @@ describe("CacheService", () => {
       });
 
       const req = httpMock.expectOne(
-        (r) => r.url === `${baseUrl}/api/admin/cache/files`
+        (r) => r.url === `${baseUrl}/api/admin/cache/files`,
       );
       expect(req.request.params.get("page")).toBe("1");
       expect(req.request.params.get("pageSize")).toBe("50");
@@ -121,7 +121,7 @@ describe("CacheService", () => {
       });
 
       const req = httpMock.expectOne(
-        (r) => r.url === `${baseUrl}/api/admin/cache/files`
+        (r) => r.url === `${baseUrl}/api/admin/cache/files`,
       );
       expect(req.request.params.get("page")).toBe("2");
       expect(req.request.params.get("pageSize")).toBe("25");
@@ -144,7 +144,7 @@ describe("CacheService", () => {
       });
 
       const req = httpMock.expectOne(
-        (r) => r.url === `${baseUrl}/api/admin/cache/files`
+        (r) => r.url === `${baseUrl}/api/admin/cache/files`,
       );
       req.flush(emptyResult);
     });
@@ -175,7 +175,7 @@ describe("CacheService", () => {
       const req = httpMock.expectOne(`${baseUrl}/api/admin/cache/clear`);
       req.flush(
         { code: "CACHE_ERROR", message: "Failed to clear cache" },
-        { status: 500, statusText: "Internal Server Error" }
+        { status: 500, statusText: "Internal Server Error" },
       );
     });
   });
@@ -213,7 +213,7 @@ describe("CacheService", () => {
       service.deleteCachedFile(fileHash).subscribe();
 
       const req = httpMock.expectOne(
-        `${baseUrl}/api/admin/cache/files/${fileHash}`
+        `${baseUrl}/api/admin/cache/files/${fileHash}`,
       );
       expect(req.request.method).toBe("DELETE");
       req.flush(null);
@@ -230,11 +230,11 @@ describe("CacheService", () => {
       });
 
       const req = httpMock.expectOne(
-        `${baseUrl}/api/admin/cache/files/${fileHash}`
+        `${baseUrl}/api/admin/cache/files/${fileHash}`,
       );
       req.flush(
         { code: "NOT_FOUND", message: "Cached file not found" },
-        { status: 404, statusText: "Not Found" }
+        { status: 404, statusText: "Not Found" },
       );
     });
 
@@ -244,7 +244,7 @@ describe("CacheService", () => {
       service.deleteCachedFile(fileHash).subscribe();
 
       const req = httpMock.expectOne(
-        `${baseUrl}/api/admin/cache/files/${fileHash}`
+        `${baseUrl}/api/admin/cache/files/${fileHash}`,
       );
       expect(req.request.method).toBe("DELETE");
       req.flush(null);

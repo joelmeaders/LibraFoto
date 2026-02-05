@@ -113,7 +113,7 @@ describe("PhotoService", () => {
       service.getPhotos(filter).subscribe();
 
       const req = httpMock.expectOne(
-        (r) => r.url === `${baseUrl}/api/admin/photos`
+        (r) => r.url === `${baseUrl}/api/admin/photos`,
       );
       expect(req.request.params.get("page")).toBe("2");
       expect(req.request.params.get("pageSize")).toBe("10");
@@ -250,7 +250,7 @@ describe("PhotoService", () => {
       });
 
       const req = httpMock.expectOne(
-        `${baseUrl}/api/admin/photos/bulk/add-tags`
+        `${baseUrl}/api/admin/photos/bulk/add-tags`,
       );
       expect(req.request.method).toBe("POST");
       expect(req.request.body).toEqual(request);
@@ -268,7 +268,7 @@ describe("PhotoService", () => {
       });
 
       const req = httpMock.expectOne(
-        `${baseUrl}/api/admin/photos/bulk/remove-tags`
+        `${baseUrl}/api/admin/photos/bulk/remove-tags`,
       );
       expect(req.request.method).toBe("POST");
       expect(req.request.body).toEqual(request);

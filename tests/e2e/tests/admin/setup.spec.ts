@@ -12,50 +12,64 @@ import { test, expect, fillMaterialInput, API_BASE_URL } from "../fixtures";
  * - Form validation
  * - Stepper navigation
  */
-test.describe("Admin Frontend - Setup Wizard", () => {
-  // Check if setup is required before each test
-  test.beforeEach(async ({ request }) => {
-    // Check setup status via API
-    const response = await request.get(`${API_BASE_URL}/api/setup/status`);
-    const status = await response.json();
+async function getSetupStatus(request: any) {
+  const response = await request.get(`${API_BASE_URL}/api/setup/status`);
+  return response.json();
+}
 
-    if (!status.isSetupRequired) {
-      test.skip(
-        true,
-        "Setup already complete (database was reset with test admin) - skipping setup wizard tests"
-      );
-    }
-  });
+test.describe("Admin Frontend - Setup Wizard", () => {
 
   test("should redirect to setup page when setup required", async ({
     page,
+    request,
   }) => {
+    const status = await getSetupStatus(request);
     await page.goto("/");
 
-    // Should redirect to setup page
-    await expect(page).toHaveURL(/\/setup/);
+    if (status.isSetupRequired) {
+      // Should redirect to setup page
+      await expect(page).toHaveURL(/\/setup/);
+    } else {
+      await expect(page).toHaveURL(/\/(dashboard|photos|login)/);
+    }
   });
 
-  test("should display welcome message", async ({ page }) => {
+  test("should display welcome message", async ({ page, request }) => {
+    const status = await getSetupStatus(request);
     await page.goto("/setup");
 
-    await expect(page.getByText("Welcome to LibraFoto")).toBeVisible();
-    await expect(
-      page.getByText("Let's set up your digital picture frame")
-    ).toBeVisible();
+    if (status.isSetupRequired) {
+      await expect(page.getByText("Welcome to LibraFoto")).toBeVisible();
+      await expect(
+        page.getByText("Let's set up your digital picture frame")
+      ).toBeVisible();
+    } else {
+      await expect(page).toHaveURL(/\/(dashboard|photos|login)/);
+    }
   });
 
-  test("should show stepper with three steps", async ({ page }) => {
+  test("should show stepper with three steps", async ({ page, request }) => {
+    const status = await getSetupStatus(request);
     await page.goto("/setup");
 
-    // Check for step labels
-    await expect(page.getByText("Create Admin Account")).toBeVisible();
-    await expect(page.getByText("Configure Storage")).toBeVisible();
-    await expect(page.getByText("Complete Setup")).toBeVisible();
+    if (status.isSetupRequired) {
+      // Check for step labels
+      await expect(page.getByText("Create Admin Account")).toBeVisible();
+      await expect(page.getByText("Configure Storage")).toBeVisible();
+      await expect(page.getByText("Complete Setup")).toBeVisible();
+    } else {
+      await expect(page).toHaveURL(/\/(dashboard|photos|login)/);
+    }
   });
 
-  test("should validate admin form fields", async ({ page }) => {
+  test("should validate admin form fields", async ({ page, request }) => {
+    const status = await getSetupStatus(request);
     await page.goto("/setup");
+
+    if (!status.isSetupRequired) {
+      await expect(page).toHaveURL(/\/(dashboard|photos|login)/);
+      return;
+    }
 
     // Click next without filling form
     await page.getByRole("button", { name: /next/i }).click();
@@ -64,8 +78,14 @@ test.describe("Admin Frontend - Setup Wizard", () => {
     await expect(page.getByText("Email is required")).toBeVisible();
   });
 
-  test("should validate password minimum length", async ({ page }) => {
+  test("should validate password minimum length", async ({ page, request }) => {
+    const status = await getSetupStatus(request);
     await page.goto("/setup");
+
+    if (!status.isSetupRequired) {
+      await expect(page).toHaveURL(/\/(dashboard|photos|login)/);
+      return;
+    }
 
     await fillMaterialInput(page, "Email", "admin@test.com");
     await fillMaterialInput(page, "Password", "short");
@@ -77,8 +97,14 @@ test.describe("Admin Frontend - Setup Wizard", () => {
     ).toBeVisible();
   });
 
-  test("should validate password match", async ({ page }) => {
+  test("should validate password match", async ({ page, request }) => {
+    const status = await getSetupStatus(request);
     await page.goto("/setup");
+
+    if (!status.isSetupRequired) {
+      await expect(page).toHaveURL(/\/(dashboard|photos|login)/);
+      return;
+    }
 
     await fillMaterialInput(page, "Email", "admin@test.com");
     await fillMaterialInput(page, "Password", "password123");
@@ -88,8 +114,14 @@ test.describe("Admin Frontend - Setup Wizard", () => {
     await expect(page.getByText("Passwords do not match")).toBeVisible();
   });
 
-  test("should allow navigation through stepper", async ({ page }) => {
+  test("should allow navigation through stepper", async ({ page, request }) => {
+    const status = await getSetupStatus(request);
     await page.goto("/setup");
+
+    if (!status.isSetupRequired) {
+      await expect(page).toHaveURL(/\/(dashboard|photos|login)/);
+      return;
+    }
 
     // Fill admin form
     await fillMaterialInput(page, "Email", "admin@test.com");
@@ -124,20 +156,14 @@ test.describe("Admin Frontend - Setup Wizard", () => {
  * this test will typically be skipped unless the reset endpoint is unavailable.
  */
 test.describe("Admin Frontend - Complete Setup Flow", () => {
-  test.beforeEach(async ({ request }) => {
-    // Check setup status via API
-    const response = await request.get(`${API_BASE_URL}/api/setup/status`);
-    const status = await response.json();
-
+  test("should complete setup successfully with real API", async ({ page, request }) => {
+    const status = await getSetupStatus(request);
     if (!status.isSetupRequired) {
-      test.skip(
-        true,
-        "Setup already complete (database was reset with test admin) - skipping setup completion test"
-      );
+      await page.goto("/setup");
+      await expect(page).toHaveURL(/\/(dashboard|photos|login)/);
+      return;
     }
-  });
 
-  test("should complete setup successfully with real API", async ({ page }) => {
     await page.goto("/setup");
 
     // Fill admin form with unique credentials

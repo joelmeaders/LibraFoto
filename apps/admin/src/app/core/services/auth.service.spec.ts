@@ -129,7 +129,7 @@ describe("AuthService", () => {
           expect(result).toEqual(mockLoginResponse);
           expect(localStorage.getItem("librafoto_token")).toBe("test-token");
           expect(localStorage.getItem("librafoto_refresh_token")).toBe(
-            "test-refresh-token"
+            "test-refresh-token",
           );
           expect(service.isAuthenticated()).toBe(true);
         });
@@ -154,7 +154,7 @@ describe("AuthService", () => {
       const req = httpMock.expectOne(`${baseUrl}/api/auth/login`);
       req.flush(
         { code: "INVALID_CREDENTIALS", message: "Invalid credentials" },
-        { status: 401, statusText: "Unauthorized" }
+        { status: 401, statusText: "Unauthorized" },
       );
     });
   });
@@ -210,7 +210,7 @@ describe("AuthService", () => {
       const req = httpMock.expectOne(`${baseUrl}/api/auth/refresh`);
       req.flush(
         { code: "INVALID_TOKEN" },
-        { status: 401, statusText: "Unauthorized" }
+        { status: 401, statusText: "Unauthorized" },
       );
     });
   });
@@ -233,7 +233,7 @@ describe("AuthService", () => {
     it("should detect expired token", () => {
       localStorage.setItem(
         "librafoto_token_expiry",
-        new Date(Date.now() - 1000).toISOString()
+        new Date(Date.now() - 1000).toISOString(),
       );
       expect(service.isTokenExpired()).toBe(true);
     });
@@ -241,7 +241,7 @@ describe("AuthService", () => {
     it("should detect valid token", () => {
       localStorage.setItem(
         "librafoto_token_expiry",
-        new Date(Date.now() + 3600000).toISOString()
+        new Date(Date.now() + 3600000).toISOString(),
       );
       expect(service.isTokenExpired()).toBe(false);
     });
@@ -249,7 +249,7 @@ describe("AuthService", () => {
     it("should consider token expired if within 30 seconds of expiry", () => {
       localStorage.setItem(
         "librafoto_token_expiry",
-        new Date(Date.now() + 20000).toISOString()
+        new Date(Date.now() + 20000).toISOString(),
       ); // 20 seconds
       expect(service.isTokenExpired()).toBe(true);
     });
@@ -260,11 +260,11 @@ describe("AuthService", () => {
       localStorage.setItem("librafoto_token", "token");
       localStorage.setItem(
         "librafoto_user",
-        JSON.stringify({ ...mockUser, role: 2 })
+        JSON.stringify({ ...mockUser, role: 2 }),
       );
       localStorage.setItem(
         "librafoto_token_expiry",
-        new Date(Date.now() + 3600000).toISOString()
+        new Date(Date.now() + 3600000).toISOString(),
       );
 
       // Reset TestBed to get a fresh service instance that reads from localStorage
@@ -286,11 +286,11 @@ describe("AuthService", () => {
       localStorage.setItem("librafoto_token", "token");
       localStorage.setItem(
         "librafoto_user",
-        JSON.stringify({ ...mockUser, role: 1 })
+        JSON.stringify({ ...mockUser, role: 1 }),
       );
       localStorage.setItem(
         "librafoto_token_expiry",
-        new Date(Date.now() + 3600000).toISOString()
+        new Date(Date.now() + 3600000).toISOString(),
       );
 
       // Reset TestBed to get a fresh service instance
@@ -312,11 +312,11 @@ describe("AuthService", () => {
       localStorage.setItem("librafoto_token", "token");
       localStorage.setItem(
         "librafoto_user",
-        JSON.stringify({ ...mockUser, role: 1 })
+        JSON.stringify({ ...mockUser, role: 1 }),
       );
       localStorage.setItem(
         "librafoto_token_expiry",
-        new Date(Date.now() + 3600000).toISOString()
+        new Date(Date.now() + 3600000).toISOString(),
       );
 
       // Reset TestBed to get a fresh service instance
@@ -347,7 +347,7 @@ describe("AuthService", () => {
       });
 
       const req = httpMock.expectOne(
-        (r) => r.url === `${baseUrl}/api/admin/users`
+        (r) => r.url === `${baseUrl}/api/admin/users`,
       );
       expect(req.request.params.get("page")).toBe("1");
       expect(req.request.params.get("pageSize")).toBe("20");
@@ -426,7 +426,7 @@ describe("AuthService", () => {
       });
 
       const req = httpMock.expectOne(
-        (r) => r.url === `${baseUrl}/api/admin/guest-links`
+        (r) => r.url === `${baseUrl}/api/admin/guest-links`,
       );
       req.flush(pagedResult);
     });
@@ -497,7 +497,7 @@ describe("AuthService", () => {
       localStorage.setItem("librafoto_user", JSON.stringify(mockUser));
       localStorage.setItem(
         "librafoto_token_expiry",
-        new Date(Date.now() + 3600000).toISOString()
+        new Date(Date.now() + 3600000).toISOString(),
       );
 
       // Reset TestBed to get a fresh service instance

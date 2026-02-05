@@ -232,7 +232,7 @@ export class ApiClient {
       `${API_BASE_URL}/api/setup/complete`,
       {
         data: { email, password },
-      }
+      },
     );
     if (response.ok()) {
       const data = await response.json();
@@ -289,11 +289,11 @@ export class ApiClient {
    */
   async getUsers(
     page: number = 1,
-    pageSize: number = 20
+    pageSize: number = 20,
   ): Promise<PagedResult<User>> {
     const response = await this.request.get(
       `${API_BASE_URL}/api/admin/users?page=${page}&pageSize=${pageSize}`,
-      { headers: this.getAuthHeaders() }
+      { headers: this.getAuthHeaders() },
     );
     if (response.ok()) {
       return response.json();
@@ -310,14 +310,14 @@ export class ApiClient {
   async createUser(
     email: string,
     password: string,
-    role: "Admin" | "Editor" | "Guest"
+    role: "Admin" | "Editor" | "Guest",
   ): Promise<User | null> {
     const response = await this.request.post(
       `${API_BASE_URL}/api/admin/users`,
       {
         headers: this.getAuthHeaders(),
         data: { email, password, role },
-      }
+      },
     );
     if (response.ok()) {
       return response.json();
@@ -335,14 +335,14 @@ export class ApiClient {
       email?: string;
       role?: string;
       isActive?: boolean;
-    }
+    },
   ): Promise<User | null> {
     const response = await this.request.put(
       `${API_BASE_URL}/api/admin/users/${id}`,
       {
         headers: this.getAuthHeaders(),
         data,
-      }
+      },
     );
     if (response.ok()) {
       return response.json();
@@ -356,7 +356,7 @@ export class ApiClient {
   async deleteUser(id: number): Promise<boolean> {
     const response = await this.request.delete(
       `${API_BASE_URL}/api/admin/users/${id}`,
-      { headers: this.getAuthHeaders() }
+      { headers: this.getAuthHeaders() },
     );
     return response.ok();
   }
@@ -371,7 +371,7 @@ export class ApiClient {
   async getPhotos(
     page: number = 1,
     pageSize: number = 20,
-    filters?: { albumId?: number; tagId?: number; search?: string }
+    filters?: { albumId?: number; tagId?: number; search?: string },
   ): Promise<PagedResult<PhotoListItem>> {
     const params = new URLSearchParams({
       page: page.toString(),
@@ -383,7 +383,7 @@ export class ApiClient {
 
     const response = await this.request.get(
       `${API_BASE_URL}/api/admin/photos?${params}`,
-      { headers: this.getAuthHeaders() }
+      { headers: this.getAuthHeaders() },
     );
     if (response.ok()) {
       return response.json();
@@ -400,7 +400,7 @@ export class ApiClient {
   async getPhoto(id: number): Promise<Photo | null> {
     const response = await this.request.get(
       `${API_BASE_URL}/api/admin/photos/${id}`,
-      { headers: this.getAuthHeaders() }
+      { headers: this.getAuthHeaders() },
     );
     if (response.ok()) {
       return response.json();
@@ -418,7 +418,7 @@ export class ApiClient {
     }
 
     const response = await this.request.post(
-      `${API_BASE_URL}/api/storage/upload`,
+      `${API_BASE_URL}/api/admin/upload`,
       {
         headers: this.getAuthHeaders(),
         multipart: {
@@ -428,7 +428,7 @@ export class ApiClient {
             buffer: fs.readFileSync(filePath),
           },
         },
-      }
+      },
     );
     if (response.ok()) {
       return response.json();
@@ -455,7 +455,7 @@ export class ApiClient {
   async deletePhoto(id: number): Promise<boolean> {
     const response = await this.request.delete(
       `${API_BASE_URL}/api/admin/photos/${id}`,
-      { headers: this.getAuthHeaders() }
+      { headers: this.getAuthHeaders() },
     );
     return response.ok();
   }
@@ -465,11 +465,11 @@ export class ApiClient {
    */
   async bulkDeletePhotos(photoIds: number[]): Promise<any> {
     const response = await this.request.post(
-      `${API_BASE_URL}/api/admin/photos/bulk-delete`,
+      `${API_BASE_URL}/api/admin/photos/bulk/delete`,
       {
         headers: this.getAuthHeaders(),
         data: { photoIds },
-      }
+      },
     );
     if (response.ok()) {
       return response.json();
@@ -482,11 +482,11 @@ export class ApiClient {
    */
   async addPhotosToAlbum(albumId: number, photoIds: number[]): Promise<any> {
     const response = await this.request.post(
-      `${API_BASE_URL}/api/admin/photos/bulk-add-to-album`,
+      `${API_BASE_URL}/api/admin/photos/bulk/add-to-album/${albumId}`,
       {
         headers: this.getAuthHeaders(),
-        data: { albumId, photoIds },
-      }
+        data: { photoIds },
+      },
     );
     if (response.ok()) {
       return response.json();
@@ -499,14 +499,14 @@ export class ApiClient {
    */
   async removePhotosFromAlbum(
     albumId: number,
-    photoIds: number[]
+    photoIds: number[],
   ): Promise<any> {
     const response = await this.request.post(
-      `${API_BASE_URL}/api/admin/photos/bulk-remove-from-album`,
+      `${API_BASE_URL}/api/admin/photos/bulk/remove-from-album/${albumId}`,
       {
         headers: this.getAuthHeaders(),
-        data: { albumId, photoIds },
-      }
+        data: { photoIds },
+      },
     );
     if (response.ok()) {
       return response.json();
@@ -519,11 +519,11 @@ export class ApiClient {
    */
   async addTagsToPhotos(tagIds: number[], photoIds: number[]): Promise<any> {
     const response = await this.request.post(
-      `${API_BASE_URL}/api/admin/photos/bulk-add-tags`,
+      `${API_BASE_URL}/api/admin/photos/bulk/add-tags`,
       {
         headers: this.getAuthHeaders(),
         data: { tagIds, photoIds },
-      }
+      },
     );
     if (response.ok()) {
       return response.json();
@@ -536,14 +536,14 @@ export class ApiClient {
    */
   async removeTagsFromPhotos(
     tagIds: number[],
-    photoIds: number[]
+    photoIds: number[],
   ): Promise<any> {
     const response = await this.request.post(
-      `${API_BASE_URL}/api/admin/photos/bulk-remove-tags`,
+      `${API_BASE_URL}/api/admin/photos/bulk/remove-tags`,
       {
         headers: this.getAuthHeaders(),
         data: { tagIds, photoIds },
-      }
+      },
     );
     if (response.ok()) {
       return response.json();
@@ -556,7 +556,7 @@ export class ApiClient {
    */
   async getDisplayPhotos(count: number = 100): Promise<any[]> {
     const response = await this.request.get(
-      `${API_BASE_URL}/api/display/photos?count=${count}`
+      `${API_BASE_URL}/api/display/photos?count=${count}`,
     );
     if (response.ok()) {
       return response.json();
@@ -574,7 +574,7 @@ export class ApiClient {
   async getAlbums(): Promise<Album[]> {
     const response = await this.request.get(
       `${API_BASE_URL}/api/admin/albums`,
-      { headers: this.getAuthHeaders() }
+      { headers: this.getAuthHeaders() },
     );
     if (response.ok()) {
       return response.json();
@@ -588,7 +588,7 @@ export class ApiClient {
   async getAlbum(id: number): Promise<Album | null> {
     const response = await this.request.get(
       `${API_BASE_URL}/api/admin/albums/${id}`,
-      { headers: this.getAuthHeaders() }
+      { headers: this.getAuthHeaders() },
     );
     if (response.ok()) {
       return response.json();
@@ -605,7 +605,7 @@ export class ApiClient {
       {
         headers: this.getAuthHeaders(),
         data: { name, description },
-      }
+      },
     );
     if (response.ok()) {
       return response.json();
@@ -618,14 +618,14 @@ export class ApiClient {
    */
   async updateAlbum(
     id: number,
-    data: { name?: string; description?: string }
+    data: { name?: string; description?: string },
   ): Promise<Album | null> {
     const response = await this.request.put(
       `${API_BASE_URL}/api/admin/albums/${id}`,
       {
         headers: this.getAuthHeaders(),
         data,
-      }
+      },
     );
     if (response.ok()) {
       return response.json();
@@ -639,7 +639,7 @@ export class ApiClient {
   async deleteAlbum(id: number): Promise<boolean> {
     const response = await this.request.delete(
       `${API_BASE_URL}/api/admin/albums/${id}`,
-      { headers: this.getAuthHeaders() }
+      { headers: this.getAuthHeaders() },
     );
     return response.ok();
   }
@@ -650,7 +650,7 @@ export class ApiClient {
   async setAlbumCover(albumId: number, photoId: number): Promise<Album | null> {
     const response = await this.request.put(
       `${API_BASE_URL}/api/admin/albums/${albumId}/cover/${photoId}`,
-      { headers: this.getAuthHeaders() }
+      { headers: this.getAuthHeaders() },
     );
     if (response.ok()) {
       return response.json();
@@ -664,7 +664,7 @@ export class ApiClient {
   async removeAlbumCover(albumId: number): Promise<Album | null> {
     const response = await this.request.delete(
       `${API_BASE_URL}/api/admin/albums/${albumId}/cover`,
-      { headers: this.getAuthHeaders() }
+      { headers: this.getAuthHeaders() },
     );
     if (response.ok()) {
       return response.json();
@@ -695,7 +695,7 @@ export class ApiClient {
   async getTag(id: number): Promise<Tag | null> {
     const response = await this.request.get(
       `${API_BASE_URL}/api/admin/tags/${id}`,
-      { headers: this.getAuthHeaders() }
+      { headers: this.getAuthHeaders() },
     );
     if (response.ok()) {
       return response.json();
@@ -722,14 +722,14 @@ export class ApiClient {
    */
   async updateTag(
     id: number,
-    data: { name?: string; color?: string }
+    data: { name?: string; color?: string },
   ): Promise<Tag | null> {
     const response = await this.request.put(
       `${API_BASE_URL}/api/admin/tags/${id}`,
       {
         headers: this.getAuthHeaders(),
         data,
-      }
+      },
     );
     if (response.ok()) {
       return response.json();
@@ -743,7 +743,7 @@ export class ApiClient {
   async deleteTag(id: number): Promise<boolean> {
     const response = await this.request.delete(
       `${API_BASE_URL}/api/admin/tags/${id}`,
-      { headers: this.getAuthHeaders() }
+      { headers: this.getAuthHeaders() },
     );
     return response.ok();
   }
@@ -758,10 +758,11 @@ export class ApiClient {
   async getGuestLinks(): Promise<GuestLink[]> {
     const response = await this.request.get(
       `${API_BASE_URL}/api/admin/guest-links`,
-      { headers: this.getAuthHeaders() }
+      { headers: this.getAuthHeaders() },
     );
     if (response.ok()) {
-      return response.json();
+      const result = await response.json();
+      return Array.isArray(result) ? result : (result.data ?? []);
     }
     return [];
   }
@@ -780,7 +781,7 @@ export class ApiClient {
       {
         headers: this.getAuthHeaders(),
         data,
-      }
+      },
     );
     if (response.ok()) {
       return response.json();
@@ -794,7 +795,7 @@ export class ApiClient {
   async deleteGuestLink(id: string): Promise<boolean> {
     const response = await this.request.delete(
       `${API_BASE_URL}/api/admin/guest-links/${id}`,
-      { headers: this.getAuthHeaders() }
+      { headers: this.getAuthHeaders() },
     );
     return response.ok();
   }
@@ -804,7 +805,7 @@ export class ApiClient {
    */
   async validateGuestLink(linkId: string): Promise<any> {
     const response = await this.request.get(
-      `${API_BASE_URL}/api/guest/validate/${linkId}`
+      `${API_BASE_URL}/api/guest/${linkId}/validate`,
     );
     if (response.ok()) {
       return response.json();
@@ -822,7 +823,7 @@ export class ApiClient {
   async getStorageProviders(): Promise<StorageProvider[]> {
     const response = await this.request.get(
       `${API_BASE_URL}/api/admin/storage/providers`,
-      { headers: this.getAuthHeaders() }
+      { headers: this.getAuthHeaders() },
     );
     if (response.ok()) {
       return response.json();
@@ -836,7 +837,7 @@ export class ApiClient {
   async syncStorageProvider(providerId: number): Promise<any> {
     const response = await this.request.post(
       `${API_BASE_URL}/api/admin/storage/providers/${providerId}/sync`,
-      { headers: this.getAuthHeaders() }
+      { headers: this.getAuthHeaders() },
     );
     if (response.ok()) {
       return response.json();
@@ -850,7 +851,7 @@ export class ApiClient {
   async scanForFiles(providerId: number): Promise<any> {
     const response = await this.request.post(
       `${API_BASE_URL}/api/admin/storage/providers/${providerId}/scan`,
-      { headers: this.getAuthHeaders() }
+      { headers: this.getAuthHeaders() },
     );
     if (response.ok()) {
       return response.json();
@@ -867,7 +868,7 @@ export class ApiClient {
       {
         headers: this.getAuthHeaders(),
         data: { isEnabled: enabled },
-      }
+      },
     );
     if (response.ok()) {
       return response.json();
@@ -884,7 +885,7 @@ export class ApiClient {
    */
   async getDisplaySettings(): Promise<DisplaySettings | null> {
     const response = await this.request.get(
-      `${API_BASE_URL}/api/display/settings`
+      `${API_BASE_URL}/api/display/settings`,
     );
     if (response.ok()) {
       return response.json();
@@ -896,14 +897,14 @@ export class ApiClient {
    * Update display settings
    */
   async updateDisplaySettings(
-    settings: Partial<DisplaySettings>
+    settings: Partial<DisplaySettings>,
   ): Promise<DisplaySettings | null> {
     const response = await this.request.put(
       `${API_BASE_URL}/api/admin/display/settings`,
       {
         headers: this.getAuthHeaders(),
         data: settings,
-      }
+      },
     );
     if (response.ok()) {
       return response.json();
@@ -1040,7 +1041,7 @@ export async function waitForAngular(page: Page): Promise<void> {
 export async function fillMaterialInput(
   page: Page,
   label: string,
-  value: string
+  value: string,
 ): Promise<void> {
   // Use getByRole for textbox with name matching the label
   const input = page.getByRole("textbox", { name: label });
@@ -1053,7 +1054,7 @@ export async function fillMaterialInput(
  */
 export async function clickMaterialButton(
   page: Page,
-  text: string
+  text: string,
 ): Promise<void> {
   await page.getByRole("button", { name: text }).click();
 }
@@ -1063,7 +1064,7 @@ export async function clickMaterialButton(
  */
 export async function waitForApiResponse(
   page: Page,
-  urlPattern: string | RegExp
+  urlPattern: string | RegExp,
 ): Promise<void> {
   await page.waitForResponse((response) => {
     if (typeof urlPattern === "string") {
@@ -1079,7 +1080,7 @@ export async function waitForApiResponse(
 export async function loginViaUi(
   page: Page,
   email: string,
-  password: string
+  password: string,
 ): Promise<void> {
   await page.goto("/login");
 
@@ -1102,7 +1103,7 @@ export async function loginViaUi(
  */
 export async function loginAs(
   page: Page,
-  user: { email: string; password: string }
+  user: { email: string; password: string },
 ): Promise<void> {
   await loginViaUi(page, user.email, user.password);
 }
@@ -1123,7 +1124,7 @@ export async function ensureTestAdmin(api: ApiClient): Promise<void> {
     if (!loginResult) {
       // If login fails, the test admin doesn't exist - this is an error state
       throw new Error(
-        "Test admin user does not exist and setup is already complete"
+        "Test admin user does not exist and setup is already complete",
       );
     }
   }
@@ -1134,7 +1135,7 @@ export async function ensureTestAdmin(api: ApiClient): Promise<void> {
  */
 export async function uploadTestImageViaUi(
   page: Page,
-  imageName: string
+  imageName: string,
 ): Promise<void> {
   const filePath = path.join(TEST_ASSETS_DIR, imageName);
 
@@ -1150,11 +1151,11 @@ export async function uploadTestImageViaUi(
  */
 export async function selectPhotosInGrid(
   page: Page,
-  count: number
+  count: number,
 ): Promise<void> {
   // Click on photo cards to select them
   const photoCards = page.locator(
-    '[data-testid="photo-card"], .photo-card, .photo-item, mat-card'
+    '[data-testid="photo-card"], .photo-card, .photo-item, mat-card',
   );
   for (let i = 0; i < count; i++) {
     await photoCards.nth(i).click({ modifiers: ["Control"] });
@@ -1166,10 +1167,10 @@ export async function selectPhotosInGrid(
  */
 export async function waitForSnackbar(
   page: Page,
-  textPattern?: string | RegExp
+  textPattern?: string | RegExp,
 ): Promise<void> {
   const snackbar = page.locator(
-    "mat-snack-bar-container, .mat-mdc-snack-bar-container"
+    "mat-snack-bar-container, .mat-mdc-snack-bar-container",
   );
   await playwrightExpect(snackbar).toBeVisible({ timeout: 10000 });
   if (textPattern) {

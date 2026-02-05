@@ -14,7 +14,11 @@ describe("SystemService", () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting(), SystemService],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        SystemService,
+      ],
     });
 
     service = TestBed.inject(SystemService);
@@ -87,7 +91,9 @@ describe("SystemService", () => {
         expect(result).toEqual(mockResponse);
       });
 
-      const req = httpMock.expectOne(`${baseUrl}/api/admin/system/updates/check`);
+      const req = httpMock.expectOne(
+        `${baseUrl}/api/admin/system/updates/check`,
+      );
       expect(req.request.method).toBe("POST");
       req.flush(mockResponse);
     });

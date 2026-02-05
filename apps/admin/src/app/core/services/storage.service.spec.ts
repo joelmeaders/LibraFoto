@@ -127,7 +127,7 @@ describe("StorageService", () => {
       });
 
       const req = httpMock.expectOne(
-        `${baseUrl}/api/admin/storage/providers/1`
+        `${baseUrl}/api/admin/storage/providers/1`,
       );
       expect(req.request.method).toBe("GET");
       req.flush(mockProvider);
@@ -177,12 +177,12 @@ describe("StorageService", () => {
       service.updateProvider(1, updateRequest).subscribe((result) => {
         expect(result).toEqual(updatedProvider);
         expect(service.providers().find((p) => p.id === 1)?.name).toBe(
-          "Updated Storage"
+          "Updated Storage",
         );
       });
 
       const req = httpMock.expectOne(
-        `${baseUrl}/api/admin/storage/providers/1`
+        `${baseUrl}/api/admin/storage/providers/1`,
       );
       expect(req.request.method).toBe("PUT");
       expect(req.request.body).toEqual(updateRequest);
@@ -221,7 +221,7 @@ describe("StorageService", () => {
       service.deleteProvider(1).subscribe();
 
       const req = httpMock.expectOne(
-        `${baseUrl}/api/admin/storage/providers/1`
+        `${baseUrl}/api/admin/storage/providers/1`,
       );
       expect(req.request.method).toBe("DELETE");
       req.flush(null);
@@ -289,7 +289,7 @@ describe("StorageService", () => {
       });
 
       const req = httpMock.expectOne(
-        `${baseUrl}/api/admin/storage/sync/1/status`
+        `${baseUrl}/api/admin/storage/sync/1/status`,
       );
       expect(req.request.method).toBe("GET");
       req.flush(syncStatus);
@@ -303,7 +303,7 @@ describe("StorageService", () => {
       });
 
       const req = httpMock.expectOne(
-        `${baseUrl}/api/admin/storage/sync/1/scan`
+        `${baseUrl}/api/admin/storage/sync/1/scan`,
       );
       expect(req.request.method).toBe("GET");
       req.flush(mockScanResult);

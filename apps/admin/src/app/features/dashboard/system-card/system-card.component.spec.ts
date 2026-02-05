@@ -43,7 +43,11 @@ describe("SystemCardComponent", () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [SystemCardComponent, NoopAnimationsModule],
-      providers: [provideHttpClient(), provideHttpClientTesting(), SystemService],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        SystemService,
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(SystemCardComponent);
@@ -101,7 +105,10 @@ describe("SystemCardComponent", () => {
     fixture.detectChanges();
 
     const req = httpMock.expectOne(`${baseUrl}/api/admin/system/info`);
-    req.error(new ProgressEvent("error"), { status: 500, statusText: "Server Error" });
+    req.error(new ProgressEvent("error"), {
+      status: 500,
+      statusText: "Server Error",
+    });
 
     expect(component.error()).not.toBeNull();
     expect(component.isLoading()).toBe(false);
@@ -139,7 +146,7 @@ describe("SystemCardComponent", () => {
 
     const compiled = fixture.nativeElement as HTMLElement;
     const updateButton = compiled.querySelector('button[color="warn"]');
-    
+
     // Update button should not exist when no update available
     expect(updateButton).toBeNull();
   });
@@ -153,7 +160,7 @@ describe("SystemCardComponent", () => {
 
     const compiled = fixture.nativeElement as HTMLElement;
     const updateButton = compiled.querySelector('button[color="warn"]');
-    
+
     expect(updateButton).not.toBeNull();
     expect(updateButton?.hasAttribute("disabled")).toBe(false);
   });
@@ -164,7 +171,7 @@ describe("SystemCardComponent", () => {
     expect(component.formatUptime("1.02:30:00")).toBe("1d 2h 30m");
     expect(component.formatUptime("00:00:00")).toBe("0m");
 
-    // Trigger detectChanges followed by flushing the initial request  
+    // Trigger detectChanges followed by flushing the initial request
     fixture.detectChanges();
     const req = httpMock.expectOne(`${baseUrl}/api/admin/system/info`);
     req.flush(mockSystemInfo);
@@ -179,7 +186,9 @@ describe("SystemCardComponent", () => {
 
     component.checkUpdates();
 
-    const req2 = httpMock.expectOne(`${baseUrl}/api/admin/system/updates/check`);
+    const req2 = httpMock.expectOne(
+      `${baseUrl}/api/admin/system/updates/check`,
+    );
     expect(req2.request.method).toBe("POST");
     req2.flush({
       updateAvailable: false,

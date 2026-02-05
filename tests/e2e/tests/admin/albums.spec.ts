@@ -89,12 +89,17 @@ test.describe.serial("Admin Frontend - Album Management", () => {
 
     // Try to submit without name
     const dialog = page.getByRole("dialog");
-    await dialog.getByRole("button", { name: /create|save/i }).click();
+    const submitButton = dialog.getByRole("button", { name: /create|save/i });
 
-    // Should show validation error
-    await expect(page.getByText(/required|name is required/i)).toBeVisible({
-      timeout: 5000,
-    });
+    // Button should be disabled or show validation error
+    await expect(submitButton)
+      .toBeDisabled({ timeout: 5000 })
+      .catch(async () => {
+        await submitButton.click();
+        await expect(page.getByText(/required|name is required/i)).toBeVisible({
+          timeout: 5000,
+        });
+      });
   });
 
   test("should create a new album", async ({ page }) => {

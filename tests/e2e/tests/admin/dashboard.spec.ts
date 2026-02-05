@@ -437,26 +437,38 @@ test.describe("Admin Frontend - Dashboard Responsiveness", () => {
     await expect(dashboardContent.first()).toBeVisible();
   });
 
-  // Skipped: Login form not visible on 375px mobile viewport - UI responsiveness issue
-  test.skip("should be responsive on mobile viewport", async ({ page }) => {
-    await page.setViewportSize({ width: 375, height: 667 });
+    test("should be responsive on mobile viewport", async ({ page }) => {
+      await page.setViewportSize({ width: 375, height: 667 });
 
-    await loginViaUi(page, TEST_ADMIN.email, TEST_ADMIN.password);
-    await waitForPageLoad(page);
+      await loginViaUi(page, TEST_ADMIN.email, TEST_ADMIN.password);
+      await waitForPageLoad(page);
 
-    // Dashboard should still be usable on mobile
-    const dashboardContent = page.getByText(/dashboard|welcome|overview/i);
-    await expect(dashboardContent.first()).toBeVisible();
+      // Dashboard should still be usable on mobile
+      const dashboardRoot = page
+        .locator("app-dashboard, .dashboard, [class*='dashboard']")
+        .first();
+      const statCard = page
+        .locator("[class*='stat'], [class*='card'], mat-card")
+        .first();
+      const heading = page
+        .getByRole("heading", { name: /dashboard|welcome|overview/i })
+        .first();
 
-    // Navigation might be in hamburger menu
-    const hamburgerMenu = page.locator(
-      "[class*='menu-toggle'], button mat-icon:has-text('menu')"
-    );
-    const isNavVisible = await hamburgerMenu.isVisible();
+      const dashboardVisible = await dashboardRoot.isVisible().catch(() => false);
+      const cardVisible = await statCard.isVisible().catch(() => false);
+      const headingVisible = await heading.isVisible().catch(() => false);
 
-    // Either direct nav or hamburger menu should be present
-    expect(
-      isNavVisible || (await page.getByRole("navigation").isVisible())
-    ).toBe(true);
-  });
+      expect(dashboardVisible || cardVisible || headingVisible).toBe(true);
+
+      // Navigation might be in hamburger menu
+      const hamburgerMenu = page.locator(
+        "[class*='menu-toggle'], button mat-icon:has-text('menu')"
+      );
+      const isNavVisible = await hamburgerMenu.isVisible();
+
+      // Either direct nav or hamburger menu should be present
+      expect(
+        isNavVisible || (await page.getByRole("navigation").isVisible())
+      ).toBe(true);
+    });
 });

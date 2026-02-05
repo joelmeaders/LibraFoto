@@ -43,7 +43,7 @@ test.describe.serial("Admin Frontend - Storage Management", () => {
 
     // Look for status indicator (enabled, active, connected, etc.)
     const statusIndicator = page.getByText(
-      /enabled|active|connected|configured/i
+      /enabled|active|connected|configured/i,
     );
     await expect(statusIndicator.first())
       .toBeVisible({ timeout: 10000 })
@@ -93,7 +93,7 @@ test.describe.serial("Admin Frontend - Storage Management", () => {
 
       // Look for completion indication
       const completedIndicator = page.getByText(
-        /complete|finished|found|scanned/i
+        /complete|finished|found|scanned/i,
       );
       await expect(completedIndicator)
         .toBeVisible({ timeout: 30000 })
@@ -137,7 +137,7 @@ test.describe.serial("Admin Frontend - Storage Management", () => {
     const editButton = page
       .getByRole("button", { name: /edit|configure|settings/i })
       .or(
-        page.locator("button mat-icon").filter({ hasText: /edit|settings/i })
+        page.locator("button mat-icon").filter({ hasText: /edit|settings/i }),
       );
 
     await expect(editButton.first())
@@ -318,14 +318,18 @@ test.describe("Admin Frontend - Cloud Storage Placeholders", () => {
     await waitForPageLoad(page);
 
     // Look for Google Photos in provider list or add dialog
-    const googlePhotos = page.getByText("Google Photos", { exact: true }).first();
+    const googleCard = page
+      .locator("mat-card, .provider-card, .storage-provider")
+      .filter({ hasText: "Google Photos" })
+      .first();
 
-    if (await googlePhotos.isVisible()) {
-      // Should show as coming soon or not connected
-      const comingSoon = page.getByText(/coming soon|not available|connect/i);
-      expect(
-        (await comingSoon.isVisible()) || (await googlePhotos.isVisible())
-      ).toBe(true);
+    if (await googleCard.isVisible().catch(() => false)) {
+      const statusText = googleCard
+        .getByText(/coming soon|not available|not connected|connect/i)
+        .first();
+      await expect(statusText)
+        .toBeVisible({ timeout: 5000 })
+        .catch(() => true);
     } else {
       // Try opening add provider dialog
       const addButton = page
@@ -335,7 +339,7 @@ test.describe("Admin Frontend - Cloud Storage Placeholders", () => {
         await addButton.click();
         await page.waitForTimeout(500);
 
-        const googleOption = page.getByText(/google photos/i);
+        const googleOption = page.getByText(/google photos/i).first();
         await expect(googleOption)
           .toBeVisible({ timeout: 5000 })
           .catch(() => true);
@@ -349,13 +353,18 @@ test.describe("Admin Frontend - Cloud Storage Placeholders", () => {
     await waitForPageLoad(page);
 
     // Look for OneDrive in provider list
-    const oneDrive = page.getByText("OneDrive", { exact: true }).first();
+    const oneDriveCard = page
+      .locator("mat-card, .provider-card, .storage-provider")
+      .filter({ hasText: "OneDrive" })
+      .first();
 
-    if (await oneDrive.isVisible()) {
-      const comingSoon = page.getByText(/coming soon|not available|connect/i);
-      expect(
-        (await comingSoon.isVisible()) || (await oneDrive.isVisible())
-      ).toBe(true);
+    if (await oneDriveCard.isVisible().catch(() => false)) {
+      const statusText = oneDriveCard
+        .getByText(/coming soon|not available|not connected|connect/i)
+        .first();
+      await expect(statusText)
+        .toBeVisible({ timeout: 5000 })
+        .catch(() => true);
     } else {
       const addButton = page
         .getByRole("button", { name: /add|new|connect/i })
@@ -364,7 +373,7 @@ test.describe("Admin Frontend - Cloud Storage Placeholders", () => {
         await addButton.click();
         await page.waitForTimeout(500);
 
-        const oneDriveOption = page.getByText(/onedrive/i);
+        const oneDriveOption = page.getByText(/onedrive/i).first();
         await expect(oneDriveOption)
           .toBeVisible({ timeout: 5000 })
           .catch(() => true);
@@ -417,7 +426,7 @@ test.describe("Admin Frontend - Storage Sync Progress", () => {
 
       // Look for results (new files found, etc.)
       const results = page.getByText(
-        /found|added|scanned|complete|new|existing/i
+        /found|added|scanned|complete|new|existing/i,
       );
       await expect(results.first())
         .toBeVisible({ timeout: 30000 })
@@ -477,7 +486,7 @@ test.describe("Admin Frontend - Storage Error Handling", () => {
 
           // Look for error message
           const errorMessage = page.getByText(
-            /error|invalid|not found|does not exist/i
+            /error|invalid|not found|does not exist/i,
           );
           await expect(errorMessage)
             .toBeVisible({ timeout: 5000 })

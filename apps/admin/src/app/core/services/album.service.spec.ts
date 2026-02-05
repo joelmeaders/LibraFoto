@@ -139,7 +139,7 @@ describe("AlbumService", () => {
       service.updateAlbum(1, updateRequest).subscribe((result) => {
         expect(result).toEqual(updatedAlbum);
         expect(service.albums().find((a) => a.id === 1)?.name).toBe(
-          "Updated Album"
+          "Updated Album",
         );
       });
 
@@ -221,7 +221,7 @@ describe("AlbumService", () => {
       });
 
       const req = httpMock.expectOne(
-        `${baseUrl}/api/admin/albums/1/photos/remove`
+        `${baseUrl}/api/admin/albums/1/photos/remove`,
       );
       expect(req.request.method).toBe("POST");
       expect(req.request.body).toEqual(request);
@@ -241,7 +241,7 @@ describe("AlbumService", () => {
       service.reorderPhotos(1, request).subscribe();
 
       const req = httpMock.expectOne(
-        `${baseUrl}/api/admin/albums/1/photos/reorder`
+        `${baseUrl}/api/admin/albums/1/photos/reorder`,
       );
       expect(req.request.method).toBe("PUT");
       expect(req.request.body).toEqual(request);
@@ -261,7 +261,7 @@ describe("AlbumService", () => {
       });
 
       const req = httpMock.expectOne(
-        (r) => r.url === `${baseUrl}/api/admin/albums/1/photos`
+        (r) => r.url === `${baseUrl}/api/admin/albums/1/photos`,
       );
       expect(req.request.params.get("page")).toBe("1");
       expect(req.request.params.get("pageSize")).toBe("50");
@@ -272,7 +272,7 @@ describe("AlbumService", () => {
       service.getAlbumPhotos(1, 2, 25).subscribe();
 
       const req = httpMock.expectOne(
-        (r) => r.url === `${baseUrl}/api/admin/albums/1/photos`
+        (r) => r.url === `${baseUrl}/api/admin/albums/1/photos`,
       );
       expect(req.request.params.get("page")).toBe("2");
       expect(req.request.params.get("pageSize")).toBe("25");
@@ -297,7 +297,7 @@ describe("AlbumService", () => {
     it("should generate cover thumbnail URL when coverPhotoId exists", () => {
       const url = service.getCoverThumbnailUrl(mockAlbum);
       expect(url).toBe(
-        `${baseUrl}/api/media/thumbnails/${mockAlbum.coverPhotoId}`
+        `${baseUrl}/api/media/thumbnails/${mockAlbum.coverPhotoId}`,
       );
     });
 

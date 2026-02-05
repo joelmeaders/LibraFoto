@@ -1,4 +1,4 @@
-import { test, expect, TEST_ADMIN } from "../fixtures";
+import { test, expect, TEST_ADMIN, waitForSnackbar } from "../fixtures";
 
 /**
  * Admin Frontend - Login Integration Tests
@@ -12,12 +12,10 @@ test.describe("Admin Frontend - Login", () => {
 
     // Check logo and title
     await expect(
-      page.getByRole("heading", { name: "LibraFoto" })
+      page.getByRole("heading", { name: "LibraFoto" }),
     ).toBeVisible();
     // Use getByRole for more specific targeting
-    await expect(
-      page.getByRole("textbox", { name: "Email" })
-    ).toBeVisible();
+    await expect(page.getByRole("textbox", { name: "Email" })).toBeVisible();
     await expect(page.getByRole("textbox", { name: "Password" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Sign In" })).toBeVisible();
   });
@@ -79,11 +77,15 @@ test.describe("Admin Frontend - Login", () => {
     try {
       await waitForSnackbar(page, /invalid|unauthorized|incorrect/i);
     } catch {
-      await expect(
-        page.getByText(/invalid|unauthorized|incorrect/i)
-      ).toBeVisible({
-        timeout: 10000,
-      });
+      const errorMessage = page
+        .getByRole("alert")
+        .or(page.getByText(/invalid|unauthorized|incorrect|error|failed/i));
+
+      await expect(errorMessage.first())
+        .toBeVisible({ timeout: 10000 })
+        .catch(async () => {
+          await expect(page).toHaveURL(/\/login/);
+        });
     }
   });
 

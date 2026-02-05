@@ -213,7 +213,7 @@ describe("TagService", () => {
       });
 
       const req = httpMock.expectOne(
-        `${baseUrl}/api/admin/tags/1/photos/remove`
+        `${baseUrl}/api/admin/tags/1/photos/remove`,
       );
       expect(req.request.method).toBe("POST");
       expect(req.request.body).toEqual(request);
@@ -233,7 +233,7 @@ describe("TagService", () => {
       });
 
       const req = httpMock.expectOne(
-        (r) => r.url === `${baseUrl}/api/admin/tags/1/photos`
+        (r) => r.url === `${baseUrl}/api/admin/tags/1/photos`,
       );
       expect(req.request.params.get("page")).toBe("1");
       expect(req.request.params.get("pageSize")).toBe("50");
@@ -244,7 +244,7 @@ describe("TagService", () => {
       service.getTagPhotos(1, 3, 30).subscribe();
 
       const req = httpMock.expectOne(
-        (r) => r.url === `${baseUrl}/api/admin/tags/1/photos`
+        (r) => r.url === `${baseUrl}/api/admin/tags/1/photos`,
       );
       expect(req.request.params.get("page")).toBe("3");
       expect(req.request.params.get("pageSize")).toBe("30");
