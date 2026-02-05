@@ -18,7 +18,6 @@ async function getSetupStatus(request: any) {
 }
 
 test.describe("Admin Frontend - Setup Wizard", () => {
-
   test("should redirect to setup page when setup required", async ({
     page,
     request,
@@ -41,7 +40,7 @@ test.describe("Admin Frontend - Setup Wizard", () => {
     if (status.isSetupRequired) {
       await expect(page.getByText("Welcome to LibraFoto")).toBeVisible();
       await expect(
-        page.getByText("Let's set up your digital picture frame")
+        page.getByText("Let's set up your digital picture frame"),
       ).toBeVisible();
     } else {
       await expect(page).toHaveURL(/\/(dashboard|photos|login)/);
@@ -93,7 +92,7 @@ test.describe("Admin Frontend - Setup Wizard", () => {
 
     // Should show password length error
     await expect(
-      page.getByText("Password must be at least 8 characters")
+      page.getByText("Password must be at least 8 characters"),
     ).toBeVisible();
   });
 
@@ -134,7 +133,7 @@ test.describe("Admin Frontend - Setup Wizard", () => {
 
     // Should be on storage step
     await expect(
-      page.getByText("Choose where to store your photos")
+      page.getByText("Choose where to store your photos"),
     ).toBeVisible();
 
     // Local Storage should be selected by default
@@ -156,7 +155,10 @@ test.describe("Admin Frontend - Setup Wizard", () => {
  * this test will typically be skipped unless the reset endpoint is unavailable.
  */
 test.describe("Admin Frontend - Complete Setup Flow", () => {
-  test("should complete setup successfully with real API", async ({ page, request }) => {
+  test("should complete setup successfully with real API", async ({
+    page,
+    request,
+  }) => {
     const status = await getSetupStatus(request);
     if (!status.isSetupRequired) {
       await page.goto("/setup");

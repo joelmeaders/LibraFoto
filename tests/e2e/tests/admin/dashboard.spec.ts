@@ -22,7 +22,7 @@ test.describe("Admin Frontend - Dashboard Overview", () => {
 
     await expect(page).toHaveURL(/\/dashboard/, { timeout: 15000 });
     await expect(
-      page.getByText(/dashboard|welcome|overview/i).first()
+      page.getByText(/dashboard|welcome|overview/i).first(),
     ).toBeVisible();
   });
 
@@ -97,7 +97,7 @@ test.describe("Admin Frontend - Dashboard Statistics Accuracy", () => {
     // Look for the count on dashboard
     if (expectedCount > 0) {
       const countText = page.getByText(
-        new RegExp(`${expectedCount}|photos?`, "i")
+        new RegExp(`${expectedCount}|photos?`, "i"),
       );
       await expect(countText.first())
         .toBeVisible({ timeout: 10000 })
@@ -116,7 +116,7 @@ test.describe("Admin Frontend - Dashboard Statistics Accuracy", () => {
     const api = new ApiClient(request);
     await api.login(TEST_ADMIN.email, TEST_ADMIN.password);
     const newAlbum = await api.createAlbum(
-      `Dashboard Test Album ${Date.now()}`
+      `Dashboard Test Album ${Date.now()}`,
     );
 
     // Refresh dashboard
@@ -238,7 +238,7 @@ test.describe("Admin Frontend - Getting Started Guide", () => {
 
     // Look for getting started section
     const gettingStarted = page.getByText(
-      /getting started|welcome|setup|first steps/i
+      /getting started|welcome|setup|first steps/i,
     );
 
     // This might not be visible if user has already completed setup
@@ -265,7 +265,7 @@ test.describe("Admin Frontend - Getting Started Guide", () => {
     await waitForPageLoad(page);
 
     const storageStep = page.getByText(
-      /connect.*storage|configure.*storage|add.*provider/i
+      /connect.*storage|configure.*storage|add.*provider/i,
     );
     await expect(storageStep.first())
       .toBeVisible({ timeout: 5000 })
@@ -383,7 +383,7 @@ test.describe("Admin Frontend - Dashboard Recent Activity", () => {
     if (photos.length > 0) {
       // Look for recent photos thumbnails
       const photoThumbnails = page.locator(
-        "img[src*='thumbnail'], img[src*='photo']"
+        "img[src*='thumbnail'], img[src*='photo']",
       );
       await expect(photoThumbnails.first())
         .toBeVisible({ timeout: 10000 })
@@ -437,38 +437,38 @@ test.describe("Admin Frontend - Dashboard Responsiveness", () => {
     await expect(dashboardContent.first()).toBeVisible();
   });
 
-    test("should be responsive on mobile viewport", async ({ page }) => {
-      await page.setViewportSize({ width: 375, height: 667 });
+  test("should be responsive on mobile viewport", async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 667 });
 
-      await loginViaUi(page, TEST_ADMIN.email, TEST_ADMIN.password);
-      await waitForPageLoad(page);
+    await loginViaUi(page, TEST_ADMIN.email, TEST_ADMIN.password);
+    await waitForPageLoad(page);
 
-      // Dashboard should still be usable on mobile
-      const dashboardRoot = page
-        .locator("app-dashboard, .dashboard, [class*='dashboard']")
-        .first();
-      const statCard = page
-        .locator("[class*='stat'], [class*='card'], mat-card")
-        .first();
-      const heading = page
-        .getByRole("heading", { name: /dashboard|welcome|overview/i })
-        .first();
+    // Dashboard should still be usable on mobile
+    const dashboardRoot = page
+      .locator("app-dashboard, .dashboard, [class*='dashboard']")
+      .first();
+    const statCard = page
+      .locator("[class*='stat'], [class*='card'], mat-card")
+      .first();
+    const heading = page
+      .getByRole("heading", { name: /dashboard|welcome|overview/i })
+      .first();
 
-      const dashboardVisible = await dashboardRoot.isVisible().catch(() => false);
-      const cardVisible = await statCard.isVisible().catch(() => false);
-      const headingVisible = await heading.isVisible().catch(() => false);
+    const dashboardVisible = await dashboardRoot.isVisible().catch(() => false);
+    const cardVisible = await statCard.isVisible().catch(() => false);
+    const headingVisible = await heading.isVisible().catch(() => false);
 
-      expect(dashboardVisible || cardVisible || headingVisible).toBe(true);
+    expect(dashboardVisible || cardVisible || headingVisible).toBe(true);
 
-      // Navigation might be in hamburger menu
-      const hamburgerMenu = page.locator(
-        "[class*='menu-toggle'], button mat-icon:has-text('menu')"
-      );
-      const isNavVisible = await hamburgerMenu.isVisible();
+    // Navigation might be in hamburger menu
+    const hamburgerMenu = page.locator(
+      "[class*='menu-toggle'], button mat-icon:has-text('menu')",
+    );
+    const isNavVisible = await hamburgerMenu.isVisible();
 
-      // Either direct nav or hamburger menu should be present
-      expect(
-        isNavVisible || (await page.getByRole("navigation").isVisible())
-      ).toBe(true);
-    });
+    // Either direct nav or hamburger menu should be present
+    expect(
+      isNavVisible || (await page.getByRole("navigation").isVisible()),
+    ).toBe(true);
+  });
 });

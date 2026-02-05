@@ -32,7 +32,7 @@ test.describe.serial("Admin Frontend - Album Management", () => {
 
     // Should have create album button
     await expect(
-      page.getByRole("button", { name: /create|add|new/i }).first()
+      page.getByRole("button", { name: /create|add|new/i }).first(),
     ).toBeVisible();
   });
 
@@ -214,7 +214,7 @@ test.describe.serial("Admin Frontend - Album Management", () => {
     // Add first two photos to Nature Photography album
     const result = await api.addPhotosToAlbum(
       testAlbumId,
-      uploadedPhotoIds.slice(0, 2)
+      uploadedPhotoIds.slice(0, 2),
     );
     expect(result).not.toBeNull();
 
@@ -349,7 +349,7 @@ test.describe.serial("Admin Frontend - Album Management", () => {
     // Remove all photos from album
     const result = await api.removePhotosFromAlbum(
       testAlbumId,
-      uploadedPhotoIds.slice(0, 2)
+      uploadedPhotoIds.slice(0, 2),
     );
     expect(result).not.toBeNull();
 

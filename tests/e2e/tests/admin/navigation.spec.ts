@@ -81,7 +81,7 @@ test.describe("Admin Frontend - Dashboard", () => {
 
     // Dashboard should load and show relevant content
     await expect(
-      page.getByText(/dashboard|welcome|overview/i).first()
+      page.getByText(/dashboard|welcome|overview/i).first(),
     ).toBeVisible({ timeout: 10000 });
   });
 
@@ -127,7 +127,7 @@ test.describe("Admin Frontend - Logout", () => {
       // If no direct logout visible, try to find a user menu to open first
       const userMenu = page
         .locator(
-          "[aria-label*='user'], [aria-label*='menu'], [aria-label*='account']"
+          "[aria-label*='user'], [aria-label*='menu'], [aria-label*='account']",
         )
         .first();
       if (await userMenu.isVisible({ timeout: 2000 }).catch(() => false)) {
