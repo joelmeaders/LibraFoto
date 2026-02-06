@@ -27,8 +27,11 @@ COPY ["apps/api/LibraFoto.Modules.Auth/LibraFoto.Modules.Auth.csproj", "apps/api
 COPY ["apps/api/LibraFoto.Data/LibraFoto.Data.csproj", "apps/api/LibraFoto.Data/"]
 COPY ["apps/api/LibraFoto.Shared/LibraFoto.Shared.csproj", "apps/api/LibraFoto.Shared/"]
 
-RUN --mount=type=cache,target=/root/.nuget/packages \
-    dotnet restore "apps/api/LibraFoto.Api/LibraFoto.Api.csproj" -a $(cat /tmp/dotnet_arch)
+# Restore with force to avoid cache corruption issues
+RUN dotnet restore "apps/api/LibraFoto.Api/LibraFoto.Api.csproj" \
+    -a $(cat /tmp/dotnet_arch) \
+    --force \
+    --no-cache
 
 # Copy source
 COPY . .
