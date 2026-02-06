@@ -2,7 +2,6 @@ using System.Text.Json;
 using LibraFoto.Data;
 using LibraFoto.Data.Entities;
 using LibraFoto.Data.Enums;
-using LibraFoto.Modules.Storage.Interfaces;
 using LibraFoto.Modules.Storage.Models;
 using LibraFoto.Modules.Storage.Providers;
 using Microsoft.EntityFrameworkCore;
@@ -21,7 +20,6 @@ public class StorageProviderDeletionTests
         var logger = NullLogger<GooglePhotosProvider>.Instance;
         var httpClientFactory = Substitute.For<IHttpClientFactory>();
         httpClientFactory.CreateClient(Arg.Any<string>()).Returns(new HttpClient());
-        var cacheService = Substitute.For<ICacheService>();
 
         var options = new DbContextOptionsBuilder<LibraFotoDbContext>()
             .UseInMemoryDatabase($"TestDb_{Guid.NewGuid()}")
@@ -29,7 +27,7 @@ public class StorageProviderDeletionTests
         var dbContext = new LibraFotoDbContext(options);
         await dbContext.Database.EnsureCreatedAsync();
 
-        var provider = new GooglePhotosProvider(logger, httpClientFactory, cacheService, dbContext);
+        var provider = new GooglePhotosProvider(logger, httpClientFactory, dbContext);
         return (provider, dbContext);
     }
 
@@ -135,9 +133,7 @@ public class StorageProviderDeletionTests
             RefreshToken = "refresh-token-to-clear",
             AccessToken = "access-token-to-clear",
             AccessTokenExpiry = DateTime.UtcNow.AddHours(1),
-            GrantedScopes = ["scope1", "scope2"],
-            EnableLocalCache = true,
-            MaxCacheSizeBytes = 1024 * 1024 * 1024
+            GrantedScopes = ["scope1", "scope2"]
         };
 
         var storageProvider = new StorageProvider
@@ -166,6 +162,5 @@ public class StorageProviderDeletionTests
 
         // Other fields should be preserved
         await Assert.That(config.ClientId).IsEqualTo(originalClientId);
-        await Assert.That(config.EnableLocalCache).IsTrue();
     }
 }

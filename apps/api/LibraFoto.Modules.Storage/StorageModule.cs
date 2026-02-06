@@ -29,9 +29,6 @@ public static class StorageModule
         // Register image import service for upload processing
         services.AddScoped<IImageImportService, ImageImportService>();
 
-        // Register cache service for cloud storage optimization
-        services.AddScoped<ICacheService, CacheService>();
-
         // Register Google Photos Picker service
         services.AddScoped<GooglePhotosPickerService>();
 
@@ -54,9 +51,6 @@ public static class StorageModule
 
         // Map Google Photos Picker endpoints
         app.MapGooglePhotosPickerEndpoints();
-
-        // Map cache management endpoints
-        app.MapCacheEndpoints();
 
         return app;
     }

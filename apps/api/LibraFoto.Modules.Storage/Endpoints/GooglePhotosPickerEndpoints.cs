@@ -5,9 +5,9 @@ using Google.Apis.Auth.OAuth2.Responses;
 using LibraFoto.Data;
 using LibraFoto.Data.Entities;
 using LibraFoto.Data.Enums;
-using LibraFoto.Modules.Storage.Interfaces;
 using LibraFoto.Modules.Storage.Models;
 using LibraFoto.Modules.Storage.Services;
+using LibraFoto.Shared.Configuration;
 using LibraFoto.Shared.DTOs;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -15,7 +15,11 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.Processing;
 
 namespace LibraFoto.Modules.Storage.Endpoints;
 
@@ -205,7 +209,8 @@ public static class GooglePhotosPickerEndpoints
         string sessionId,
         [FromServices] LibraFotoDbContext dbContext,
         [FromServices] GooglePhotosPickerService pickerService,
-        [FromServices] ICacheService cacheService,
+        [FromServices] IImageImportService imageImport,
+        [FromServices] IConfiguration configuration,
         [FromServices] ILoggerFactory loggerFactory,
         CancellationToken cancellationToken)
     {
@@ -240,7 +245,8 @@ public static class GooglePhotosPickerEndpoints
             sessionId,
             accessToken,
             pickerService,
-            cacheService,
+            imageImport,
+            configuration,
             dbContext,
             logger);
 
@@ -280,10 +286,39 @@ public static class GooglePhotosPickerEndpoints
             return false;
         }
 
+        var isVideo = string.Equals(item.Type, "VIDEO", StringComparison.OrdinalIgnoreCase);
+        var isImage = !isVideo;
+
+        // Determine extension from filename, mime type, or default
+        var extension = !string.IsNullOrWhiteSpace(item.MediaFile.Filename)
+            ? Path.GetExtension(item.MediaFile.Filename).ToLowerInvariant()
+            : GetExtensionFromMimeType(item.MediaFile.MimeType);
+        if (string.IsNullOrEmpty(extension))
+        {
+            extension = ".jpg";
+        }
+
+        var storagePath = context.Configuration["Storage:LocalPath"] ?? LibraFotoDefaults.GetDefaultPhotosPath();
+        var maxDimension = context.Configuration.GetValue("Storage:MaxImportDimension", 2560);
+        var dateTaken = item.CreateTime ?? DateTime.UtcNow;
+        var yearMonth = Path.Combine(dateTaken.Year.ToString(), dateTaken.Month.ToString("D2"));
+
+        Photo? photo = null;
+        string? uploadedFilePath = null;
+        string? thumbnailFilePath = null;
+
         try
         {
-            var isVideo = string.Equals(item.Type, "VIDEO", StringComparison.OrdinalIgnoreCase);
-            var (downloadStream, contentType) = await context.PickerService.DownloadMediaItemAsync(
+            // Check for existing photo by provider + file ID (dedup)
+            var existingPhoto = await context.DbContext.Photos
+                .FirstOrDefaultAsync(p => p.ProviderId == context.ProviderId && p.ProviderFileId == item.Id, cancellationToken);
+
+            var fileName = item.MediaFile.Filename ?? item.Id;
+            var width = item.MediaFile.MediaFileMetadata?.Width ?? 0;
+            var height = item.MediaFile.MediaFileMetadata?.Height ?? 0;
+
+            // Download media from Google
+            var (downloadStream, _) = await context.PickerService.DownloadMediaItemAsync(
                 item.MediaFile.BaseUrl,
                 context.AccessToken,
                 isVideo,
@@ -292,65 +327,164 @@ public static class GooglePhotosPickerEndpoints
                 cancellationToken);
 
             await using var tempStream = downloadStream;
-            var fileHash = await CacheService.ComputeHashAsync(tempStream, cancellationToken);
-            tempStream.Position = 0;
 
-            var cachedFile = await context.CacheService.CacheFileAsync(
-                new CacheFileRequest
-                {
-                    FileHash = fileHash,
-                    OriginalUrl = item.MediaFile.BaseUrl,
-                    ProviderId = context.ProviderId,
-                    ProviderFileId = item.Id,
-                    PickerSessionId = context.SessionId,
-                    FileStream = tempStream,
-                    ContentType = contentType
-                },
-                cancellationToken);
-
-            var existingPhoto = await context.DbContext.Photos
-                .FirstOrDefaultAsync(p => p.ProviderId == context.ProviderId && p.ProviderFileId == item.Id, cancellationToken);
-
-            var fileName = item.MediaFile.Filename ?? item.Id;
-            var width = item.MediaFile.MediaFileMetadata?.Width ?? 0;
-            var height = item.MediaFile.MediaFileMetadata?.Height ?? 0;
-
-            if (existingPhoto == null)
+            if (existingPhoto != null)
             {
-                var photo = new Photo
+                photo = existingPhoto;
+            }
+            else
+            {
+                // STEP 1: Create Photo record to get auto-increment ID
+                photo = new Photo
                 {
                     Filename = fileName,
                     OriginalFilename = fileName,
-                    FilePath = cachedFile.LocalPath,
-                    FileSize = cachedFile.FileSize,
+                    FilePath = "",
+                    FileSize = 0,
                     Width = width,
                     Height = height,
-                    MediaType = isVideo ? MediaType.Video : MediaType.Photo,
+                    MediaType = isImage ? MediaType.Photo : MediaType.Video,
                     Duration = null,
-                    DateTaken = item.CreateTime,
+                    DateTaken = dateTaken,
                     DateAdded = DateTime.UtcNow,
                     ProviderId = context.ProviderId,
                     ProviderFileId = item.Id
                 };
 
                 context.DbContext.Photos.Add(photo);
+                await context.DbContext.SaveChangesAsync(cancellationToken);
+            }
+
+            // STEP 2: Compute paths using photo ID
+            var idFilename = $"{photo.Id}{extension}";
+            var relativePath = Path.Combine("media", yearMonth, idFilename).Replace('\\', '/');
+            uploadedFilePath = Path.Combine(storagePath, "media", yearMonth, idFilename);
+            Directory.CreateDirectory(Path.GetDirectoryName(uploadedFilePath)!);
+
+            // STEP 3: Save / process file
+            if (isImage)
+            {
+                var importResult = await context.ImageImport.ProcessImageAsync(
+                    tempStream, uploadedFilePath, maxDimension, cancellationToken);
+
+                if (!importResult.Success)
+                {
+                    throw new InvalidOperationException(importResult.ErrorMessage ?? "Image processing failed");
+                }
+
+                photo.Width = importResult.Width;
+                photo.Height = importResult.Height;
+                photo.FileSize = importResult.FileSize;
             }
             else
             {
-                existingPhoto.FileSize = cachedFile.FileSize;
-                existingPhoto.Width = width;
-                existingPhoto.Height = height;
-                existingPhoto.FilePath = cachedFile.LocalPath;
+                await using var fileStream = new FileStream(
+                    uploadedFilePath, FileMode.Create, FileAccess.Write, FileShare.None);
+                await tempStream.CopyToAsync(fileStream, cancellationToken);
+
+                photo.FileSize = new FileInfo(uploadedFilePath).Length;
             }
+
+            // STEP 4: Generate thumbnail for images
+            if (isImage)
+            {
+                var thumbnailBasePath = Path.Combine(storagePath, ".thumbnails", yearMonth);
+                Directory.CreateDirectory(thumbnailBasePath);
+
+                try
+                {
+                    using var sourceImage = await Image.LoadAsync(uploadedFilePath, cancellationToken);
+                    sourceImage.Mutate(ctx => ctx.AutoOrient());
+
+                    using var thumbnail = sourceImage.Clone(ctx => ctx.Resize(new ResizeOptions
+                    {
+                        Size = new Size(400, 400),
+                        Mode = ResizeMode.Max,
+                        Sampler = KnownResamplers.Lanczos3
+                    }));
+
+                    thumbnailFilePath = Path.Combine(thumbnailBasePath, $"{photo.Id}.jpg");
+                    var encoder = new JpegEncoder { Quality = 85 };
+                    await thumbnail.SaveAsync(thumbnailFilePath, encoder, cancellationToken);
+
+                    var relativeThumbnailPath = Path.Combine(".thumbnails", yearMonth, $"{photo.Id}.jpg").Replace('\\', '/');
+                    photo.ThumbnailPath = relativeThumbnailPath;
+                }
+                catch (Exception ex)
+                {
+                    context.Logger.LogWarning(ex, "Failed to generate thumbnail for picker item {ItemId}", item.Id);
+                }
+            }
+
+            // STEP 5: Update photo record with final paths
+            photo.Filename = idFilename;
+            photo.FilePath = relativePath;
+            photo.ProviderFileId = item.Id;
+            photo.ProviderId = context.ProviderId;
+
+            await context.DbContext.SaveChangesAsync(cancellationToken);
 
             return true;
         }
         catch (Exception ex)
         {
-            context.Logger.LogWarning(ex, "Failed to import picker item {ItemId}", item.Id);
+            context.Logger.LogWarning(ex, "Failed to import picker item {ItemId}, cleaning up", item.Id);
+
+            // CLEANUP: Delete uploaded file
+            if (!string.IsNullOrEmpty(uploadedFilePath) && File.Exists(uploadedFilePath))
+            {
+                try { File.Delete(uploadedFilePath); }
+                catch (Exception deleteEx)
+                {
+                    context.Logger.LogWarning(deleteEx, "Failed to delete file {Path} during cleanup", uploadedFilePath);
+                }
+            }
+
+            // CLEANUP: Delete thumbnail
+            if (!string.IsNullOrEmpty(thumbnailFilePath) && File.Exists(thumbnailFilePath))
+            {
+                try { File.Delete(thumbnailFilePath); }
+                catch (Exception deleteEx)
+                {
+                    context.Logger.LogWarning(deleteEx, "Failed to delete thumbnail {Path} during cleanup", thumbnailFilePath);
+                }
+            }
+
+            // CLEANUP: Remove DB record if we created it (not an existing dedup match)
+            if (photo != null && photo.Id > 0)
+            {
+                try
+                {
+                    // Only remove if we created it (FilePath is still empty = never fully saved)
+                    if (string.IsNullOrEmpty(photo.FilePath))
+                    {
+                        context.DbContext.Photos.Remove(photo);
+                        await context.DbContext.SaveChangesAsync(CancellationToken.None);
+                    }
+                }
+                catch (Exception deleteEx)
+                {
+                    context.Logger.LogWarning(deleteEx, "Failed to remove Photo record {PhotoId} during cleanup", photo.Id);
+                }
+            }
+
             return false;
         }
     }
+
+    private static string GetExtensionFromMimeType(string? mimeType) => mimeType?.ToLowerInvariant() switch
+    {
+        "image/jpeg" => ".jpg",
+        "image/png" => ".png",
+        "image/gif" => ".gif",
+        "image/webp" => ".webp",
+        "image/heic" => ".heic",
+        "image/heif" => ".heif",
+        "video/mp4" => ".mp4",
+        "video/quicktime" => ".mov",
+        "video/x-msvideo" => ".avi",
+        _ => ".jpg"
+    };
 
     private static async Task<Results<Ok, NotFound<ApiError>, BadRequest<ApiError>>> DeletePickerSession(
         long providerId,
@@ -645,6 +779,7 @@ internal record PickerImportContext(
     string SessionId,
     string AccessToken,
     GooglePhotosPickerService PickerService,
-    ICacheService CacheService,
+    IImageImportService ImageImport,
+    IConfiguration Configuration,
     LibraFotoDbContext DbContext,
     ILogger Logger);

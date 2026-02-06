@@ -358,7 +358,6 @@ public static class StorageEndpoints
         [AsParameters] DeleteProviderRequest request,
         [FromServices] LibraFotoDbContext dbContext,
         [FromServices] IStorageProviderFactory factory,
-        [FromServices] ICacheService cacheService,
         [FromServices] IConfiguration configuration,
         [FromServices] ILoggerFactory loggerFactory,
         CancellationToken cancellationToken)
@@ -372,7 +371,6 @@ public static class StorageEndpoints
         }
 
         await DisconnectOAuthProviderAsync(entity, factory, logger, cancellationToken);
-        await ClearProviderCacheAsync(request.Id, cacheService, logger, cancellationToken);
         await HandleProviderPhotosAsync(request, dbContext, configuration, logger, cancellationToken);
 
         // Step 4: Remove the storage provider (required step)
@@ -405,23 +403,6 @@ public static class StorageEndpoints
         catch (Exception ex)
         {
             logger.LogWarning(ex, "Exception during OAuth disconnect for provider {ProviderId}, continuing with deletion", entity.Id);
-        }
-    }
-
-    private static async Task ClearProviderCacheAsync(
-        long providerId,
-        ICacheService cacheService,
-        ILogger logger,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            await cacheService.ClearProviderCacheAsync(providerId, cancellationToken);
-            logger.LogInformation("Cleared cache for provider {ProviderId}", providerId);
-        }
-        catch (Exception ex)
-        {
-            logger.LogWarning(ex, "Failed to clear cache for provider {ProviderId}, continuing with deletion", providerId);
         }
     }
 

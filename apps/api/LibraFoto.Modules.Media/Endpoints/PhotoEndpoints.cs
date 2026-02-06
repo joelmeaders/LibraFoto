@@ -1,6 +1,5 @@
 using LibraFoto.Data;
 using LibraFoto.Data.Enums;
-using LibraFoto.Modules.Storage.Interfaces;
 using LibraFoto.Shared.Configuration;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -32,7 +31,6 @@ public static class PhotoEndpoints
     private static async Task<Results<FileStreamHttpResult, NotFound>> GetPhoto(
         long photoId,
         LibraFotoDbContext dbContext,
-        IStorageProviderFactory providerFactory,
         IConfiguration configuration,
         CancellationToken ct)
     {
@@ -42,47 +40,22 @@ public static class PhotoEndpoints
             return TypedResults.NotFound();
         }
 
-        Stream? fileStream = null;
-
         try
         {
-            if (photo.ProviderId.HasValue)
-            {
-                // Cloud storage - get stream from provider
-                var provider = await providerFactory.GetProviderAsync(photo.ProviderId.Value, ct);
-                if (provider != null)
-                {
-                    fileStream = await provider.GetFileStreamAsync(photo.ProviderFileId ?? photo.FilePath, ct);
-                }
-            }
-            else
-            {
-                // Local storage - combine relative path with storage root
-                var storagePath = configuration["Storage:LocalPath"] ?? LibraFotoDefaults.GetDefaultPhotosPath();
-                var absolutePath = Path.Combine(storagePath, photo.FilePath);
+            var storagePath = configuration["Storage:LocalPath"] ?? LibraFotoDefaults.GetDefaultPhotosPath();
+            var absolutePath = Path.Combine(storagePath, photo.FilePath);
 
-                if (File.Exists(absolutePath))
-                {
-                    fileStream = new FileStream(absolutePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-                }
-            }
-
-            if (fileStream is null)
+            if (!File.Exists(absolutePath))
             {
                 return TypedResults.NotFound();
             }
 
-            // Determine content type from file extension
+            var fileStream = new FileStream(absolutePath, FileMode.Open, FileAccess.Read, FileShare.Read);
             var contentType = GetContentTypeFromFilename(photo.Filename, photo.MediaType);
-
             return TypedResults.File(fileStream, contentType, enableRangeProcessing: true);
         }
         catch
         {
-            if (fileStream != null)
-            {
-                await fileStream.DisposeAsync();
-            }
             return TypedResults.NotFound();
         }
     }

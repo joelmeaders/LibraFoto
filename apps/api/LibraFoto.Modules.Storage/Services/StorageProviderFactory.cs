@@ -157,7 +157,6 @@ public class StorageProviderFactory : IStorageProviderFactory
             StorageProviderType.GooglePhotos => new GooglePhotosProvider(
                 _serviceProvider.GetRequiredService<ILogger<GooglePhotosProvider>>(),
                 _serviceProvider.GetRequiredService<IHttpClientFactory>(),
-                _serviceProvider.GetRequiredService<ICacheService>(),
                 _serviceProvider.GetRequiredService<LibraFotoDbContext>()),
             StorageProviderType.GoogleDrive => throw new NotImplementedException("Google Drive provider not yet implemented"),
             StorageProviderType.OneDrive => throw new NotImplementedException("OneDrive provider not yet implemented"),

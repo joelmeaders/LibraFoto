@@ -1,9 +1,7 @@
 using System.Text.Json;
-using NSubstitute;
 using LibraFoto.Data;
 using LibraFoto.Data.Entities;
 using LibraFoto.Data.Enums;
-using LibraFoto.Modules.Storage.Interfaces;
 using LibraFoto.Modules.Storage.Models;
 using LibraFoto.Modules.Storage.Providers;
 using Microsoft.EntityFrameworkCore;
@@ -19,7 +17,6 @@ public class GooglePhotosProviderTests
 {
     private GooglePhotosProvider _provider = null!;
     private TestHttpClientFactory _httpClientFactory = null!;
-    private ICacheService _cacheService = null!;
     private LibraFotoDbContext _dbContext = null!;
 
     [Before(Test)]
@@ -28,7 +25,6 @@ public class GooglePhotosProviderTests
         var logger = NullLogger<GooglePhotosProvider>.Instance;
 
         _httpClientFactory = new TestHttpClientFactory();
-        _cacheService = Substitute.For<ICacheService>();
 
         var options = new DbContextOptionsBuilder<LibraFotoDbContext>()
             .UseInMemoryDatabase($"TestDb_{Guid.NewGuid()}")
@@ -36,7 +32,7 @@ public class GooglePhotosProviderTests
         _dbContext = new LibraFotoDbContext(options);
         await _dbContext.Database.EnsureCreatedAsync();
 
-        _provider = new GooglePhotosProvider(logger, _httpClientFactory, _cacheService, _dbContext);
+        _provider = new GooglePhotosProvider(logger, _httpClientFactory, _dbContext);
 
         await Task.CompletedTask;
     }
@@ -266,31 +262,6 @@ public class GooglePhotosProviderTests
     #endregion
 
     #region Configuration Tests
-
-    [Test]
-    public async Task Configuration_EnableLocalCache_DefaultsToTrue()
-    {
-        var config = new GooglePhotosConfiguration
-        {
-            ClientId = "test-id",
-            ClientSecret = "test-secret"
-        };
-
-        await Assert.That(config.EnableLocalCache).IsTrue();
-    }
-
-    [Test]
-    public async Task Configuration_MaxCacheSizeBytes_DefaultsTo5GB()
-    {
-        var config = new GooglePhotosConfiguration
-        {
-            ClientId = "test-id",
-            ClientSecret = "test-secret"
-        };
-
-        var expectedSize = 5L * 1024 * 1024 * 1024;
-        await Assert.That(config.MaxCacheSizeBytes).IsEqualTo(expectedSize);
-    }
 
     #endregion
 

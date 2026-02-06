@@ -11,7 +11,6 @@ import { MatMenuModule } from "@angular/material/menu";
 import { MatChipsModule } from "@angular/material/chips";
 import { MatTooltipModule } from "@angular/material/tooltip";
 import { StorageService } from "../../core/services/storage.service";
-import { CacheService, CacheStatus } from "../../core/services/cache.service";
 import { StorageProviderDto, SyncStatus } from "../../core/models";
 import { StorageProviderType } from "../../core/models/enums.model";
 import { interval, Subject, takeUntil } from "rxjs";
@@ -284,76 +283,6 @@ import { GooglePhotosPickerComponent } from "./google-photos-picker.component";
             </mat-card>
           }
         </div>
-
-        <!-- Cache Management Section -->
-        <div class="cache-section">
-          <h2>Cache Management</h2>
-
-          @if (cacheStatus()) {
-            <mat-card>
-              <mat-card-header>
-                <mat-icon mat-card-avatar class="cache-icon">storage</mat-icon>
-                <mat-card-title>Server Cache</mat-card-title>
-                <mat-card-subtitle>
-                  Files cached from cloud providers
-                </mat-card-subtitle>
-              </mat-card-header>
-
-              <mat-card-content>
-                <div class="cache-stats-grid">
-                  <div class="cache-stat">
-                    <div class="stat-label">Cache Usage</div>
-                    <div class="stat-value">
-                      {{ formatBytes(cacheStatus()!.totalSizeBytes) }} /
-                      {{ formatBytes(cacheStatus()!.maxSizeBytes) }}
-                    </div>
-                    <mat-progress-bar
-                      mode="determinate"
-                      [value]="cacheStatus()!.usagePercent"
-                      [color]="
-                        cacheStatus()!.usagePercent > 90
-                          ? 'warn'
-                          : cacheStatus()!.usagePercent > 70
-                            ? 'accent'
-                            : 'primary'
-                      "
-                    ></mat-progress-bar>
-                    <div class="stat-percent">
-                      {{ cacheStatus()!.usagePercent.toFixed(1) }}% used
-                    </div>
-                  </div>
-
-                  <div class="cache-stat">
-                    <div class="stat-label">Cached Files</div>
-                    <div class="stat-value">
-                      {{ cacheStatus()!.fileCount }} files
-                    </div>
-                  </div>
-                </div>
-              </mat-card-content>
-
-              <mat-card-actions>
-                <button
-                  mat-button
-                  (click)="triggerEviction()"
-                  matTooltip="Remove old files to free up space"
-                >
-                  <mat-icon>cleaning_services</mat-icon>
-                  Evict Old Files
-                </button>
-                <button
-                  mat-button
-                  color="warn"
-                  (click)="clearCache()"
-                  matTooltip="Remove all cached files"
-                >
-                  <mat-icon>delete_sweep</mat-icon>
-                  Clear Cache
-                </button>
-              </mat-card-actions>
-            </mat-card>
-          }
-        </div>
       }
     </div>
   `,
@@ -536,62 +465,16 @@ import { GooglePhotosPickerComponent } from "./google-photos-picker.component";
         display: inline-block;
         margin-right: 8px;
       }
-
-      .cache-section {
-        margin-top: 32px;
-      }
-
-      .cache-section h2 {
-        margin-bottom: 16px;
-      }
-
-      .cache-icon {
-        color: #9c27b0 !important;
-      }
-
-      .cache-stats-grid {
-        display: grid;
-        grid-template-columns: 2fr 1fr;
-        gap: 24px;
-      }
-
-      .cache-stat {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-      }
-
-      .stat-label {
-        font-size: 12px;
-        color: rgba(0, 0, 0, 0.6);
-        font-weight: 500;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-      }
-
-      .stat-value {
-        font-size: 20px;
-        font-weight: 500;
-        color: rgba(0, 0, 0, 0.87);
-      }
-
-      .stat-percent {
-        font-size: 12px;
-        color: rgba(0, 0, 0, 0.6);
-        margin-top: 4px;
-      }
     `,
   ],
 })
 export class StorageComponent implements OnInit, OnDestroy {
   private readonly storageService = inject(StorageService);
-  private readonly cacheService = inject(CacheService);
   private readonly snackBar = inject(MatSnackBar);
   private readonly destroy$ = new Subject<void>();
 
   providers = signal<StorageProviderDto[]>([]);
   syncStatuses = signal<Map<number, SyncStatus>>(new Map());
-  cacheStatus = signal<CacheStatus | null>(null);
   isLoading = signal(true);
 
   // Expose enum to template
@@ -599,7 +482,6 @@ export class StorageComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadProviders();
-    this.loadCacheStatus();
     this.startSyncStatusPolling();
   }
 
@@ -625,61 +507,6 @@ export class StorageComponent implements OnInit, OnDestroy {
         });
       },
     });
-  }
-
-  loadCacheStatus(): void {
-    this.cacheService.getCacheStatus().subscribe({
-      next: (status) => this.cacheStatus.set(status),
-      error: (error) => console.error("Failed to load cache status:", error),
-    });
-  }
-
-  formatBytes(bytes: number): string {
-    if (bytes === 0) return "0 B";
-    const k = 1024;
-    const sizes = ["B", "KB", "MB", "GB", "TB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return (
-      Number.parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i]
-    );
-  }
-
-  triggerEviction(): void {
-    this.cacheService.triggerEviction().subscribe({
-      next: (result) => {
-        this.snackBar.open(
-          `Evicted ${result.filesEvicted} files from cache`,
-          "Close",
-          { duration: 3000 },
-        );
-        this.loadCacheStatus();
-      },
-      error: (error) => {
-        console.error("Cache eviction failed:", error);
-        this.snackBar.open("Cache eviction failed", "Close", {
-          duration: 3000,
-        });
-      },
-    });
-  }
-
-  clearCache(): void {
-    if (confirm("Clear all cached files? This cannot be undone.")) {
-      this.cacheService.clearCache().subscribe({
-        next: () => {
-          this.snackBar.open("Cache cleared successfully", "Close", {
-            duration: 3000,
-          });
-          this.loadCacheStatus();
-        },
-        error: (error) => {
-          console.error("Failed to clear cache:", error);
-          this.snackBar.open("Failed to clear cache", "Close", {
-            duration: 3000,
-          });
-        },
-      });
-    }
   }
 
   private startSyncStatusPolling(): void {

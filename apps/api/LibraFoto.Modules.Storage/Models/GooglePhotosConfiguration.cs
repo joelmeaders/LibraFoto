@@ -34,14 +34,4 @@ public class GooglePhotosConfiguration
     /// OAuth scopes granted for the stored refresh token.
     /// </summary>
     public string[]? GrantedScopes { get; set; }
-
-    /// <summary>
-    /// Whether to cache files locally or stream on demand.
-    /// </summary>
-    public bool EnableLocalCache { get; set; } = true;
-
-    /// <summary>
-    /// Maximum cache size in bytes (default 5GB).
-    /// </summary>
-    public long MaxCacheSizeBytes { get; set; } = 5L * 1024 * 1024 * 1024;
 }

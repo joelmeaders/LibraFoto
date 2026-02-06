@@ -238,9 +238,7 @@ public static class GooglePhotosOAuthEndpoints
                 AccessToken = tokenResponse.AccessToken,
                 AccessTokenExpiry = DateTime.UtcNow.AddSeconds(tokenResponse.ExpiresInSeconds ?? 3600),
                 GrantedScopes = (tokenResponse.Scope ?? string.Join(" ", GooglePhotosScopes))
-                    .Split(' ', StringSplitOptions.RemoveEmptyEntries),
-                EnableLocalCache = existingConfig?.EnableLocalCache ?? true,
-                MaxCacheSizeBytes = existingConfig?.MaxCacheSizeBytes ?? (5L * 1024 * 1024 * 1024)
+                    .Split(' ', StringSplitOptions.RemoveEmptyEntries)
             };
 
             // Update provider configuration

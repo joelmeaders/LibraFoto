@@ -64,11 +64,6 @@ public class LibraFotoDbContext : DbContext
     public DbSet<GuestLink> GuestLinks => Set<GuestLink>();
 
     /// <summary>
-    /// Cached files from cloud storage providers.
-    /// </summary>
-    public DbSet<CachedFile> CachedFiles => Set<CachedFile>();
-
-    /// <summary>
     /// Google Photos picker sessions.
     /// </summary>
     public DbSet<PickerSession> PickerSessions => Set<PickerSession>();
@@ -178,21 +173,6 @@ public class LibraFotoDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(e => e.TargetAlbumId)
                 .OnDelete(DeleteBehavior.SetNull);
-        });
-
-        // CachedFile configuration
-        modelBuilder.Entity<CachedFile>(entity =>
-        {
-            entity.HasIndex(e => e.FileHash).IsUnique();
-            entity.HasIndex(e => e.LastAccessedDate);
-            entity.HasIndex(e => e.ProviderId);
-            entity.HasIndex(e => e.ProviderFileId);
-            entity.HasIndex(e => new { e.ProviderId, e.ProviderFileId });
-
-            entity.HasOne(e => e.Provider)
-                .WithMany()
-                .HasForeignKey(e => e.ProviderId)
-                .OnDelete(DeleteBehavior.Cascade);
         });
 
         // PickerSession configuration

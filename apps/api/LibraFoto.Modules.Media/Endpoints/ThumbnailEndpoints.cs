@@ -1,7 +1,6 @@
 using LibraFoto.Data;
 using LibraFoto.Modules.Media.Models;
 using LibraFoto.Modules.Media.Services;
-using LibraFoto.Modules.Storage.Interfaces;
 using LibraFoto.Shared.Configuration;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -50,7 +49,6 @@ public static class ThumbnailEndpoints
         long photoId,
         IThumbnailService thumbnailService,
         [FromServices] LibraFotoDbContext dbContext,
-        [FromServices] IStorageProviderFactory providerFactory,
         [FromServices] IConfiguration configuration,
         CancellationToken ct)
     {
@@ -68,21 +66,11 @@ public static class ThumbnailEndpoints
             return TypedResults.NotFound();
         }
 
-        // Check if photo has an explicit ThumbnailPath (e.g., from Google Photos import)
+        // Check if photo has an explicit ThumbnailPath
         if (!string.IsNullOrEmpty(photo.ThumbnailPath))
         {
-            var thumbnailPath = photo.ThumbnailPath;
-
-            // If it's an absolute path and exists, serve it directly
-            if (Path.IsPathRooted(thumbnailPath) && File.Exists(thumbnailPath))
-            {
-                var fileStream = File.OpenRead(thumbnailPath);
-                return TypedResults.File(fileStream, "image/jpeg", enableRangeProcessing: true);
-            }
-
-            // If it's a relative path, resolve against storage path
             var storagePath = configuration["Storage:LocalPath"] ?? LibraFotoDefaults.GetDefaultPhotosPath();
-            var absoluteThumbnailPath = Path.Combine(storagePath, thumbnailPath);
+            var absoluteThumbnailPath = Path.Combine(storagePath, photo.ThumbnailPath);
             if (File.Exists(absoluteThumbnailPath))
             {
                 var fileStream = File.OpenRead(absoluteThumbnailPath);
@@ -95,7 +83,7 @@ public static class ThumbnailEndpoints
         {
             var dateTaken = photo.DateTaken ?? photo.DateAdded;
             var result = await GenerateThumbnailFromSource(
-                photo, thumbnailService, providerFactory, configuration, dateTaken, ct);
+                photo, thumbnailService, configuration, dateTaken, ct);
 
             if (result is not null)
             {
@@ -168,7 +156,6 @@ public static class ThumbnailEndpoints
         long photoId,
         IThumbnailService thumbnailService,
         [FromServices] LibraFotoDbContext dbContext,
-        [FromServices] IStorageProviderFactory providerFactory,
         [FromServices] IConfiguration configuration,
         CancellationToken ct)
     {
@@ -183,28 +170,20 @@ public static class ThumbnailEndpoints
             // Delete existing thumbnail
             thumbnailService.DeleteThumbnails(photoId);
 
-            // Also delete the photo's ThumbnailPath file if it exists and is different
+            // Also delete the photo's ThumbnailPath file if it exists
             if (!string.IsNullOrEmpty(photo.ThumbnailPath))
             {
-                var existingPath = photo.ThumbnailPath;
-                if (Path.IsPathRooted(existingPath) && File.Exists(existingPath))
+                var storagePath = configuration["Storage:LocalPath"] ?? LibraFotoDefaults.GetDefaultPhotosPath();
+                var absolutePath = Path.Combine(storagePath, photo.ThumbnailPath);
+                if (File.Exists(absolutePath))
                 {
-                    File.Delete(existingPath);
-                }
-                else
-                {
-                    var storagePath = configuration["Storage:LocalPath"] ?? LibraFotoDefaults.GetDefaultPhotosPath();
-                    var absolutePath = Path.Combine(storagePath, existingPath);
-                    if (File.Exists(absolutePath))
-                    {
-                        File.Delete(absolutePath);
-                    }
+                    File.Delete(absolutePath);
                 }
             }
 
             var dateTaken = photo.DateTaken ?? photo.DateAdded;
             var result = await GenerateThumbnailFromSource(
-                photo, thumbnailService, providerFactory, configuration, dateTaken, ct);
+                photo, thumbnailService, configuration, dateTaken, ct);
 
             if (result is null)
             {
@@ -229,34 +208,15 @@ public static class ThumbnailEndpoints
     }
 
     /// <summary>
-    /// Generates a thumbnail from the photo's source, handling local files, cached files, and provider files.
+    /// Generates a thumbnail from the photo's source file in local storage.
     /// </summary>
     private static async Task<ThumbnailResult?> GenerateThumbnailFromSource(
         LibraFoto.Data.Entities.Photo photo,
         IThumbnailService thumbnailService,
-        IStorageProviderFactory providerFactory,
         IConfiguration configuration,
         DateTime dateTaken,
         CancellationToken ct)
     {
-        // First, check if FilePath is an absolute path that exists (cached files from Google Photos, etc.)
-        if (Path.IsPathRooted(photo.FilePath) && File.Exists(photo.FilePath))
-        {
-            return await thumbnailService.GenerateThumbnailAsync(photo.FilePath, photo.Id, dateTaken, ct);
-        }
-
-        // For provider-based photos, try to get stream from provider
-        if (photo.ProviderId.HasValue)
-        {
-            var provider = await providerFactory.GetProviderAsync(photo.ProviderId.Value, ct);
-            if (provider != null)
-            {
-                using var sourceStream = await provider.GetFileStreamAsync(photo.ProviderFileId ?? photo.FilePath, ct);
-                return await thumbnailService.GenerateThumbnailAsync(sourceStream, photo.Id, dateTaken, ct);
-            }
-        }
-
-        // Local storage - combine relative path with storage root
         var storagePath = configuration["Storage:LocalPath"] ?? LibraFotoDefaults.GetDefaultPhotosPath();
         var absolutePath = Path.Combine(storagePath, photo.FilePath);
 
@@ -275,7 +235,6 @@ public static class ThumbnailEndpoints
         [FromBody] RefreshThumbnailsRequest request,
         IThumbnailService thumbnailService,
         [FromServices] LibraFotoDbContext dbContext,
-        [FromServices] IStorageProviderFactory providerFactory,
         [FromServices] IConfiguration configuration,
         CancellationToken ct)
     {
@@ -305,25 +264,17 @@ public static class ThumbnailEndpoints
 
                 if (!string.IsNullOrEmpty(photo.ThumbnailPath))
                 {
-                    var existingPath = photo.ThumbnailPath;
-                    if (Path.IsPathRooted(existingPath) && File.Exists(existingPath))
+                    var storagePath2 = configuration["Storage:LocalPath"] ?? LibraFotoDefaults.GetDefaultPhotosPath();
+                    var absolutePath2 = Path.Combine(storagePath2, photo.ThumbnailPath);
+                    if (File.Exists(absolutePath2))
                     {
-                        File.Delete(existingPath);
-                    }
-                    else
-                    {
-                        var storagePath = configuration["Storage:LocalPath"] ?? LibraFotoDefaults.GetDefaultPhotosPath();
-                        var absolutePath = Path.Combine(storagePath, existingPath);
-                        if (File.Exists(absolutePath))
-                        {
-                            File.Delete(absolutePath);
-                        }
+                        File.Delete(absolutePath2);
                     }
                 }
 
                 var dateTaken = photo.DateTaken ?? photo.DateAdded;
                 var result = await GenerateThumbnailFromSource(
-                    photo, thumbnailService, providerFactory, configuration, dateTaken, ct);
+                    photo, thumbnailService, configuration, dateTaken, ct);
 
                 if (result is not null)
                 {

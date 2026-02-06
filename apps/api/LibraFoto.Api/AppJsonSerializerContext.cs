@@ -78,10 +78,6 @@ public record ApiInfo(string Name, string Version);
 [JsonSerializable(typeof(GuestUploadRequest))]
 [JsonSerializable(typeof(ScannedFile))]
 [JsonSerializable(typeof(ScannedFile[]))]
-[JsonSerializable(typeof(CacheStatusResponse))]
-[JsonSerializable(typeof(CachedFileDto))]
-[JsonSerializable(typeof(CachedFileDto[]))]
-[JsonSerializable(typeof(PagedResult<CachedFileDto>))]
 // Media module DTOs
 [JsonSerializable(typeof(MetadataResponse))]
 [JsonSerializable(typeof(ThumbnailResult))]

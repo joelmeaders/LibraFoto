@@ -7,7 +7,6 @@ using LibraFoto.Modules.Storage.Providers;
 using LibraFoto.Modules.Storage.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
-using NSubstitute;
 
 namespace LibraFoto.GooglePhotos.Tests;
 
@@ -22,11 +21,10 @@ public class GooglePhotosProviderTests
     private const string TestProviderName = "Test Provider";
     private const string TestFileId = "test-file-id";
 
-    private static async Task<(GooglePhotosProvider provider, ICacheService cacheService, LibraFotoDbContext dbContext)> CreateProviderAsync()
+    private static async Task<(GooglePhotosProvider provider, LibraFotoDbContext dbContext)> CreateProviderAsync()
     {
         var logger = NullLogger<GooglePhotosProvider>.Instance;
         var httpClientFactory = new TestHttpClientFactory();
-        var cacheService = Substitute.For<ICacheService>();
 
         var options = new DbContextOptionsBuilder<LibraFotoDbContext>()
             .UseInMemoryDatabase($"TestDb_{Guid.NewGuid()}")
@@ -34,8 +32,8 @@ public class GooglePhotosProviderTests
         var dbContext = new LibraFotoDbContext(options);
         await dbContext.Database.EnsureCreatedAsync();
 
-        var provider = new GooglePhotosProvider(logger, httpClientFactory, cacheService, dbContext);
-        return (provider, cacheService, dbContext);
+        var provider = new GooglePhotosProvider(logger, httpClientFactory, dbContext);
+        return (provider, dbContext);
     }
 
     #region Helper Classes
@@ -52,7 +50,7 @@ public class GooglePhotosProviderTests
     [Test]
     public async Task ProviderId_ReturnsInitializedId()
     {
-        var (provider, _, dbContext) = await CreateProviderAsync();
+        var (provider, dbContext) = await CreateProviderAsync();
         await using var _ = dbContext;
 
         var config = new GooglePhotosConfiguration
@@ -69,7 +67,7 @@ public class GooglePhotosProviderTests
     [Test]
     public async Task DisplayName_ReturnsInitializedName()
     {
-        var (provider, _, dbContext) = await CreateProviderAsync();
+        var (provider, dbContext) = await CreateProviderAsync();
         await using var _ = dbContext;
 
         var config = new GooglePhotosConfiguration
@@ -86,7 +84,7 @@ public class GooglePhotosProviderTests
     [Test]
     public async Task ProviderType_ReturnsGooglePhotos()
     {
-        var (provider, _, dbContext) = await CreateProviderAsync();
+        var (provider, dbContext) = await CreateProviderAsync();
         await using var _ = dbContext;
 
         await Assert.That(provider.ProviderType).IsEqualTo(StorageProviderType.GooglePhotos);
@@ -95,7 +93,7 @@ public class GooglePhotosProviderTests
     [Test]
     public async Task SupportsUpload_ReturnsFalse()
     {
-        var (provider, _, dbContext) = await CreateProviderAsync();
+        var (provider, dbContext) = await CreateProviderAsync();
         await using var _ = dbContext;
 
         await Assert.That(provider.SupportsUpload).IsFalse();
@@ -104,7 +102,7 @@ public class GooglePhotosProviderTests
     [Test]
     public async Task SupportsWatch_ReturnsFalse()
     {
-        var (provider, _, dbContext) = await CreateProviderAsync();
+        var (provider, dbContext) = await CreateProviderAsync();
         await using var _ = dbContext;
 
         await Assert.That(provider.SupportsWatch).IsFalse();
@@ -117,7 +115,7 @@ public class GooglePhotosProviderTests
     [Test]
     public async Task Initialize_WithValidConfiguration_Succeeds()
     {
-        var (provider, _, dbContext) = await CreateProviderAsync();
+        var (provider, dbContext) = await CreateProviderAsync();
         await using var _ = dbContext;
 
         var config = new GooglePhotosConfiguration
@@ -137,7 +135,7 @@ public class GooglePhotosProviderTests
     [Test]
     public async Task Initialize_WithEmptyConfiguration_UsesDefaults()
     {
-        var (provider, _, dbContext) = await CreateProviderAsync();
+        var (provider, dbContext) = await CreateProviderAsync();
         await using var _ = dbContext;
 
         provider.Initialize(1, TestProviderName, null);
@@ -149,7 +147,7 @@ public class GooglePhotosProviderTests
     [Test]
     public async Task Initialize_WithInvalidJson_UsesDefaults()
     {
-        var (provider, _, dbContext) = await CreateProviderAsync();
+        var (provider, dbContext) = await CreateProviderAsync();
         await using var _ = dbContext;
 
         provider.Initialize(1, TestProviderName, "{ invalid json }");
@@ -165,7 +163,7 @@ public class GooglePhotosProviderTests
     [Test]
     public async Task UploadFileAsync_ThrowsNotSupportedException()
     {
-        var (provider, _, dbContext) = await CreateProviderAsync();
+        var (provider, dbContext) = await CreateProviderAsync();
         await using var _ = dbContext;
 
         using var stream = new MemoryStream(new byte[100]);
@@ -178,7 +176,7 @@ public class GooglePhotosProviderTests
     [Test]
     public async Task DeleteFileAsync_ThrowsNotSupportedException()
     {
-        var (provider, _, dbContext) = await CreateProviderAsync();
+        var (provider, dbContext) = await CreateProviderAsync();
         await using var _ = dbContext;
 
         await Assert.That(async () =>
@@ -193,7 +191,7 @@ public class GooglePhotosProviderTests
     [Test]
     public async Task GetFilesAsync_WithNoPhotos_ReturnsEmptyList()
     {
-        var (provider, _, dbContext) = await CreateProviderAsync();
+        var (provider, dbContext) = await CreateProviderAsync();
         await using var _ = dbContext;
 
         var config = new GooglePhotosConfiguration
@@ -212,7 +210,7 @@ public class GooglePhotosProviderTests
     [Test]
     public async Task GetFilesAsync_WithImportedPhotos_ReturnsPhotos()
     {
-        var (provider, _, dbContext) = await CreateProviderAsync();
+        var (provider, dbContext) = await CreateProviderAsync();
         await using var _ = dbContext;
 
         provider.Initialize(1, TestProviderName, null);
@@ -244,7 +242,7 @@ public class GooglePhotosProviderTests
     [Test]
     public async Task TestConnectionAsync_WithoutCredentials_ReturnsFalse()
     {
-        var (provider, _, dbContext) = await CreateProviderAsync();
+        var (provider, dbContext) = await CreateProviderAsync();
         await using var _ = dbContext;
 
         var config = new GooglePhotosConfiguration();
@@ -258,7 +256,7 @@ public class GooglePhotosProviderTests
     [Test]
     public async Task TestConnectionAsync_WithIncompleteCredentials_ReturnsFalse()
     {
-        var (provider, _, dbContext) = await CreateProviderAsync();
+        var (provider, dbContext) = await CreateProviderAsync();
         await using var _ = dbContext;
 
         var config = new GooglePhotosConfiguration
@@ -275,7 +273,7 @@ public class GooglePhotosProviderTests
     [Test]
     public async Task TestConnectionAsync_WithPickerScope_ReturnsTrue()
     {
-        var (provider, _, dbContext) = await CreateProviderAsync();
+        var (provider, dbContext) = await CreateProviderAsync();
         await using var _ = dbContext;
 
         var config = new GooglePhotosConfiguration
@@ -296,31 +294,6 @@ public class GooglePhotosProviderTests
 
     #region Configuration Tests
 
-    [Test]
-    public async Task Configuration_EnableLocalCache_DefaultsToTrue()
-    {
-        var config = new GooglePhotosConfiguration
-        {
-            ClientId = TestClientId,
-            ClientSecret = TestClientSecret
-        };
-
-        await Assert.That(config.EnableLocalCache).IsTrue();
-    }
-
-    [Test]
-    public async Task Configuration_MaxCacheSizeBytes_DefaultsTo5GB()
-    {
-        var config = new GooglePhotosConfiguration
-        {
-            ClientId = TestClientId,
-            ClientSecret = TestClientSecret
-        };
-
-        var expectedSize = 5L * 1024 * 1024 * 1024;
-        await Assert.That(config.MaxCacheSizeBytes).IsEqualTo(expectedSize);
-    }
-
     #endregion
 
     #region FileExistsAsync Tests
@@ -328,7 +301,7 @@ public class GooglePhotosProviderTests
     [Test]
     public async Task FileExistsAsync_WithNoPhotos_ReturnsFalse()
     {
-        var (provider, _, dbContext) = await CreateProviderAsync();
+        var (provider, dbContext) = await CreateProviderAsync();
         await using var _ = dbContext;
 
         var config = new GooglePhotosConfiguration
@@ -346,7 +319,7 @@ public class GooglePhotosProviderTests
     [Test]
     public async Task FileExistsAsync_WithImportedPhoto_ReturnsTrue()
     {
-        var (provider, _, dbContext) = await CreateProviderAsync();
+        var (provider, dbContext) = await CreateProviderAsync();
         await using var _ = dbContext;
 
         provider.Initialize(1, TestProviderName, null);
@@ -378,8 +351,8 @@ public class GooglePhotosProviderTests
     [Test]
     public async Task MultipleProviders_CanBeInitializedIndependently()
     {
-        var (provider1, _, dbContext1) = await CreateProviderAsync();
-        var (provider2, _, dbContext2) = await CreateProviderAsync();
+        var (provider1, dbContext1) = await CreateProviderAsync();
+        var (provider2, dbContext2) = await CreateProviderAsync();
         await using var _1 = dbContext1;
         await using var _2 = dbContext2;
 
@@ -402,7 +375,7 @@ public class GooglePhotosProviderTests
     [Test]
     public async Task Provider_ImplementsIStorageProvider()
     {
-        var (provider, _, dbContext) = await CreateProviderAsync();
+        var (provider, dbContext) = await CreateProviderAsync();
         await using var _ = dbContext;
 
         await Assert.That(provider).IsAssignableTo<IStorageProvider>();
@@ -411,7 +384,7 @@ public class GooglePhotosProviderTests
     [Test]
     public async Task Provider_IsReadOnly()
     {
-        var (provider, _, dbContext) = await CreateProviderAsync();
+        var (provider, dbContext) = await CreateProviderAsync();
         await using var _ = dbContext;
 
         await Assert.That(provider.SupportsUpload).IsFalse();
@@ -461,9 +434,7 @@ public class GooglePhotosProviderTests
             ClientSecret = TestClientSecret,
             RefreshToken = "test-refresh",
             AccessToken = "test-access",
-            AccessTokenExpiry = DateTime.UtcNow.AddHours(1),
-            EnableLocalCache = false,
-            MaxCacheSizeBytes = 1024 * 1024
+            AccessTokenExpiry = DateTime.UtcNow.AddHours(1)
         };
 
         var json = JsonSerializer.Serialize(originalConfig);
@@ -472,7 +443,6 @@ public class GooglePhotosProviderTests
         await Assert.That(deserializedConfig).IsNotNull();
         await Assert.That(deserializedConfig!.ClientId).IsEqualTo(originalConfig.ClientId);
         await Assert.That(deserializedConfig.ClientSecret).IsEqualTo(originalConfig.ClientSecret);
-        await Assert.That(deserializedConfig.EnableLocalCache).IsEqualTo(originalConfig.EnableLocalCache);
     }
 
     #endregion

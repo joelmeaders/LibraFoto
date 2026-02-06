@@ -3,6 +3,7 @@ using System;
 using LibraFoto.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LibraFoto.Data.Migrations
 {
     [DbContext(typeof(LibraFotoDbContext))]
-    partial class LibraFotoDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260206175018_RemoveCachedFilesTable")]
+    partial class RemoveCachedFilesTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.0");

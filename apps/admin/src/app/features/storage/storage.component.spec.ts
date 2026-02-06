@@ -3,7 +3,6 @@ import { of } from "rxjs";
 import { describe, it, expect } from "vitest";
 import { StorageComponent } from "./storage.component";
 import { StorageService } from "../../core/services/storage.service";
-import { CacheService, CacheStatus } from "../../core/services/cache.service";
 import {
   StorageProviderDto,
   StorageProviderType,
@@ -46,10 +45,6 @@ describe("StorageComponent", () => {
       getSyncStatus: () => of(emptySyncStatus),
     } as Partial<StorageService>;
 
-    const cacheServiceStub = {
-      getCacheStatus: () => of(null as CacheStatus | null),
-    } as Partial<CacheService>;
-
     const snackBarStub = {
       open: () => ({}) as MatSnackBarRef<TextOnlySnackBar>,
     } as Partial<MatSnackBar>;
@@ -58,7 +53,6 @@ describe("StorageComponent", () => {
       imports: [StorageComponent],
       providers: [
         { provide: StorageService, useValue: storageServiceStub },
-        { provide: CacheService, useValue: cacheServiceStub },
         { provide: MatSnackBar, useValue: snackBarStub },
       ],
     });

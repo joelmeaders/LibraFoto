@@ -1,4 +1,3 @@
-using System.Security.Cryptography;
 using System.Text.Json;
 using LibraFoto.Data;
 using LibraFoto.Data.Entities;
@@ -14,7 +13,7 @@ namespace LibraFoto.Modules.Storage.Providers;
 /// <summary>
 /// Storage provider for Google Photos integration using the Picker API.
 /// Photos are selected by users through Google's Picker UI and imported locally.
-/// This provider serves files from the local cache after import.
+/// This provider serves files from local storage after import.
 /// </summary>
 public class GooglePhotosProvider : IStorageProvider, IOAuthProvider
 {
@@ -25,7 +24,6 @@ public class GooglePhotosProvider : IStorageProvider, IOAuthProvider
 
     private readonly ILogger<GooglePhotosProvider> _logger;
     private readonly HttpClient _httpClient;
-    private readonly ICacheService _cacheService;
     private readonly LibraFotoDbContext _dbContext;
 
     private long _providerId;
@@ -35,12 +33,10 @@ public class GooglePhotosProvider : IStorageProvider, IOAuthProvider
     public GooglePhotosProvider(
         ILogger<GooglePhotosProvider> logger,
         IHttpClientFactory httpClientFactory,
-        ICacheService cacheService,
         LibraFotoDbContext dbContext)
     {
         _logger = logger;
         _httpClient = httpClientFactory.CreateClient();
-        _cacheService = cacheService;
         _dbContext = dbContext;
     }
 
@@ -130,8 +126,6 @@ public class GooglePhotosProvider : IStorageProvider, IOAuthProvider
     /// <inheritdoc />
     public async Task<Stream> GetFileStreamAsync(string fileId, CancellationToken cancellationToken = default)
     {
-        // Files from Google Photos are cached locally during the picker import flow.
-        // Look up the photo by provider file ID to get the cached file path.
         var photo = await _dbContext.Photos
             .FirstOrDefaultAsync(p => p.ProviderId == _providerId && p.ProviderFileId == fileId, cancellationToken);
 
@@ -141,36 +135,14 @@ public class GooglePhotosProvider : IStorageProvider, IOAuthProvider
             throw new FileNotFoundException($"Photo with file ID {fileId} not found");
         }
 
-        // Compute cache key from fileId for cache lookup
-        var cacheKey = ComputeCacheKey(fileId);
-
-        // Check cache first
-        var cachedStream = await _cacheService.GetCachedFileStreamAsync(cacheKey, cancellationToken);
-        if (cachedStream != null)
-        {
-            _logger.LogDebug("Serving file {FileId} from cache", fileId);
-            return cachedStream;
-        }
-
-        // Fallback: Try to serve directly from the file path stored in the Photo entity
         if (!string.IsNullOrEmpty(photo.FilePath) && File.Exists(photo.FilePath))
         {
             _logger.LogDebug("Serving file {FileId} from local path {Path}", fileId, photo.FilePath);
             return new FileStream(photo.FilePath, FileMode.Open, FileAccess.Read, FileShare.Read);
         }
 
-        _logger.LogError("Cached file not found for photo {FileId}. The file may need to be re-imported via the Picker.", fileId);
-        throw new FileNotFoundException($"Cached file for {fileId} not found. Please re-import via Google Photos Picker.");
-    }
-
-    /// <summary>
-    /// Computes a cache key from a file ID.
-    /// </summary>
-    private static string ComputeCacheKey(string fileId)
-    {
-        using var sha256 = SHA256.Create();
-        var hashBytes = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(fileId));
-        return BitConverter.ToString(hashBytes).Replace("-", "").ToLowerInvariant();
+        _logger.LogError("File not found for photo {FileId}. The file may need to be re-imported via the Picker.", fileId);
+        throw new FileNotFoundException($"File for {fileId} not found. Please re-import via Google Photos Picker.");
     }
 
     /// <inheritdoc />

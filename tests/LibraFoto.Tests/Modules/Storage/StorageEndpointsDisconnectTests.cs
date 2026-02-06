@@ -51,12 +51,10 @@ public class StorageEndpointsDisconnectTests
 
         var httpClientFactory = Substitute.For<IHttpClientFactory>();
         httpClientFactory.CreateClient(Arg.Any<string>()).Returns(new HttpClient());
-        var cacheService = Substitute.For<ICacheService>();
 
         var provider = new GooglePhotosProvider(
             NullLogger<GooglePhotosProvider>.Instance,
             httpClientFactory,
-            cacheService,
             dbContext);
 
         var factory = Substitute.For<IStorageProviderFactory>();
