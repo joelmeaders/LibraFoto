@@ -7,6 +7,15 @@ ARG TARGETARCH
 ARG VERSION=dev
 WORKDIR /src
 
+# Map Docker TARGETARCH to .NET RID architecture
+# Docker uses: amd64, arm64
+# .NET uses: x64, arm64
+RUN case ${TARGETARCH} in \
+      "amd64")  echo "x64" > /tmp/dotnet_arch  ;; \
+      "arm64")  echo "arm64" > /tmp/dotnet_arch  ;; \
+      *)        echo "Unsupported architecture: ${TARGETARCH}"; exit 1 ;; \
+    esac
+
 # Copy project files
 COPY ["apps/api/LibraFoto.Api/LibraFoto.Api.csproj", "apps/api/LibraFoto.Api/"]
 COPY ["apps/api/LibraFoto.ServiceDefaults/LibraFoto.ServiceDefaults.csproj", "apps/api/LibraFoto.ServiceDefaults/"]
@@ -19,7 +28,7 @@ COPY ["apps/api/LibraFoto.Data/LibraFoto.Data.csproj", "apps/api/LibraFoto.Data/
 COPY ["apps/api/LibraFoto.Shared/LibraFoto.Shared.csproj", "apps/api/LibraFoto.Shared/"]
 
 RUN --mount=type=cache,target=/root/.nuget/packages \
-    dotnet restore "apps/api/LibraFoto.Api/LibraFoto.Api.csproj" -a $TARGETARCH
+    dotnet restore "apps/api/LibraFoto.Api/LibraFoto.Api.csproj" -a $(cat /tmp/dotnet_arch)
 
 # Copy source
 COPY . .
@@ -30,12 +39,11 @@ RUN dotnet build "LibraFoto.Api.csproj" -c $BUILD_CONFIGURATION -o /app/build
 # Publish stage
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-ARG TARGETARCH
 RUN dotnet publish "LibraFoto.Api.csproj" \
     -c $BUILD_CONFIGURATION \
     -o /app/publish \
     --self-contained \
-    -a $TARGETARCH \
+    -a $(cat /tmp/dotnet_arch) \
     /p:PublishSingleFile=false
 
 # Runtime stage - using standard runtime-deps for compatibility
