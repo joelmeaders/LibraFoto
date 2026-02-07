@@ -108,10 +108,13 @@ stop_containers() {
     
     cd "$docker_dir"
     
+    local compose_file
+    compose_file=$(get_compose_filename "$SCRIPT_DIR")
+    
     log_info "Stopping LibraFoto containers..."
     
-    if docker compose ps -q 2>/dev/null | grep -q .; then
-        docker compose stop >> "$LOG_FILE" 2>&1 || true
+    if docker compose -f "$compose_file" ps -q 2>/dev/null | grep -q .; then
+        docker compose -f "$compose_file" stop >> "$LOG_FILE" 2>&1 || true
         log_success "Containers stopped"
     else
         log_info "No running containers found"
@@ -135,13 +138,16 @@ remove_containers() {
     
     cd "$docker_dir"
     
+    local compose_file
+    compose_file=$(get_compose_filename "$SCRIPT_DIR")
+    
     log_info "Removing containers and networks..."
     
     if [[ "$keep_volumes" == "true" ]]; then
-        docker compose down >> "$LOG_FILE" 2>&1 || true
+        docker compose -f "$compose_file" down >> "$LOG_FILE" 2>&1 || true
         log_success "Containers and networks removed (volumes preserved)"
     else
-        docker compose down -v >> "$LOG_FILE" 2>&1 || true
+        docker compose -f "$compose_file" down -v >> "$LOG_FILE" 2>&1 || true
         log_success "Containers, networks, and volumes removed"
     fi
 }
@@ -336,8 +342,10 @@ show_dry_run() {
     echo -e "${CYAN}Docker Resources:${NC}"
     if check_docker && [[ -d "$docker_dir" ]]; then
         cd "$docker_dir"
+        local compose_file
+        compose_file=$(get_compose_filename "$SCRIPT_DIR")
         echo "  Containers:"
-        docker compose ps --format "    - {{.Name}}" 2>/dev/null || echo "    (none found)"
+        docker compose -f "$compose_file" ps --format "    - {{.Name}}" 2>/dev/null || echo "    (none found)"
         echo ""
         echo "  Images:"
         docker images --format "    - {{.Repository}}:{{.Tag}}" | grep -E "librafoto|docker-" || echo "    (none found)"

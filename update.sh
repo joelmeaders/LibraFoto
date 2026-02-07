@@ -73,23 +73,31 @@ OPTIONS:
     --help, -h      Show this help message
     --check         Check for updates without installing
     --force, -f     Update without confirmation prompts
-    --no-cache      Force rebuild without Docker cache
+    --no-cache      Force rebuild without Docker cache (build mode only)
     --rollback      Rollback to previous version from backup
     --repair-kiosk  Repair kiosk mode configuration
+    --switch-mode   Switch between build and GHCR deploy modes
 
 DESCRIPTION:
     This script automates the LibraFoto update process including:
     - Pre-update backup of database and configuration
     - Git pull to fetch latest changes
-    - Database migrations
-    - Container rebuild and deployment
+    - Container rebuild (build mode) or image pull (GHCR mode)
     - Health checks with automatic rollback on failure
+
+    The update script respects the deploy mode chosen during installation:
+    - Build mode:  Pulls source code and rebuilds container images locally
+    - GHCR mode:   Pulls source code (for scripts) and pre-built images from
+                   GitHub Container Registry
+
+    Use --switch-mode to change between build and GHCR modes after installation.
 
 EXAMPLES:
     ./update.sh              # Interactive update
     ./update.sh --check      # Check for available updates
     ./update.sh --force      # Non-interactive update
     ./update.sh --rollback   # Restore from last backup
+    ./update.sh --switch-mode # Change deploy mode (build <-> ghcr)
 
 BACKUP LOCATION:
     Backups are stored in: $BACKUP_DIR
@@ -107,6 +115,8 @@ EOF
 check_prerequisites() {
     local script_dir
     script_dir=$(get_script_dir)
+    local deploy_mode
+    deploy_mode=$(get_deploy_mode "$script_dir")
     
     # Check if user can run docker (either root or in docker group)
     if ! docker info &>/dev/null; then
@@ -135,12 +145,18 @@ check_prerequisites() {
         exit 1
     fi
     
-    # Check for docker-compose.yml
+    # Check for docker-compose.yml (always needed)
     if [[ ! -f "$script_dir/docker/docker-compose.yml" ]]; then
         log_error "docker/docker-compose.yml not found"
         exit 1
     fi
     
+    # Check for GHCR compose file if in GHCR mode
+    if [[ "$deploy_mode" == "ghcr" ]] && [[ ! -f "$script_dir/docker/docker-compose.ghcr.yml" ]]; then
+        log_warn "docker-compose.ghcr.yml not found - will be available after git pull"
+    fi
+    
+    log_info "Deploy mode: $([ "$deploy_mode" == "ghcr" ] && echo "Pre-built GitHub images" || echo "Local source build")"
     log_success "Prerequisites verified"
 }
 
@@ -378,54 +394,81 @@ run_migrations() {
 rebuild_containers() {
     local no_cache="$1"
     
-    log_step "4/5" "Rebuilding Containers"
-    
     local script_dir
     script_dir=$(get_script_dir)
+    local deploy_mode
+    deploy_mode=$(get_deploy_mode "$script_dir")
+    local compose_file
+    compose_file=$(get_compose_filename "$script_dir")
     
     cd "$script_dir/docker"
     
-    # Fix permissions on data/backups folders if they exist
-    # Docker buildkit needs read access to scan directories, even if they're in .dockerignore
-    # These folders may be root-owned from container operations
-    for dir in "$script_dir/data" "$script_dir/backups"; do
-        if [[ -d "$dir" ]]; then
-            local current_perms
-            current_perms=$(stat -c "%a" "$dir" 2>/dev/null || echo "000")
-            if [[ ! "$current_perms" =~ ^7[0-7][5-7]$ ]]; then
-                log_info "Fixing permissions on $(basename "$dir") folder..."
-                chmod 755 "$dir" 2>/dev/null || sudo chmod 755 "$dir" 2>/dev/null || {
-                    log_warn "Could not fix permissions on $dir - docker build may fail"
-                    log_info "Run: sudo chmod 755 $dir"
-                }
-            fi
+    if [[ "$deploy_mode" == "ghcr" ]]; then
+        log_step "4/5" "Pulling Updated Images"
+        
+        # Update image tag in .env based on current .version
+        local version
+        version=$(get_current_version "$script_dir")
+        local image_tag
+        image_tag=$(get_image_tag_for_version "$version")
+        
+        set_env_var "LIBRAFOTO_IMAGE_TAG" "$image_tag" "$script_dir"
+        set_env_var "VERSION" "$version" "$script_dir"
+        
+        log_info "Pulling images (tag: $image_tag)..."
+        echo ""
+        
+        if ! docker compose -f "$compose_file" pull 2>&1 | tee -a "$LOG_FILE"; then
+            log_error "Image pull failed"
+            return 1
         fi
-    done
-    
-    # Enable BuildKit
-    export DOCKER_BUILDKIT=1
-    export COMPOSE_DOCKER_CLI_BUILD=1
-    
-    local build_args=""
-    if [[ "$no_cache" == "true" ]]; then
-        build_args="--no-cache"
-        log_info "Building with --no-cache"
+        
+        log_success "Images pulled successfully"
+    else
+        log_step "4/5" "Rebuilding Containers"
+        
+        # Fix permissions on data/backups folders if they exist
+        # Docker buildkit needs read access to scan directories, even if they're in .dockerignore
+        # These folders may be root-owned from container operations
+        for dir in "$script_dir/data" "$script_dir/backups"; do
+            if [[ -d "$dir" ]]; then
+                local current_perms
+                current_perms=$(stat -c "%a" "$dir" 2>/dev/null || echo "000")
+                if [[ ! "$current_perms" =~ ^7[0-7][5-7]$ ]]; then
+                    log_info "Fixing permissions on $(basename "$dir") folder..."
+                    chmod 755 "$dir" 2>/dev/null || sudo chmod 755 "$dir" 2>/dev/null || {
+                        log_warn "Could not fix permissions on $dir - docker build may fail"
+                        log_info "Run: sudo chmod 755 $dir"
+                    }
+                fi
+            fi
+        done
+        
+        # Enable BuildKit
+        export DOCKER_BUILDKIT=1
+        export COMPOSE_DOCKER_CLI_BUILD=1
+        
+        local build_args=""
+        if [[ "$no_cache" == "true" ]]; then
+            build_args="--no-cache"
+            log_info "Building with --no-cache"
+        fi
+        
+        # Get version for build
+        local version
+        version=$(get_current_version "$script_dir")
+        export VERSION="$version"
+        
+        log_info "Building containers (version: $version)..."
+        echo ""
+        
+        if ! docker compose -f "$compose_file" build $build_args 2>&1 | tee -a "$LOG_FILE"; then
+            log_error "Container build failed"
+            return 1
+        fi
+        
+        log_success "Containers rebuilt successfully"
     fi
-    
-    # Get version for build
-    local version
-    version=$(get_current_version "$script_dir")
-    export VERSION="$version"
-    
-    log_info "Building containers (version: $version)..."
-    echo ""
-    
-    if ! docker compose build $build_args 2>&1 | tee -a "$LOG_FILE"; then
-        log_error "Container build failed"
-        return 1
-    fi
-    
-    log_success "Containers rebuilt successfully"
 }
 
 # =============================================================================
@@ -437,18 +480,20 @@ deploy_containers() {
     
     local script_dir
     script_dir=$(get_script_dir)
+    local compose_file
+    compose_file=$(get_compose_filename "$script_dir")
     
     cd "$script_dir/docker"
     
     # Store current container IDs for potential rollback
     local old_containers
-    old_containers=$(docker compose ps -q 2>/dev/null || true)
+    old_containers=$(docker compose -f "$compose_file" ps -q 2>/dev/null || true)
     
     log_info "Stopping existing containers..."
-    docker compose down >> "$LOG_FILE" 2>&1 || true
+    docker compose -f "$compose_file" down >> "$LOG_FILE" 2>&1 || true
     
     log_info "Starting updated containers..."
-    if ! docker compose up -d 2>&1 | tee -a "$LOG_FILE"; then
+    if ! docker compose -f "$compose_file" up -d 2>&1 | tee -a "$LOG_FILE"; then
         log_error "Failed to start containers"
         return 1
     fi
@@ -461,9 +506,9 @@ deploy_containers() {
     
     while [[ $wait_time -lt $HEALTH_CHECK_TIMEOUT ]]; do
         local running_count
-        running_count=$(docker compose ps --status running -q 2>/dev/null | wc -l)
+        running_count=$(docker compose -f "$compose_file" ps --status running -q 2>/dev/null | wc -l)
         local expected_count
-        expected_count=$(docker compose config --services 2>/dev/null | wc -l)
+        expected_count=$(docker compose -f "$compose_file" config --services 2>/dev/null | wc -l)
         
         if [[ $running_count -ge $expected_count ]] && [[ $expected_count -gt 0 ]]; then
             # Check health of API container specifically
@@ -490,11 +535,11 @@ deploy_containers() {
         
         echo ""
         log_info "Container status:"
-        docker compose ps
+        docker compose -f "$compose_file" ps
         
         echo ""
         log_info "Recent logs:"
-        docker compose logs --tail=20 api 2>/dev/null || true
+        docker compose -f "$compose_file" logs --tail=20 api 2>/dev/null || true
         
         return 1
     fi
@@ -541,9 +586,12 @@ perform_rollback() {
     
     cd "$script_dir"
     
-    # Stop containers
+    # Stop containers using the appropriate compose file
+    local compose_file
+    compose_file=$(get_compose_filename "$script_dir")
+    
     log_info "Stopping containers..."
-    docker compose -f docker/docker-compose.yml down >> "$LOG_FILE" 2>&1 || true
+    docker compose -f "docker/$compose_file" down >> "$LOG_FILE" 2>&1 || true
     
     # Restore git state
     if [[ -f "$backup_path/git-head.txt" ]]; then
@@ -578,11 +626,23 @@ perform_rollback() {
         log_success "Configuration restored"
     fi
     
-    # Rebuild and restart
-    log_info "Rebuilding containers..."
-    cd "$script_dir/docker"
-    docker compose build >> "$LOG_FILE" 2>&1
-    docker compose up -d >> "$LOG_FILE" 2>&1
+    # Rebuild/pull and restart using the appropriate compose file
+    local deploy_mode
+    deploy_mode=$(get_deploy_mode "$script_dir")
+    local rb_compose_file
+    rb_compose_file=$(get_compose_filename "$script_dir")
+    
+    if [[ "$deploy_mode" == "ghcr" ]]; then
+        log_info "Pulling container images..."
+        cd "$script_dir/docker"
+        docker compose -f "$rb_compose_file" pull >> "$LOG_FILE" 2>&1
+        docker compose -f "$rb_compose_file" up -d >> "$LOG_FILE" 2>&1
+    else
+        log_info "Rebuilding containers..."
+        cd "$script_dir/docker"
+        docker compose -f "$rb_compose_file" build >> "$LOG_FILE" 2>&1
+        docker compose -f "$rb_compose_file" up -d >> "$LOG_FILE" 2>&1
+    fi
     
     log_success "Rollback completed"
     echo ""
@@ -642,6 +702,10 @@ cleanup_old_backups() {
 show_post_update() {
     local script_dir
     script_dir=$(get_script_dir)
+    local deploy_mode
+    deploy_mode=$(get_deploy_mode "$script_dir")
+    local compose_file
+    compose_file=$(get_compose_filename "$script_dir")
     
     echo ""
     echo -e "${GREEN}${BOLD}╔════════════════════════════════════════════════════════════╗${NC}"
@@ -650,10 +714,11 @@ show_post_update() {
     echo ""
     
     echo -e "${BOLD}Version:${NC} $(get_current_version "$script_dir") ($(get_current_commit))"
+    echo -e "${BOLD}Deploy Mode:${NC} $([ "$deploy_mode" == "ghcr" ] && echo "Pre-built GitHub images" || echo "Local source build")"
     echo ""
     
     echo -e "${BOLD}Container Status:${NC}"
-    docker compose -f "$script_dir/docker/docker-compose.yml" ps
+    docker compose -f "$script_dir/docker/$compose_file" ps
     echo ""
     
     echo -e "${BOLD}Access URLs:${NC}"
@@ -681,6 +746,7 @@ main() {
     local do_rollback=false
     local rollback_target="latest"
     local repair_kiosk=false
+    local switch_mode=false
     
     # Parse arguments
     while [[ $# -gt 0 ]]; do
@@ -717,6 +783,10 @@ main() {
                 repair_kiosk=true
                 shift
                 ;;
+            --switch-mode)
+                switch_mode=true
+                shift
+                ;;
             *)
                 log_error "Unknown option: $1"
                 echo "Use --help for usage information"
@@ -728,6 +798,48 @@ main() {
     # Initialize
     log_init "LibraFoto Update"
     show_update_banner
+    
+    # Handle switch-mode
+    if [[ "$switch_mode" == "true" ]]; then
+        local script_dir
+        script_dir=$(get_script_dir)
+        local current_mode
+        current_mode=$(get_deploy_mode "$script_dir")
+        
+        echo -e "Current deploy mode: ${BOLD}$([ "$current_mode" == "ghcr" ] && echo "Pre-built GitHub images (ghcr)" || echo "Local source build (build)")${NC}"
+        echo ""
+        
+        if [[ "$current_mode" == "ghcr" ]]; then
+            echo "Switch to building images locally from source code?"
+            echo "This is slower but lets you run custom/modified versions."
+            echo ""
+            if confirm_prompt "Switch to build mode?" "N"; then
+                set_env_var "DEPLOY_MODE" "build" "$script_dir"
+                log_success "Switched to build mode"
+                log_info "Run ./update.sh to rebuild containers from source"
+            else
+                echo "No changes made."
+            fi
+        else
+            echo "Switch to using pre-built images from GitHub Container Registry?"
+            echo "This is faster and doesn't require compiling on this machine."
+            echo ""
+            if confirm_prompt "Switch to GHCR mode?" "Y"; then
+                local version
+                version=$(get_current_version "$script_dir")
+                local image_tag
+                image_tag=$(get_image_tag_for_version "$version")
+                
+                set_env_var "DEPLOY_MODE" "ghcr" "$script_dir"
+                set_env_var "LIBRAFOTO_IMAGE_TAG" "$image_tag" "$script_dir"
+                log_success "Switched to GHCR mode (image tag: $image_tag)"
+                log_info "Run ./update.sh to pull and deploy pre-built images"
+            else
+                echo "No changes made."
+            fi
+        fi
+        exit 0
+    fi
     
     # Check prerequisites
     check_prerequisites
@@ -794,7 +906,7 @@ main() {
         run_migrations || true  # Migrations are non-fatal
     fi
     
-    # Rebuild containers
+    # Rebuild containers (or pull images in GHCR mode)
     if [[ "$update_failed" != "true" ]]; then
         if ! rebuild_containers "$no_cache"; then
             update_failed=true

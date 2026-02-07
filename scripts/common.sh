@@ -305,6 +305,102 @@ find_librafoto_root() {
 }
 
 # =============================================================================
+# Deploy Mode Utilities
+# =============================================================================
+
+# Read a variable from docker/.env file
+# Usage: read_env_var "DEPLOY_MODE" "/path/to/librafoto"
+read_env_var() {
+    local var_name="$1"
+    local root_dir="${2:-.}"
+    local env_file="$root_dir/docker/.env"
+
+    if [[ -f "$env_file" ]]; then
+        grep -E "^${var_name}=" "$env_file" 2>/dev/null | tail -1 | cut -d= -f2-
+    fi
+}
+
+# Get the current deploy mode (build or ghcr)
+# Usage: get_deploy_mode "/path/to/librafoto"
+get_deploy_mode() {
+    local root_dir="${1:-.}"
+    local mode
+    mode=$(read_env_var "DEPLOY_MODE" "$root_dir")
+    echo "${mode:-build}"
+}
+
+# Get the compose file path based on deploy mode
+# Usage: get_compose_file "/path/to/librafoto"
+get_compose_file() {
+    local root_dir="${1:-.}"
+    local mode
+    mode=$(get_deploy_mode "$root_dir")
+
+    if [[ "$mode" == "ghcr" ]]; then
+        echo "$root_dir/docker/docker-compose.ghcr.yml"
+    else
+        echo "$root_dir/docker/docker-compose.yml"
+    fi
+}
+
+# Get the compose filename only (for use when already in docker/ dir)
+# Usage: get_compose_filename "/path/to/librafoto"
+get_compose_filename() {
+    local root_dir="${1:-.}"
+    local mode
+    mode=$(get_deploy_mode "$root_dir")
+
+    if [[ "$mode" == "ghcr" ]]; then
+        echo "docker-compose.ghcr.yml"
+    else
+        echo "docker-compose.yml"
+    fi
+}
+
+# Check if a version string is a pre-release
+# Matches: 1.0.0-alpha.1, 1.0.0-beta.2, 1.0.0-rc.1
+# Usage: is_prerelease_version "0.1.0-alpha.1" && echo "prerelease"
+is_prerelease_version() {
+    local version="$1"
+    [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+-(alpha|beta|rc)\.[0-9]+$ ]]
+}
+
+# Get the GHCR image tag for a given version
+# Stable versions (1.0.0) -> "latest"
+# Pre-release versions (0.1.0-alpha.1) -> "0.1.0-alpha.1"
+# Usage: get_image_tag_for_version "0.1.0-alpha.1"
+get_image_tag_for_version() {
+    local version="$1"
+    if is_prerelease_version "$version"; then
+        echo "$version"
+    else
+        echo "latest"
+    fi
+}
+
+# Update or add a variable in docker/.env file
+# Usage: set_env_var "DEPLOY_MODE" "ghcr" "/path/to/librafoto"
+set_env_var() {
+    local var_name="$1"
+    local var_value="$2"
+    local root_dir="${3:-.}"
+    local env_file="$root_dir/docker/.env"
+
+    if [[ ! -f "$env_file" ]]; then
+        echo "${var_name}=${var_value}" > "$env_file"
+        return
+    fi
+
+    if grep -qE "^${var_name}=" "$env_file" 2>/dev/null; then
+        # Update existing variable
+        sed -i "s|^${var_name}=.*|${var_name}=${var_value}|" "$env_file"
+    else
+        # Append new variable
+        echo "${var_name}=${var_value}" >> "$env_file"
+    fi
+}
+
+# =============================================================================
 # Internet Connectivity
 # =============================================================================
 

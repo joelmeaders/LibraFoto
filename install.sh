@@ -78,11 +78,18 @@ OPTIONS:
     --skip-kiosk    Skip kiosk mode configuration
     --skip-docker   Skip Docker installation (if already installed)
     --repair-kiosk  Repair/reconfigure kiosk mode only
+    --use-ghcr      Use pre-built images from GitHub Container Registry
+    --build-local   Build images locally from source code
 
 DESCRIPTION:
     This script automates the complete setup of LibraFoto on a Raspberry Pi,
     including Docker installation, kiosk mode configuration, and container
     deployment.
+
+    You can choose to build container images locally from source or pull
+    pre-built images from GitHub Container Registry (GHCR). GHCR images are
+    faster to deploy and don't require compiling on the Pi. Your choice is
+    saved and respected by the update script.
 
 REQUIREMENTS:
     - Raspberry Pi 4 or later
@@ -92,8 +99,10 @@ REQUIREMENTS:
     - Run from the cloned LibraFoto repository directory
 
 EXAMPLES:
-    sudo ./install.sh              # Full installation
-    sudo ./install.sh --skip-kiosk # Install without kiosk mode
+    sudo ./install.sh                # Full installation (interactive)
+    sudo ./install.sh --use-ghcr     # Install using pre-built GHCR images
+    sudo ./install.sh --build-local  # Install by building from source
+    sudo ./install.sh --skip-kiosk   # Install without kiosk mode
     sudo ./install.sh --repair-kiosk # Fix kiosk mode if not working
 
 LOG FILE:
@@ -119,7 +128,7 @@ show_overview() {
     echo "     - Disable screen blanking"
     echo ""
     echo "  4. Application Deployment"
-    echo "     - Build container images"
+    echo "     - Build or pull container images"
     echo "     - Start LibraFoto services"
     echo ""
     echo "  5. Post-Installation"
@@ -217,10 +226,14 @@ check_repo_files() {
         return 1
     fi
     
-    if [[ ! -f "$script_dir/docker/Dockerfile.api" ]]; then
-        log_error "Source files not found"
-        log_info "Please ensure you have cloned the complete repository"
-        return 1
+    # Dockerfile check is only needed for build-from-source mode
+    # GHCR mode uses pre-built images, so source files are optional
+    if [[ "${INSTALL_DEPLOY_MODE:-}" != "ghcr" ]]; then
+        if [[ ! -f "$script_dir/docker/Dockerfile.api" ]]; then
+            log_error "Source files not found"
+            log_info "Please ensure you have cloned the complete repository"
+            return 1
+        fi
     fi
     
     log_success "Repository files verified"
@@ -330,6 +343,12 @@ install_docker() {
 }
 
 configure_swap() {
+    # Swap increase is only needed for building images locally
+    if [[ "${INSTALL_DEPLOY_MODE:-build}" == "ghcr" ]]; then
+        log_info "Skipping swap configuration (using pre-built images)"
+        return 0
+    fi
+    
     log_info "Checking swap configuration..."
     
     local current_swap_mb
@@ -401,6 +420,7 @@ setup_application() {
     local script_dir
     script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     local docker_dir="$script_dir/docker"
+    local deploy_mode="${INSTALL_DEPLOY_MODE:-build}"
     
     # Create data directory with permissions that allow docker buildkit to scan
     # (755 allows read access for buildkit, even though folder is in .dockerignore)
@@ -418,6 +438,17 @@ setup_application() {
     local version="1.0.0"
     if [[ -f "$script_dir/.version" ]]; then
         version=$(cat "$script_dir/.version")
+    fi
+    
+    # Determine image tag for GHCR mode
+    local image_tag="latest"
+    if [[ "$deploy_mode" == "ghcr" ]]; then
+        if [[ "${INSTALL_FORCE_STABLE:-}" == "true" ]]; then
+            image_tag="latest"
+        else
+            image_tag=$(get_image_tag_for_version "$version")
+        fi
+        log_info "GHCR image tag: $image_tag"
     fi
     
     # Create .env file
@@ -442,8 +473,20 @@ JWT_KEY=$jwt_key
 # Application version
 VERSION=$version
 
+# Deploy mode: 'build' (local source build) or 'ghcr' (pre-built GitHub images)
+DEPLOY_MODE=$deploy_mode
+
+# GHCR image tag (used when DEPLOY_MODE=ghcr)
+# 'latest' for stable releases, or a version like '0.1.0-alpha.1' for pre-releases
+LIBRAFOTO_IMAGE_TAG=$image_tag
+
 EOF
 
+    if [[ "$deploy_mode" == "ghcr" ]]; then
+        log_success "Configured for pre-built GitHub images (tag: $image_tag)"
+    else
+        log_success "Configured for local source build"
+    fi
 }
 
 # =============================================================================
@@ -456,28 +499,43 @@ deploy_containers() {
     local script_dir
     script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     local docker_dir="$script_dir/docker"
+    local deploy_mode="${INSTALL_DEPLOY_MODE:-build}"
+    local compose_file
+    compose_file=$(get_compose_filename "$script_dir")
     
     cd "$docker_dir"
     
-    # Enable BuildKit
-    export DOCKER_BUILDKIT=1
-    export COMPOSE_DOCKER_CLI_BUILD=1
-    
-    # Build containers
-    log_info "Building container images (this may take 10-20 minutes on Pi)..."
-    echo ""
-    
-    if ! docker compose build 2>&1 | tee -a "$LOG_FILE"; then
-        log_error "Container build failed. Check $LOG_FILE for details."
-        exit 1
+    if [[ "$deploy_mode" == "ghcr" ]]; then
+        # Pull pre-built images from GitHub Container Registry
+        log_info "Pulling pre-built images from GitHub Container Registry..."
+        echo ""
+        
+        if ! docker compose -f "$compose_file" pull 2>&1 | tee -a "$LOG_FILE"; then
+            log_error "Failed to pull images. Check $LOG_FILE for details."
+            exit 1
+        fi
+        
+        log_success "Container images pulled successfully"
+    else
+        # Build images locally from source
+        export DOCKER_BUILDKIT=1
+        export COMPOSE_DOCKER_CLI_BUILD=1
+        
+        log_info "Building container images (this may take 10-20 minutes on Pi)..."
+        echo ""
+        
+        if ! docker compose -f "$compose_file" build 2>&1 | tee -a "$LOG_FILE"; then
+            log_error "Container build failed. Check $LOG_FILE for details."
+            exit 1
+        fi
+        
+        log_success "Container images built successfully"
     fi
-    
-    log_success "Container images built successfully"
     
     # Start containers
     log_info "Starting LibraFoto services..."
     
-    if ! docker compose up -d 2>&1 | tee -a "$LOG_FILE"; then
+    if ! docker compose -f "$compose_file" up -d 2>&1 | tee -a "$LOG_FILE"; then
         log_error "Failed to start containers. Check $LOG_FILE for details."
         exit 1
     fi
@@ -491,13 +549,13 @@ deploy_containers() {
     
     while [[ $wait_time -lt $max_wait ]]; do
         local health_status
-        health_status=$(docker compose ps --format json 2>/dev/null | grep -o '"Health":"[^"]*"' | sort -u || echo "")
+        health_status=$(docker compose -f "$compose_file" ps --format json 2>/dev/null | grep -o '"Health":"[^"]*"' | sort -u || echo "")
         
         # Check if all containers are running and healthy
         local running_count
-        running_count=$(docker compose ps --status running -q 2>/dev/null | wc -l)
+        running_count=$(docker compose -f "$compose_file" ps --status running -q 2>/dev/null | wc -l)
         local expected_count
-        expected_count=$(docker compose config --services 2>/dev/null | wc -l)
+        expected_count=$(docker compose -f "$compose_file" config --services 2>/dev/null | wc -l)
         
         if [[ $running_count -ge $expected_count ]] && [[ $expected_count -gt 0 ]]; then
             # Check health of API container specifically
@@ -521,13 +579,13 @@ deploy_containers() {
     else
         log_warn "Services started but health check timed out"
         log_info "Checking container status..."
-        docker compose ps
+        docker compose -f "$compose_file" ps
     fi
     
     # Show container status
     echo ""
     log_info "Container status:"
-    docker compose ps
+    docker compose -f "$compose_file" ps
 }
 
 # =============================================================================
@@ -580,12 +638,19 @@ show_post_install() {
     echo "  4. ${CYAN}Configure slideshows${NC} and display settings"
     echo ""
     
+    local deploy_mode="${INSTALL_DEPLOY_MODE:-build}"
+    local compose_file
+    compose_file=$(get_compose_filename "$SCRIPT_DIR")
+    
+    echo -e "${BOLD}Deploy Mode:${NC} $([ "$deploy_mode" == "ghcr" ] && echo "Pre-built GitHub images" || echo "Local source build")"
+    echo ""
+    
     echo -e "${BOLD}Useful Commands:${NC}"
     echo ""
-    echo "  View logs:     cd docker && docker compose logs -f"
-    echo "  Restart:       cd docker && docker compose restart"
-    echo "  Stop:          cd docker && docker compose down"
-    echo "  Update:        git pull && cd docker && docker compose pull && docker compose up -d --build"
+    echo "  View logs:     cd docker && docker compose -f $compose_file logs -f"
+    echo "  Restart:       cd docker && docker compose -f $compose_file restart"
+    echo "  Stop:          cd docker && docker compose -f $compose_file down"
+    echo "  Update:        ./update.sh"
     echo ""
     
     echo -e "${BOLD}Log file:${NC} $LOG_FILE"
@@ -631,13 +696,15 @@ uninstall() {
     pi_home=$(get_pi_home)
     
     log_info "Stopping containers..."
+    local compose_file
+    compose_file=$(get_compose_filename "$script_dir")
     if [[ -d "$docker_dir" ]]; then
         cd "$docker_dir"
-        docker compose down >> "$LOG_FILE" 2>&1 || true
+        docker compose -f "$compose_file" down >> "$LOG_FILE" 2>&1 || true
     fi
     
     if confirm_prompt "Remove Docker volumes (this will delete your photos and database)?" "N"; then
-        docker compose down -v >> "$LOG_FILE" 2>&1 || true
+        docker compose -f "$compose_file" down -v >> "$LOG_FILE" 2>&1 || true
         log_warn "Docker volumes removed - data deleted"
     else
         log_info "Docker volumes preserved"
@@ -710,6 +777,10 @@ main() {
     local skip_docker=false
     local repair_kiosk=false
     
+    # INSTALL_DEPLOY_MODE is used by setup_application and deploy_containers
+    # It can be set via --use-ghcr / --build-local flags or via interactive prompt
+    export INSTALL_DEPLOY_MODE=""
+    
     while [[ $# -gt 0 ]]; do
         case "$1" in
             --help|-h)
@@ -731,6 +802,14 @@ main() {
                 ;;
             --repair-kiosk)
                 repair_kiosk=true
+                shift
+                ;;
+            --use-ghcr)
+                INSTALL_DEPLOY_MODE="ghcr"
+                shift
+                ;;
+            --build-local)
+                INSTALL_DEPLOY_MODE="build"
                 shift
                 ;;
             *)
@@ -773,6 +852,57 @@ main() {
     if ! confirm_prompt "Do you want to proceed with the installation?" "Y"; then
         echo "Installation cancelled."
         exit 0
+    fi
+    
+    echo ""
+    
+    # Ask about deploy mode (unless set via flags)
+    if [[ -z "$INSTALL_DEPLOY_MODE" ]]; then
+        echo ""
+        echo -e "${BOLD}Deployment Method${NC}"
+        echo ""
+        echo "  1) ${CYAN}Pre-built images from GitHub${NC} (recommended, faster)"
+        echo "     Downloads ready-to-run images. No compilation needed."
+        echo ""
+        echo "  2) ${CYAN}Build from source${NC} (slower, 10-20 min on Pi)"
+        echo "     Compiles images locally from the repository source code."
+        echo ""
+        
+        if confirm_prompt "Use pre-built images from GitHub? (No = build from source)" "Y"; then
+            INSTALL_DEPLOY_MODE="ghcr"
+        else
+            INSTALL_DEPLOY_MODE="build"
+        fi
+    fi
+    
+    # For GHCR mode with a prerelease version, ask the user
+    if [[ "$INSTALL_DEPLOY_MODE" == "ghcr" ]]; then
+        local current_version="1.0.0"
+        if [[ -f "$SCRIPT_DIR/.version" ]]; then
+            current_version=$(cat "$SCRIPT_DIR/.version")
+        fi
+        
+        if is_prerelease_version "$current_version"; then
+            echo ""
+            echo -e "${YELLOW}${BOLD}Pre-release Version Detected${NC}"
+            echo ""
+            echo "  Current version: ${BOLD}$current_version${NC}"
+            echo ""
+            echo "  Pre-release images may be less stable but include the latest features."
+            echo "  Choosing 'No' will use the latest stable release instead."
+            echo ""
+            
+            if ! confirm_prompt "Use pre-release images ($current_version)?" "Y"; then
+                # User wants stable - we'll use 'latest' tag regardless of .version
+                log_info "Will use latest stable release images"
+                # Override to force 'latest' tag in setup_application
+                export INSTALL_FORCE_STABLE=true
+            fi
+        fi
+        
+        log_success "Deploy mode: Pre-built GitHub images"
+    else
+        log_success "Deploy mode: Build from source"
     fi
     
     echo ""

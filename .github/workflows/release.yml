@@ -107,6 +107,7 @@ jobs:
         run: |
           mkdir -p release-assets
           cp docker/docker-compose.yml release-assets/
+          cp docker/docker-compose.ghcr.yml release-assets/
           cp install.sh release-assets/
           cp update.sh release-assets/
 
@@ -124,6 +125,12 @@ jobs:
           # Application version
           VERSION=${{ needs.validate.outputs.version }}
 
+          # Deploy mode: 'build' (local source build) or 'ghcr' (pre-built GitHub images)
+          DEPLOY_MODE=ghcr
+
+          # GHCR image tag (used when DEPLOY_MODE=ghcr)
+          LIBRAFOTO_IMAGE_TAG=latest
+
           # Optional: Google Photos Integration
           # GooglePhotos__ClientId=
           # GooglePhotos__ClientSecret=
@@ -138,6 +145,7 @@ jobs:
           prerelease: false
           files: |
             release-assets/docker-compose.yml
+            release-assets/docker-compose.ghcr.yml
             release-assets/install.sh
             release-assets/update.sh
             release-assets/.env.template
