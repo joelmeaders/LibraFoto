@@ -19,25 +19,25 @@ test_update_help_shows_usage() {
     assertEquals 0 $?
 }
 
-test_update_help_mentions_switch_mode_flag() {
+test_update_help_mentions_check_flag() {
     local output
     output=$(bash "$UPDATE_SCRIPT" --help 2>&1)
-    echo "$output" | grep -q "\-\-switch-mode"
-    assertEquals "--help should mention --switch-mode" 0 $?
+    echo "$output" | grep -q "\-\-check"
+    assertEquals "--help should mention --check" 0 $?
 }
 
-test_update_help_mentions_rollback_flag() {
+test_update_help_mentions_list_backups_flag() {
     local output
     output=$(bash "$UPDATE_SCRIPT" --help 2>&1)
-    echo "$output" | grep -q "\-\-rollback"
-    assertEquals "--help should mention --rollback" 0 $?
+    echo "$output" | grep -q "\-\-list-backups"
+    assertEquals "--help should mention --list-backups" 0 $?
 }
 
-test_update_help_mentions_no_cache_flag() {
+test_update_help_mentions_interactive_workflow() {
     local output
     output=$(bash "$UPDATE_SCRIPT" --help 2>&1)
-    echo "$output" | grep -q "\-\-no-cache"
-    assertEquals "--help should mention --no-cache" 0 $?
+    echo "$output" | grep -q "interactive"
+    assertEquals "--help should mention interactive workflow" 0 $?
 }
 
 test_update_rejects_unknown_option() {

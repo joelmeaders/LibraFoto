@@ -19,25 +19,26 @@ test_install_help_shows_usage() {
     assertEquals 0 $?
 }
 
-test_install_help_mentions_use_ghcr_flag() {
+test_install_help_mentions_interactive_features() {
     local output
     output=$(bash "$INSTALL_SCRIPT" --help 2>&1)
-    echo "$output" | grep -q "\-\-use-ghcr"
-    assertEquals "--help should mention --use-ghcr" 0 $?
+    # Script is now interactive-first, check for key terms
+    echo "$output" | grep -q "interactive"
+    assertEquals "--help should mention interactive" 0 $?
 }
 
-test_install_help_mentions_build_local_flag() {
+test_install_help_mentions_deployment_method() {
     local output
     output=$(bash "$INSTALL_SCRIPT" --help 2>&1)
-    echo "$output" | grep -q "\-\-build-local"
-    assertEquals "--help should mention --build-local" 0 $?
+    echo "$output" | grep -q "Deployment.*method\|GHCR.*images\|build from source"
+    assertEquals "--help should mention deployment options" 0 $?
 }
 
-test_install_help_mentions_skip_kiosk_flag() {
+test_install_help_mentions_kiosk_mode() {
     local output
     output=$(bash "$INSTALL_SCRIPT" --help 2>&1)
-    echo "$output" | grep -q "\-\-skip-kiosk"
-    assertEquals "--help should mention --skip-kiosk" 0 $?
+    echo "$output" | grep -qi "kiosk"
+    assertEquals "--help should mention kiosk mode" 0 $?
 }
 
 test_install_rejects_unknown_option() {

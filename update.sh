@@ -2,18 +2,19 @@
 #
 # LibraFoto - Update Script
 #
-# This script automates updating LibraFoto:
+# This script automates updating LibraFoto with a fully interactive workflow:
 # - Check for available updates
+# - Show preview of changes
+# - Interactive configuration prompts
 # - Backup database and configuration
 # - Pull latest code changes
 # - Run database migrations
 # - Rebuild and deploy containers
-# - Rollback on failure
+# - Automatic rollback on failure
 #
 # Usage:
-#   ./update.sh           # Interactive update
+#   ./update.sh           # Interactive update workflow
 #   ./update.sh --check   # Check for updates only
-#   ./update.sh --force   # Update without confirmation
 #   ./update.sh --help    # Show help
 #
 # Version: 1.0.0
@@ -72,32 +73,36 @@ Usage: $0 [OPTIONS]
 OPTIONS:
     --help, -h      Show this help message
     --check         Check for updates without installing
-    --force, -f     Update without confirmation prompts
-    --no-cache      Force rebuild without Docker cache (build mode only)
-    --rollback      Rollback to previous version from backup
-    --repair-kiosk  Repair kiosk mode configuration
-    --switch-mode   Switch between build and GHCR deploy modes
+    --list-backups  List available backups
 
 DESCRIPTION:
-    This script automates the LibraFoto update process including:
+    This script provides a fully interactive update workflow for LibraFoto.
+    
+    The update process includes:
     - Pre-update backup of database and configuration
     - Git pull to fetch latest changes
     - Container rebuild (build mode) or image pull (GHCR mode)
-    - Health checks with automatic rollback on failure
+    - Automatic database migrations
+    - Health checks and validation
 
-    The update script respects the deploy mode chosen during installation:
+    You'll see a detailed preview of what will change, then be asked:
+    1. Whether to proceed with the update
+    2. Whether to stash local changes (if any detected)
+    3. Whether to switch deploy mode (build ↔ GHCR)
+    4. Whether to use Docker build cache (build mode only)
+
+    Deploy Modes:
     - Build mode:  Pulls source code and rebuilds container images locally
     - GHCR mode:   Pulls source code (for scripts) and pre-built images from
                    GitHub Container Registry
 
-    Use --switch-mode to change between build and GHCR modes after installation.
+    If the update fails, you'll be offered an automatic rollback to restore
+    your previous version.
 
 EXAMPLES:
-    ./update.sh              # Interactive update
-    ./update.sh --check      # Check for available updates
-    ./update.sh --force      # Non-interactive update
-    ./update.sh --rollback   # Restore from last backup
-    ./update.sh --switch-mode # Change deploy mode (build <-> ghcr)
+    ./update.sh              # Interactive update workflow
+    ./update.sh --check      # Check for available updates only
+    ./update.sh --list-backups  # Show available backups
 
 BACKUP LOCATION:
     Backups are stored in: $BACKUP_DIR
@@ -212,6 +217,66 @@ check_for_updates() {
     echo ""
     
     return 0
+}
+
+# Show preview of what will be updated
+show_update_preview() {
+    local script_dir="${1:-.}"
+    local deploy_mode="$2"
+    local commits_behind="${3:-?}"
+    
+    echo ""
+    echo -e "${BOLD}═══════════════════════════════════════════════════════${NC}"
+    echo -e "${BOLD}Update Preview${NC}"
+    echo -e "${BOLD}═══════════════════════════════════════════════════════${NC}"
+    
+    echo -e "\n${BOLD}Current State:${NC}"
+    echo "  • Version: $(get_current_version "$script_dir") ($(get_current_commit))"
+    echo "  • Deploy Mode: $([ "$deploy_mode" == "ghcr" ] && echo "Pre-built GitHub images" || echo "Local source build")"
+    echo "  • Commits Behind: $commits_behind"
+    
+    echo -e "\n${BOLD}Backup (Step 1/5):${NC}"
+    echo "  • New backup created: $script_dir/$BACKUP_DIR/[timestamp]/"
+    echo "  • Contents: database, .env, git state, Docker images list"
+    
+    echo -e "\n${BOLD}Git Changes (Step 2/5):${NC}"
+    echo "  • Repository will be updated to latest commit"
+    echo "  • Local changes will be stashed if present"
+    echo "  • Scripts and configuration files updated"
+    
+    echo -e "\n${BOLD}Database Migrations (Step 3/5):${NC}"
+    echo "  • Migrations applied automatically on API container startup"
+    echo "  • EF Core handles via DbContext.Database.Migrate()"
+    
+    if [[ "$deploy_mode" == "ghcr" ]]; then
+        echo -e "\n${BOLD}Container Images (Step 4/5):${NC}"
+        echo "  • Pull pre-built images from GitHub Container Registry"
+        local version
+        version=$(get_current_version "$script_dir")
+        local image_tag
+        image_tag=$(get_image_tag_for_version "$version")
+        echo "  • Image tag: $image_tag"
+    else
+        echo -e "\n${BOLD}Container Images (Step 4/5):${NC}"
+        echo "  • Rebuild images locally from source code"
+        echo "  • Estimated time: 5-20 minutes depending on Pi model"
+    fi
+    
+    echo -e "\n${BOLD}Deployment (Step 5/5):${NC}"
+    echo "  • Stop existing containers"
+    echo "  • Start updated containers"
+    echo "  • Wait for health checks (up to 120s)"
+    
+    echo -e "\n${BOLD}Containers to Restart:${NC}"
+    local compose_file
+    compose_file=$(get_compose_file "$script_dir")
+    if [[ -f "$compose_file" ]]; then
+        docker compose -f "$compose_file" ps --format "    • {{.Name}} ({{.Status}})" 2>/dev/null || echo "    • Unable to list containers"
+    else
+        echo "    • librafoto-api, librafoto-admin, librafoto-display, librafoto-proxy"
+    fi
+    
+    echo -e "\n${BOLD}═══════════════════════════════════════════════════════${NC}\n"
 }
 
 # =============================================================================
@@ -699,7 +764,116 @@ cleanup_old_backups() {
 # Post-Update
 # =============================================================================
 
+validate_update() {
+    local script_dir="${1:-.}"
+    local backup_path="$2"
+    
+    echo -e "\n${BOLD}Validating Update:${NC}\n"
+    
+    local validation_passed=true
+    
+    # Check version changed
+    if [[ -f "$backup_path/version.txt" ]]; then
+        local old_version
+        old_version=$(cat "$backup_path/version.txt")
+        local new_version
+        new_version=$(get_current_version "$script_dir")
+        
+        if [[ "$old_version" != "$new_version" ]]; then
+            echo -e "  ${GREEN}✓${NC} Version updated: $old_version → $new_version"
+        else
+            echo -e "  ${YELLOW}⚠${NC} Version unchanged (may be commit-only update)"
+        fi
+    fi
+    
+    # Check containers healthy
+    if check_docker; then
+        local compose_file
+        compose_file=$(get_compose_filename "$script_dir")
+        local api_health
+        api_health=$(docker inspect librafoto-api --format='{{.State.Health.Status}}' 2>/dev/null || echo "unknown")
+        
+        if [[ "$api_health" == "healthy" ]]; then
+            echo -e "  ${GREEN}✓${NC} API container healthy"
+        else
+            echo -e "  ${RED}✗${NC} API container not healthy (status: $api_health)"
+            validation_passed=false
+        fi
+        
+        local running_count
+        running_count=$(cd "$script_dir/docker" && docker compose -f "$compose_file" ps --status running -q 2>/dev/null | wc -l)
+        local expected_count
+        expected_count=$(cd "$script_dir/docker" && docker compose -f "$compose_file" config --services 2>/dev/null | wc -l)
+        
+        if [[ $running_count -ge $expected_count ]] && [[ $expected_count -gt 0 ]]; then
+            echo -e "  ${GREEN}✓${NC} All containers running ($running_count/$expected_count)"
+        else
+            echo -e "  ${YELLOW}⚠${NC} Some containers not running ($running_count/$expected_count)"
+        fi
+    fi
+    
+    # Check backup created
+    if [[ -f "$backup_path/data-backup.tar.gz" ]]; then
+        local backup_size
+        backup_size=$(du -sh "$backup_path/data-backup.tar.gz" 2>/dev/null | cut -f1 || echo "unknown")
+        echo -e "  ${GREEN}✓${NC} Backup created ($backup_size)"
+    else
+        echo -e "  ${YELLOW}⚠${NC} No data backup found (volume may be empty)"
+    fi
+    
+    echo ""
+    if [[ "$validation_passed" == "true" ]]; then
+        log_success "All validation checks passed"
+    else
+        log_warn "Some validation checks failed - see above"
+    fi
+    
+    return 0
+}
+
 show_post_update() {
+    local script_dir
+    script_dir=$(get_script_dir)
+    local deploy_mode
+    deploy_mode=$(get_deploy_mode "$script_dir")
+    local compose_file
+    compose_file=$(get_compose_filename "$script_dir")
+    local backup_path="${1:-}"
+    
+    echo ""
+    echo -e "${GREEN}${BOLD}╔════════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${GREEN}${BOLD}║          LibraFoto Update Complete!                    ║${NC}"
+    echo -e "${GREEN}${BOLD}╚════════════════════════════════════════════════════════════╝${NC}"
+    echo ""
+    
+    echo -e "${BOLD}Version:${NC} $(get_current_version "$script_dir") ($(get_current_commit))"
+    echo -e "${BOLD}Deploy Mode:${NC} $([ "$deploy_mode" == "ghcr" ] && echo "Pre-built GitHub images" || echo "Local source build")"
+    echo ""
+    
+    echo -e "${BOLD}Container Status:${NC}"
+    docker compose -f "$script_dir/docker/$compose_file" ps
+    echo ""
+    
+    echo -e "${BOLD}Access URLs:${NC}"
+    local ip_address
+    ip_address=$(get_ip_address)
+    echo "  Display UI: http://$ip_address/display/"
+    echo "  Admin UI:   http://$ip_address/admin/"
+    echo ""
+    
+    # Show validation results  
+    if [[ -n "$backup_path" ]]; then
+        validate_update "$script_dir" "$backup_path"
+    fi
+    
+    echo -e "${BOLD}Log file:${NC} $LOG_FILE"
+    echo ""
+    
+    # Cleanup old backups
+    cleanup_old_backups
+}
+
+show_post_update_old() {
     local script_dir
     script_dir=$(get_script_dir)
     local deploy_mode
@@ -741,14 +915,8 @@ show_post_update() {
 
 main() {
     local check_only=false
-    local force_update=false
-    local no_cache=false
-    local do_rollback=false
-    local rollback_target="latest"
-    local repair_kiosk=false
-    local switch_mode=false
     
-    # Parse arguments
+    # Parse arguments - keep only read-only flags
     while [[ $# -gt 0 ]]; do
         case "$1" in
             --help|-h)
@@ -759,37 +927,16 @@ main() {
                 check_only=true
                 shift
                 ;;
-            --force|-f)
-                force_update=true
-                shift
-                ;;
-            --no-cache)
-                no_cache=true
-                shift
-                ;;
-            --rollback)
-                do_rollback=true
-                if [[ $# -gt 1 ]] && [[ ! "$2" =~ ^-- ]]; then
-                    rollback_target="$2"
-                    shift
-                fi
-                shift
-                ;;
             --list-backups)
                 list_backups
                 exit 0
                 ;;
-            --repair-kiosk)
-                repair_kiosk=true
-                shift
-                ;;
-            --switch-mode)
-                switch_mode=true
-                shift
-                ;;
             *)
                 log_error "Unknown option: $1"
-                echo "Use --help for usage information"
+                echo ""
+                echo "Update is now fully interactive."
+                echo "Run './update.sh' with no arguments for the interactive workflow."
+                echo "Use '--help' for available options."
                 exit 1
                 ;;
         esac
@@ -799,75 +946,8 @@ main() {
     log_init "LibraFoto Update"
     show_update_banner
     
-    # Handle switch-mode
-    if [[ "$switch_mode" == "true" ]]; then
-        local script_dir
-        script_dir=$(get_script_dir)
-        local current_mode
-        current_mode=$(get_deploy_mode "$script_dir")
-        
-        echo -e "Current deploy mode: ${BOLD}$([ "$current_mode" == "ghcr" ] && echo "Pre-built GitHub images (ghcr)" || echo "Local source build (build)")${NC}"
-        echo ""
-        
-        if [[ "$current_mode" == "ghcr" ]]; then
-            echo "Switch to building images locally from source code?"
-            echo "This is slower but lets you run custom/modified versions."
-            echo ""
-            if confirm_prompt "Switch to build mode?" "N"; then
-                set_env_var "DEPLOY_MODE" "build" "$script_dir"
-                log_success "Switched to build mode"
-                log_info "Run ./update.sh to rebuild containers from source"
-            else
-                echo "No changes made."
-            fi
-        else
-            echo "Switch to using pre-built images from GitHub Container Registry?"
-            echo "This is faster and doesn't require compiling on this machine."
-            echo ""
-            if confirm_prompt "Switch to GHCR mode?" "Y"; then
-                local version
-                version=$(get_current_version "$script_dir")
-                local image_tag
-                image_tag=$(get_image_tag_for_version "$version")
-                
-                set_env_var "DEPLOY_MODE" "ghcr" "$script_dir"
-                set_env_var "LIBRAFOTO_IMAGE_TAG" "$image_tag" "$script_dir"
-                log_success "Switched to GHCR mode (image tag: $image_tag)"
-                log_info "Run ./update.sh to pull and deploy pre-built images"
-            else
-                echo "No changes made."
-            fi
-        fi
-        exit 0
-    fi
-    
     # Check prerequisites
     check_prerequisites
-    
-    # Handle rollback
-    if [[ "$do_rollback" == "true" ]]; then
-        perform_rollback "$rollback_target"
-        exit $?
-    fi
-    
-    # Handle kiosk repair
-    if [[ "$repair_kiosk" == "true" ]]; then
-        log_info "Repairing kiosk mode..."
-        local script_dir
-        script_dir=$(get_script_dir)
-        
-        # Try kiosk-setup.sh first (preferred), fall back to install.sh
-        if [[ -f "$script_dir/scripts/kiosk-setup.sh" ]]; then
-            bash "$script_dir/scripts/kiosk-setup.sh" --repair
-            exit $?
-        elif [[ -f "$script_dir/install.sh" ]]; then
-            bash "$script_dir/install.sh" --repair-kiosk
-            exit $?
-        else
-            log_error "Kiosk setup script not found"
-            exit 1
-        fi
-    fi
     
     # Check for updates
     if ! check_for_updates; then
@@ -879,25 +959,96 @@ main() {
         exit 0
     fi
     
-    # Confirm update
-    if [[ "$force_update" != "true" ]]; then
-        if ! confirm_prompt "Do you want to install this update?" "Y"; then
-            echo "Update cancelled"
-            exit 0
+    # Get context for preview
+    local script_dir
+    script_dir=$(get_script_dir)
+    local deploy_mode
+    deploy_mode=$(get_deploy_mode "$script_dir")
+    
+    # Count commits behind
+    local commits_behind
+    commits_behind=$(git rev-list --count HEAD..origin/main 2>/dev/null || git rev-list --count HEAD..origin/master 2>/dev/null || echo "?")
+    
+    # Show preview
+    show_update_preview "$script_dir" "$deploy_mode" "$commits_behind"
+    
+    # Interactive prompts
+    echo -e "${BOLD}Configuration Questions:${NC}\n"
+    
+    # Q1: Proceed with update?
+    if ! confirm_prompt "Proceed with update?" "Y"; then
+        echo "Update cancelled"
+        exit 0
+    fi
+    
+    # Q2: Stash changes? (only if local changes detected)
+    cd "$script_dir"
+    local force_stash="false"
+    if ! git diff-index --quiet HEAD -- 2>/dev/null; then
+        echo ""
+        log_warn "Local changes detected in repository"
+        if confirm_prompt "Stash changes and continue?" "Y"; then
+            force_stash="true"
+        else
+            log_error "Update cancelled - please commit or stash your changes manually"
+            exit 1
+        fi
+    fi
+    
+    # Q3: Switch deploy mode?
+    echo ""
+    local switch_mode=false
+    local new_deploy_mode="$deploy_mode"
+    
+    echo -e "Current deploy mode: ${BOLD}$([ "$deploy_mode" == "ghcr" ] && echo "Pre-built GitHub images" || echo "Local source build")${NC}"
+    if confirm_prompt "Switch deploy mode?" "N"; then
+        if [[ "$deploy_mode" == "ghcr" ]]; then
+            echo "Switching to: Local source build"
+            new_deploy_mode="build"
+        else
+            echo "Switching to: Pre-built GitHub images"
+            new_deploy_mode="ghcr"
+        fi
+        switch_mode=true
+    fi
+    
+    # Q4: Use Docker build cache? (build mode only)
+    echo ""
+    local use_no_cache="false"
+    if [[ "$new_deploy_mode" == "build" ]]; then
+        if ! confirm_prompt "Use Docker build cache?" "Y"; then
+            use_no_cache="true"
+            log_info "Will rebuild with --no-cache"
         fi
     fi
     
     echo ""
     
+    # Apply deploy mode switch if requested
+    if [[ "$switch_mode" == "true" ]]; then
+        set_env_var "DEPLOY_MODE" "$new_deploy_mode" "$script_dir"
+        
+        if [[ "$new_deploy_mode" == "ghcr" ]]; then
+            local version
+            version=$(get_current_version "$script_dir")
+            local image_tag
+            image_tag=$(get_image_tag_for_version "$version")
+            set_env_var "LIBRAFOTO_IMAGE_TAG" "$image_tag" "$script_dir"
+        fi
+        
+        log_success "Deploy mode switched to: $new_deploy_mode"
+        echo ""
+    fi
+    
     # Track if we need to rollback on failure
     local backup_path=""
     local update_failed=false
     
-    # Create backup (always enabled)
+    # Create backup
     backup_path=$(create_backup)
     
     # Pull updates
-    if ! pull_updates "$force_update"; then
+    if ! pull_updates "$force_stash"; then
         update_failed=true
     fi
     
@@ -908,7 +1059,7 @@ main() {
     
     # Rebuild containers (or pull images in GHCR mode)
     if [[ "$update_failed" != "true" ]]; then
-        if ! rebuild_containers "$no_cache"; then
+        if ! rebuild_containers "$use_no_cache"; then
             update_failed=true
         fi
     fi
@@ -929,8 +1080,9 @@ main() {
             if confirm_prompt "Would you like to rollback to the previous version?" "Y"; then
                 automatic_rollback
             else
-                log_warn "Rollback skipped. You can manually rollback later with:"
-                echo "  sudo ./update.sh --rollback"
+                log_warn "Rollback skipped. Contact support or check logs for manual recovery steps."
+                echo ""
+                echo "Backup location: $backup_path"
             fi
         fi
         
@@ -938,7 +1090,7 @@ main() {
     fi
     
     # Success
-    show_post_update
+    show_post_update "$backup_path"
 }
 
 # Run main function

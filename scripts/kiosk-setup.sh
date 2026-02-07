@@ -304,28 +304,57 @@ kiosk_install_ip_update_service() {
     # Make executable
     chmod +x "$source_script"
     
-    # Create systemd service
+    # Detect which network manager is active
+    log_info "Detecting network manager..."
+    local network_wait_service=""
+    if systemctl list-unit-files 2>/dev/null | grep -q "NetworkManager.service"; then
+        network_wait_service="NetworkManager-wait-online.service"
+        log_info "Detected NetworkManager"
+    elif systemctl list-unit-files 2>/dev/null | grep -q "dhcpcd.service"; then
+        network_wait_service="dhcpcd.service"
+        log_info "Detected dhcpcd"
+    elif systemctl list-unit-files 2>/dev/null | grep -q "systemd-networkd.service"; then
+        network_wait_service="systemd-networkd-wait-online.service"
+        log_info "Detected systemd-networkd"
+    else
+        log_warn "No known network manager detected - using network-online.target only"
+    fi
+    
+    # Create systemd service with proper dependencies
     cat > /etc/systemd/system/librafoto-ip-update.service << EOF
 [Unit]
 Description=LibraFoto Host IP Update
-After=network-online.target
-Wants=network-online.target
-Before=docker.service
+# Wait for network to have an IP address (not just link up)
+After=network-online.target${network_wait_service:+ $network_wait_service}
+Wants=network-online.target${network_wait_service:+ $network_wait_service}
+# Run AFTER Docker starts so we can restart containers with new IP
+After=docker.service
+Requires=docker.service
+BindsTo=docker.service
 
 [Service]
 Type=oneshot
+# Allow longer timeout for network switches (DHCP can take time)
+TimeoutStartSec=120
 ExecStart=$source_script
 RemainAfterExit=yes
+# Restart on failure (e.g., if network not ready yet)
+Restart=on-failure
+RestartSec=10
+StartLimitBurst=5
 
 [Install]
 WantedBy=multi-user.target
 EOF
     
-    # Enable service
+    # Enable and start service
     systemctl daemon-reload >> "$KIOSK_LOG_FILE" 2>&1
     systemctl enable librafoto-ip-update.service >> "$KIOSK_LOG_FILE" 2>&1
     
-    log_success "Host IP update service installed (runs at boot)"
+    log_success "Host IP update service installed (runs after network and Docker are ready)"
+    
+    # Verify service dependencies
+    log_info "Service will wait for: ${network_wait_service:-network-online.target} and docker.service"
 }
 
 # =============================================================================

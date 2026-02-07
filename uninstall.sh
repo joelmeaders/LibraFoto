@@ -58,29 +58,26 @@ Usage: sudo $0 [OPTIONS]
 
 OPTIONS:
     --help, -h      Show this help message
-    --force, -f     Uninstall without confirmation prompts
-    --purge         Remove everything including data (photos, database)
-    --keep-docker   Keep Docker images (only remove containers)
-    --dry-run       Show what would be removed without removing
 
 DESCRIPTION:
-    This script removes LibraFoto from a Raspberry Pi including:
-    - Docker containers and networks
-    - Optionally Docker images and volumes
-    - Kiosk mode configuration
-    - Autostart entries
-    - Systemd services
+    This script is fully interactive and will guide you through uninstalling
+    LibraFoto from your Raspberry Pi.
+    
+    During the uninstall process, you will be asked to confirm:
+    - Uninstallation (yes/no)
+    - Removal of Docker images (yes/no)
+    - Removal of Docker volumes/database (yes/no)
+    - Removal of data directories including photos and backups (yes/no)
+    
+    The script will:
+    - Stop and remove Docker containers
+    - Remove kiosk mode configuration
+    - Clean up systemd services
+    - Track all operations and show a summary
+    - Validate that resources were properly removed
 
-WHAT IS PRESERVED BY DEFAULT:
-    - Your photos and database (data/ directory)
-    - Docker installation itself
-    - Backups directory
-
-EXAMPLES:
-    sudo ./uninstall.sh              # Interactive uninstall
-    sudo ./uninstall.sh --force      # Non-interactive uninstall
-    sudo ./uninstall.sh --purge      # Remove everything including data
-    sudo ./uninstall.sh --dry-run    # Preview what would be removed
+EXAMPLE:
+    sudo ./uninstall.sh
 
 LOG FILE:
     Uninstall log is saved to: $LOG_FILE
@@ -93,7 +90,7 @@ EOF
 # =============================================================================
 
 stop_containers() {
-    log_step "1/5" "Stopping Containers"
+    log_info "Stopping LibraFoto containers..."
     
     local docker_dir="$SCRIPT_DIR/docker"
     
@@ -111,8 +108,6 @@ stop_containers() {
     local compose_file
     compose_file=$(get_compose_filename "$SCRIPT_DIR")
     
-    log_info "Stopping LibraFoto containers..."
-    
     if docker compose -f "$compose_file" ps -q 2>/dev/null | grep -q .; then
         docker compose -f "$compose_file" stop >> "$LOG_FILE" 2>&1 || true
         log_success "Containers stopped"
@@ -122,10 +117,6 @@ stop_containers() {
 }
 
 remove_containers() {
-    local keep_volumes="$1"
-    
-    log_step "2/5" "Removing Containers"
-    
     local docker_dir="$SCRIPT_DIR/docker"
     
     if [[ ! -d "$docker_dir" ]]; then
@@ -142,19 +133,32 @@ remove_containers() {
     compose_file=$(get_compose_filename "$SCRIPT_DIR")
     
     log_info "Removing containers and networks..."
+    docker compose -f "$compose_file" down >> "$LOG_FILE" 2>&1 || true
+    log_success "Containers and networks removed (volumes preserved)"
+}
+
+remove_volumes() {
+    local docker_dir="$SCRIPT_DIR/docker"
     
-    if [[ "$keep_volumes" == "true" ]]; then
-        docker compose -f "$compose_file" down >> "$LOG_FILE" 2>&1 || true
-        log_success "Containers and networks removed (volumes preserved)"
-    else
-        docker compose -f "$compose_file" down -v >> "$LOG_FILE" 2>&1 || true
-        log_success "Containers, networks, and volumes removed"
+    if [[ ! -d "$docker_dir" ]]; then
+        return 0
     fi
+    
+    if ! check_docker; then
+        return 0
+    fi
+    
+    cd "$docker_dir"
+    
+    local compose_file
+    compose_file=$(get_compose_filename "$SCRIPT_DIR")
+    
+    log_info "Removing Docker volumes..."
+    docker compose -f "$compose_file" down -v >> "$LOG_FILE" 2>&1 || true
+    log_success "Volumes removed"
 }
 
 remove_images() {
-    log_step "3/5" "Removing Docker Images"
-    
     if ! check_docker; then
         return 0
     fi
@@ -187,8 +191,6 @@ remove_images() {
 # =============================================================================
 
 remove_kiosk() {
-    log_step "4/5" "Removing Kiosk Configuration"
-    
     local pi_home
     pi_home=$(get_pi_home)
     local pi_user
@@ -246,8 +248,6 @@ remove_kiosk() {
 # =============================================================================
 
 remove_services() {
-    log_step "5/5" "Removing Systemd Services"
-    
     local services_removed=0
     
     # Remove IP update service
@@ -382,7 +382,7 @@ show_dry_run() {
 # =============================================================================
 
 show_post_uninstall() {
-    local purge_mode="$1"
+    local removed_data="$1"
     
     echo ""
     echo -e "${GREEN}${BOLD}╔════════════════════════════════════════════════════════════╗${NC}"
@@ -390,7 +390,7 @@ show_post_uninstall() {
     echo -e "${GREEN}${BOLD}╚════════════════════════════════════════════════════════════╝${NC}"
     echo ""
     
-    if [[ "$purge_mode" != "true" ]]; then
+    if [[ "$removed_data" != "true" ]]; then
         echo -e "${BOLD}Preserved Data:${NC}"
         echo ""
         if [[ -d "$SCRIPT_DIR/data" ]]; then
@@ -423,98 +423,101 @@ show_post_uninstall() {
     echo ""
 }
 
+show_post_uninstall_with_validation() {
+    local removed_images="$1"
+    local removed_volumes="$2"
+    local removed_data="$3"
+    
+    # Show standard post-uninstall message
+    show_post_uninstall "$removed_data"
+    
+    # Show operation summary
+    show_operation_summary
+    
+    # Validate resource removal
+    echo -e "\n${BOLD}Validating removal...${NC}\n"
+    
+    local validation_targets=("containers" "kiosk" "config")
+    [[ "$removed_images" == "true" ]] && validation_targets+=("images")
+    [[ "$removed_volumes" == "true" ]] && validation_targets+=("volumes")
+    [[ "$removed_data" == "true" ]] && validation_targets+=("data")
+    
+    if validate_removal "${validation_targets[@]}"; then
+        log_success "All resources validated as removed"
+    else
+        log_warn "Some resources may require manual cleanup"
+    fi
+}
+
 # =============================================================================
 # Main Uninstall Logic
 # =============================================================================
 
 perform_uninstall() {
-    local force_mode="$1"
-    local purge_mode="$2"
-    local keep_images="$3"
+    local remove_images="$1"
+    local remove_volumes="$2"
+    local remove_data="$3"
     
-    # Show what will be removed
-    echo -e "${YELLOW}${BOLD}LibraFoto Uninstallation${NC}"
     echo ""
-    echo "This will remove:"
-    echo "  - Docker containers and networks"
-    if [[ "$keep_images" != "true" ]]; then
-        echo "  - Docker images"
-    fi
-    echo "  - Kiosk mode configuration"
-    echo "  - Systemd services"
-    echo "  - Environment configuration"
+    echo -e "${CYAN}${BOLD}Starting uninstall operations...${NC}"
     echo ""
     
-    if [[ "$purge_mode" == "true" ]]; then
-        echo -e "${RED}${BOLD}PURGE MODE: This will also delete:${NC}"
-        echo "  - All photos"
-        echo "  - Database"
-        echo "  - Backups"
-        echo ""
+    # Enable non-fatal errors for tracked operations
+    set +e
+    
+    # Step 1: Stop containers (always if Docker available)
+    log_step "1/8" "Stopping Containers"
+    track_operation "Stop containers" stop_containers || true
+    
+    # Step 2: Remove containers (always)
+    log_step "2/8" "Removing Containers"
+    track_operation "Remove containers" remove_containers || true
+    
+    # Step 3: Remove volumes (if user chose yes)
+    if [[ "$remove_volumes" == "true" ]]; then
+        log_step "3/8" "Removing Docker Volumes"
+        track_operation "Remove volumes" remove_volumes || true
     else
-        echo -e "${YELLOW}This will NOT remove:${NC}"
-        echo "  - Your photos and database (data/ directory)"
-        echo "  - Docker itself"
-        echo "  - Backups directory"
-        echo ""
+        log_step "3/8" "Skipping Volume Removal"
+        log_info "Docker volumes preserved"
     fi
     
-    if [[ "$force_mode" != "true" ]]; then
-        if ! confirm_prompt "Are you sure you want to uninstall LibraFoto?" "N"; then
-            echo ""
-            log_info "Uninstallation cancelled"
-            exit 0
-        fi
-        echo ""
-    fi
-    
-    # Stop containers
-    stop_containers
-    
-    # Remove containers (ask about volumes if not in purge mode)
-    local keep_volumes="true"
-    if [[ "$purge_mode" == "true" ]]; then
-        keep_volumes="false"
-    elif [[ "$force_mode" != "true" ]]; then
-        echo ""
-        if confirm_prompt "Remove Docker volumes (this will delete database data)?" "N"; then
-            keep_volumes="false"
-        fi
-    fi
-    remove_containers "$keep_volumes"
-    
-    # Remove images unless skipped
-    if [[ "$keep_images" != "true" ]]; then
-        remove_images
+    # Step 4: Remove images (if user chose yes)
+    if [[ "$remove_images" == "true" ]]; then
+        log_step "4/8" "Removing Docker Images"
+        track_operation "Remove images" remove_images || true
     else
-        log_info "Skipping Docker image removal (--keep-docker)"
+        log_step "4/8" "Skipping Image Removal"
+        log_info "Docker images preserved"
     fi
     
-    # Remove kiosk configuration
-    remove_kiosk
+    # Step 5: Remove kiosk (always)
+    log_step "5/8" "Removing Kiosk Configuration"
+    track_operation "Remove kiosk" remove_kiosk || true
     
-    # Remove systemd services
-    remove_services
+    # Step 6: Remove services (always)
+    log_step "6/8" "Removing Systemd Services"
+    track_operation "Remove services" remove_services || true
     
-    # Remove configuration
-    remove_config
+    # Step 7: Remove config (always)
+    log_step "7/8" "Removing Configuration"
+    track_operation "Remove config" remove_config || true
     
-    # Remove data if purge mode
-    if [[ "$purge_mode" == "true" ]]; then
-        echo ""
-        if [[ "$force_mode" != "true" ]]; then
-            if confirm_prompt "FINAL WARNING: Delete all photos, database, and backups?" "N"; then
-                remove_data
-            else
-                log_info "Data preserved"
-            fi
-        else
-            remove_data
-        fi
+    # Step 8: Remove data (if user chose yes)
+    if [[ "$remove_data" == "true" ]]; then
+        log_step "8/8" "Removing Data Directories"
+        log_warn "Removing all photos, database, and backups..."
+        track_operation "Remove data" remove_data || true
+    else
+        log_step "8/8" "Skipping Data Removal"
+        log_info "Data directories preserved"
     fi
     
-    # Show completion message
-    show_post_uninstall "$purge_mode"
+    # Re-enable fatal errors
+    set -e
+    
+    # Show completion with validation
+    show_post_uninstall_with_validation "$remove_images" "$remove_volumes" "$remove_data"
 }
 
 # =============================================================================
@@ -522,37 +525,20 @@ perform_uninstall() {
 # =============================================================================
 
 main() {
-    local force_mode=false
-    local purge_mode=false
-    local keep_images=false
-    local dry_run=false
-    
-    # Parse arguments
+    # Parse arguments - only --help is supported
     while [[ $# -gt 0 ]]; do
         case "$1" in
             --help|-h)
                 show_help
                 exit 0
                 ;;
-            --force|-f)
-                force_mode=true
-                shift
-                ;;
-            --purge)
-                purge_mode=true
-                shift
-                ;;
-            --keep-docker)
-                keep_images=true
-                shift
-                ;;
-            --dry-run)
-                dry_run=true
-                shift
-                ;;
             *)
                 log_error "Unknown option: $1"
-                echo "Use --help for usage information"
+                echo ""
+                echo "LibraFoto uninstall is now fully interactive."
+                echo "All options will be presented during the uninstall process."
+                echo ""
+                echo "Use --help for more information."
                 exit 1
                 ;;
         esac
@@ -561,20 +547,91 @@ main() {
     # Initialize
     show_uninstall_banner
     log_init "LibraFoto Uninstall"
+    reset_operation_tracking
     
-    # Check root
+    # Check root privileges
     check_root
     
-    # Dry run mode
-    if [[ "$dry_run" == "true" ]]; then
-        show_dry_run
+    echo ""
+    echo -e "${CYAN}This script will guide you through uninstalling LibraFoto.${NC}"
+    echo ""
+    echo "First, let's preview what will be removed..."
+    echo ""
+    
+    # Show preview of what will be removed
+    show_dry_run
+    
+    # Ask configuration questions
+    echo -e "${BOLD}Configuration Questions:${NC}"
+    echo ""
+    
+    # Question 1: Confirm uninstallation
+    echo -e "${CYAN}1. Uninstallation Confirmation${NC}"
+    echo ""
+    if ! confirm_prompt "Do you want to proceed with uninstalling LibraFoto?" "N"; then
+        echo ""
+        log_info "Uninstallation cancelled by user"
         exit 0
     fi
+    echo ""
     
-    # Perform uninstall
-    perform_uninstall "$force_mode" "$purge_mode" "$keep_images"
+    # Question 2: Remove Docker images
+    echo -e "${CYAN}2. Docker Images${NC}"
+    echo ""
+    echo "  Docker images contain the LibraFoto application code."
+    echo "  Removing them will free up disk space (~500MB)."
+    echo "  You can always re-download them if you reinstall."
+    echo ""
+    local remove_images=false
+    if confirm_prompt "Remove Docker images?" "N"; then
+        remove_images=true
+    fi
+    echo ""
     
-    log_success "Uninstallation complete"
+    # Question 3: Remove Docker volumes
+    echo -e "${CYAN}3. Docker Volumes (Database)${NC}"
+    echo ""
+    echo "  ${YELLOW}WARNING:${NC} Docker volumes contain your LibraFoto database."
+    echo "  This includes album organization, tags, and photo metadata."
+    echo "  Your actual photo files will NOT be removed (see next question)."
+    echo ""
+    local remove_volumes=false
+    if confirm_prompt "Remove Docker volumes (deletes database)?" "N"; then
+        remove_volumes=true
+    fi
+    echo ""
+    
+    # Question 4: Remove data directories
+    echo -e "${CYAN}4. Data Directories (Photos & Backups)${NC}"
+    echo ""
+    echo "  ${RED}${BOLD}DANGER:${NC} This will ${RED}permanently delete${NC} all your photos and backups!"
+    echo ""
+    if [[ -d "$SCRIPT_DIR/data" ]]; then
+        echo "  Data directory size: $(du -sh "$SCRIPT_DIR/data" 2>/dev/null | cut -f1)"
+    fi
+    if [[ -d "$SCRIPT_DIR/backups" ]]; then
+        echo "  Backups directory size: $(du -sh "$SCRIPT_DIR/backups" 2>/dev/null | cut -f1)"
+    fi
+    echo ""
+    local remove_data=false
+    if confirm_prompt "Remove data directories (photos & backups)?" "N"; then
+        echo ""
+        # Double confirmation for data removal
+        echo -e "  ${RED}${BOLD}FINAL WARNING:${NC} Are you absolutely sure?"
+        echo "  This action ${RED}CANNOT BE UNDONE${NC}!"
+        echo ""
+        if confirm_prompt "  Type YES to confirm data deletion" "N"; then
+            remove_data=true
+        else
+            log_info "Data directories will be preserved"
+        fi
+    fi
+    echo ""
+    
+    # Perform uninstall with error tracking
+    perform_uninstall "$remove_images" "$remove_volumes" "$remove_data"
+    
+    log_success "Uninstallation script complete"
 }
 
 # Run main function

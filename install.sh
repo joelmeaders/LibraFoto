@@ -73,23 +73,19 @@ show_help() {
 Usage: sudo $0 [OPTIONS]
 
 OPTIONS:
-    --help          Show this help message
-    --uninstall     Remove LibraFoto (keeps photos data)
-    --skip-kiosk    Skip kiosk mode configuration
-    --skip-docker   Skip Docker installation (if already installed)
-    --repair-kiosk  Repair/reconfigure kiosk mode only
-    --use-ghcr      Use pre-built images from GitHub Container Registry
-    --build-local   Build images locally from source code
+    --help, -h      Show this help message
 
 DESCRIPTION:
     This script automates the complete setup of LibraFoto on a Raspberry Pi,
     including Docker installation, kiosk mode configuration, and container
     deployment.
 
-    You can choose to build container images locally from source or pull
-    pre-built images from GitHub Container Registry (GHCR). GHCR images are
-    faster to deploy and don't require compiling on the Pi. Your choice is
-    saved and respected by the update script.
+    The installation is interactive. You'll be shown a preview of what will
+    be installed and configured, then prompted for your preferences:
+    - Deployment method (pre-built GHCR images or build from source)
+    - Kiosk mode configuration (fullscreen slideshow on boot)
+
+    Your choices are saved and respected by the update script.
 
 REQUIREMENTS:
     - Raspberry Pi 4 or later
@@ -99,11 +95,7 @@ REQUIREMENTS:
     - Run from the cloned LibraFoto repository directory
 
 EXAMPLES:
-    sudo ./install.sh                # Full installation (interactive)
-    sudo ./install.sh --use-ghcr     # Install using pre-built GHCR images
-    sudo ./install.sh --build-local  # Install by building from source
-    sudo ./install.sh --skip-kiosk   # Install without kiosk mode
-    sudo ./install.sh --repair-kiosk # Fix kiosk mode if not working
+    sudo ./install.sh                # Interactive installation
 
 LOG FILE:
     Installation log is saved to: $LOG_FILE
@@ -111,30 +103,50 @@ LOG FILE:
 EOF
 }
 
-show_overview() {
-    echo -e "${BOLD}Installation Overview:${NC}"
+show_install_preview() {
+    local script_dir="${1:-.}"
+    local pi_home
+    pi_home=$(get_pi_home)
+    
     echo ""
-    echo "  1. System Validation"
-    echo "     - Verify Raspberry Pi 4+ with 64-bit OS"
-    echo "     - Check available RAM and storage"
-    echo ""
-    echo "  2. Docker Setup"
-    echo "     - Install Docker and Docker Compose"
-    echo "     - Configure for non-root access"
-    echo ""
-    echo "  3. Kiosk Mode Configuration"
-    echo "     - Install Chromium browser"
-    echo "     - Configure auto-start on boot"
-    echo "     - Disable screen blanking"
-    echo ""
-    echo "  4. Application Deployment"
-    echo "     - Build or pull container images"
-    echo "     - Start LibraFoto services"
-    echo ""
-    echo "  5. Post-Installation"
-    echo "     - Display access URLs and QR code"
-    echo "     - Show next steps"
-    echo ""
+    echo -e "${BOLD}═══════════════════════════════════════════════════════${NC}"
+    echo -e "${BOLD}Installation Preview${NC}"
+    echo -e "${BOLD}═══════════════════════════════════════════════════════${NC}"
+    
+    echo -e "\n${BOLD}System Modifications:${NC}"
+    echo "    • Docker and Docker Compose (if not installed)"
+    echo "    • User added to 'docker' group"
+    echo "    • Swap file increased to 2GB (if building from source)"
+    
+    echo -e "\n${BOLD}Directories to Create:${NC}"
+    echo "    • $script_dir/data/ (photos and database, mode 755)"
+    
+    echo -e "\n${BOLD}Files to Create:${NC}"
+    echo "    • $script_dir/docker/.env (environment configuration)"
+    echo "      - LIBRAFOTO_HOST_IP (auto-detected)"
+    echo "      - JWT_KEY (generated securely)"
+    echo "      - VERSION (from .version file)"
+    echo "      - DEPLOY_MODE (based on your choice)"
+    echo "      - LIBRAFOTO_IMAGE_TAG (for GHCR mode)"
+    
+    echo -e "\n${BOLD}Docker Resources (from compose file):${NC}"
+    echo "    • Containers: librafoto-api, librafoto-admin, librafoto-display, librafoto-proxy"
+    echo "    • Network: librafoto_default"
+    echo "    • Volume: librafoto-data"
+    echo "    • Images: depends on deployment method (pulled or built)"
+    
+    echo -e "\n${BOLD}Kiosk Mode Files (if enabled):${NC}"
+    echo "    • $pi_home/start-kiosk.sh (startup script)"
+    echo "    • $pi_home/.config/autostart/librafoto-kiosk.desktop (XDG autostart)"
+    echo "    • /etc/systemd/system/librafoto-ip-update.service (IP update service)"
+    echo "    • /etc/lightdm/lightdm.conf (modified for auto-login, backed up)"
+    echo "    • /etc/xdg/lxsession/LXDE-pi/autostart (modified, backed up)"
+    echo "    • $pi_home/.config/lxsession/LXDE-pi/autostart (configured)"
+    
+    echo -e "\n${BOLD}System Packages (if kiosk enabled):${NC}"
+    echo "    • chromium-browser, unclutter, xdotool"
+    
+    echo -e "\n${BOLD}═══════════════════════════════════════════════════════${NC}\n"
 }
 
 # =============================================================================
@@ -592,6 +604,89 @@ deploy_containers() {
 # Post-Installation
 # =============================================================================
 
+validate_installation() {
+    local script_dir="${1:-.}"
+    local install_kiosk="${2:-false}"
+    local pi_home
+    pi_home=$(get_pi_home)
+    
+    echo -e "\n${BOLD}Validating Installation:${NC}\n"
+    
+    local validation_passed=true
+    
+    # Check directories
+    if [[ -d "$script_dir/data" ]]; then
+        echo -e "  ${GREEN}✓${NC} Data directory created"
+    else
+        echo -e "  ${RED}✗${NC} Data directory missing"
+        validation_passed=false
+    fi
+    
+    # Check .env file
+    if [[ -f "$script_dir/docker/.env" ]]; then
+        echo -e "  ${GREEN}✓${NC} Environment configuration created"
+        
+        # Validate required keys
+        local env_file="$script_dir/docker/.env"
+        for key in LIBRAFOTO_HOST_IP JWT_KEY VERSION DEPLOY_MODE; do
+            if grep -q "^${key}=" "$env_file"; then
+                echo -e "    ${GREEN}✓${NC} $key configured"
+            else
+                echo -e "    ${RED}✗${NC} $key missing"
+                validation_passed=false
+            fi
+        done
+    else
+        echo -e "  ${RED}✗${NC} Environment configuration missing"
+        validation_passed=false
+    fi
+    
+    # Check Docker containers
+    if check_docker; then
+        local compose_file
+        compose_file=$(get_compose_filename "$script_dir")
+        local running_count
+        running_count=$(cd "$script_dir/docker" && docker compose -f "$compose_file" ps --status running -q 2>/dev/null | wc -l)
+        
+        if [[ $running_count -gt 0 ]]; then
+            echo -e "  ${GREEN}✓${NC} Docker containers running ($running_count containers)"
+        else
+            echo -e "  ${YELLOW}⚠${NC} No containers running (may need time to start)"
+        fi
+    fi
+    
+    # Check kiosk files (if kiosk was enabled)
+    if [[ "$install_kiosk" == "true" ]]; then
+        local kiosk_files_ok=true
+        
+        if [[ -f "$pi_home/start-kiosk.sh" ]]; then
+            echo -e "  ${GREEN}✓${NC} Kiosk startup script created"
+        else
+            echo -e "  ${RED}✗${NC} Kiosk startup script missing"
+            kiosk_files_ok=false
+        fi
+        
+        if systemctl list-unit-files "librafoto-ip-update.service" 2>/dev/null | grep -q librafoto; then
+            echo -e "  ${GREEN}✓${NC} IP update service installed"
+        else
+            echo -e "  ${YELLOW}⚠${NC} IP update service not found"
+        fi
+        
+        if [[ "$kiosk_files_ok" != "true" ]]; then
+            validation_passed=false
+        fi
+    fi
+    
+    echo ""
+    if [[ "$validation_passed" == "true" ]]; then
+        log_success "All validation checks passed"
+    else
+        log_warn "Some validation checks failed - see above"
+    fi
+    
+    return 0
+}
+
 show_post_install() {
     log_step "6/6" "Installation Complete"
     
@@ -656,92 +751,19 @@ show_post_install() {
     echo -e "${BOLD}Log file:${NC} $LOG_FILE"
     echo ""
     
+    # Show validation results
+    validate_installation "$SCRIPT_DIR" "$install_kiosk"
+    
     # Prompt for reboot
-    if confirm_prompt "Would you like to reboot now to start kiosk mode?" "Y"; then
-        log_info "Rebooting in 5 seconds..."
-        sleep 5
-        reboot
-    else
-        log_info "Remember to reboot to start kiosk mode"
-    fi
-}
-
-# =============================================================================
-# Uninstall
-# =============================================================================
-
-uninstall() {
-    show_install_banner
-    
-    echo -e "${YELLOW}${BOLD}LibraFoto Uninstallation${NC}"
-    echo ""
-    echo "This will remove:"
-    echo "  - Docker containers and images"
-    echo "  - Kiosk mode configuration"
-    echo ""
-    echo -e "${YELLOW}This will NOT remove:${NC}"
-    echo "  - Your photos and database (data/ directory)"
-    echo "  - Docker itself"
-    echo ""
-    
-    if ! confirm_prompt "Are you sure you want to uninstall LibraFoto?" "N"; then
-        echo "Uninstallation cancelled."
-        exit 0
-    fi
-    
-    local script_dir
-    script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-    local docker_dir="$script_dir/docker"
-    local pi_home
-    pi_home=$(get_pi_home)
-    
-    log_info "Stopping containers..."
-    local compose_file
-    compose_file=$(get_compose_filename "$script_dir")
-    if [[ -d "$docker_dir" ]]; then
-        cd "$docker_dir"
-        docker compose -f "$compose_file" down >> "$LOG_FILE" 2>&1 || true
-    fi
-    
-    if confirm_prompt "Remove Docker volumes (this will delete your photos and database)?" "N"; then
-        docker compose -f "$compose_file" down -v >> "$LOG_FILE" 2>&1 || true
-        log_warn "Docker volumes removed - data deleted"
-    else
-        log_info "Docker volumes preserved"
-    fi
-    
-    log_info "Removing kiosk configuration..."
-    
-    # Use kiosk uninstall function if available
-    if declare -f kiosk_uninstall &>/dev/null; then
-        kiosk_uninstall
-    else
-        # Fallback to inline removal
-        rm -f "$pi_home/start-kiosk.sh"
-        rm -f "$pi_home/.config/autostart/librafoto-kiosk.desktop"
-        
-        local lxde_autostart="/etc/xdg/lxsession/LXDE-pi/autostart"
-        if [[ -f "$lxde_autostart" ]]; then
-            sed -i '/start-kiosk.sh/d' "$lxde_autostart"
-            sed -i '/LibraFoto/d' "$lxde_autostart"
+    if [[ "$install_kiosk" == "true" ]]; then
+        if confirm_prompt "Would you like to reboot now to start kiosk mode?" "Y"; then
+            log_info "Rebooting in 5 seconds..."
+            sleep 5
+            reboot
+        else
+            log_info "Remember to reboot to start kiosk mode"
         fi
-        
-        if [[ -f "/etc/lightdm/lightdm.conf.backup" ]]; then
-            mv /etc/lightdm/lightdm.conf.backup /etc/lightdm/lightdm.conf
-        fi
-        
-        log_success "Kiosk configuration removed"
     fi
-    
-    # Remove .env file
-    rm -f "$docker_dir/.env"
-    
-    echo ""
-    log_success "LibraFoto uninstalled successfully"
-    echo ""
-    echo "Your data directory is preserved at: $script_dir/data"
-    echo "To completely remove, manually delete the LibraFoto directory."
-    echo ""
 }
 
 # =============================================================================
@@ -772,49 +794,20 @@ cleanup() {
 # =============================================================================
 
 main() {
-    # Parse arguments
-    local skip_kiosk=false
-    local skip_docker=false
-    local repair_kiosk=false
-    
-    # INSTALL_DEPLOY_MODE is used by setup_application and deploy_containers
-    # It can be set via --use-ghcr / --build-local flags or via interactive prompt
-    export INSTALL_DEPLOY_MODE=""
-    
+    # Parse arguments - only --help is supported
     while [[ $# -gt 0 ]]; do
         case "$1" in
             --help|-h)
                 show_help
                 exit 0
                 ;;
-            --uninstall)
-                check_root
-                uninstall
-                exit 0
-                ;;
-            --skip-kiosk)
-                skip_kiosk=true
-                shift
-                ;;
-            --skip-docker)
-                skip_docker=true
-                shift
-                ;;
-            --repair-kiosk)
-                repair_kiosk=true
-                shift
-                ;;
-            --use-ghcr)
-                INSTALL_DEPLOY_MODE="ghcr"
-                shift
-                ;;
-            --build-local)
-                INSTALL_DEPLOY_MODE="build"
-                shift
-                ;;
             *)
                 log_error "Unknown option: $1"
-                echo "Use --help for usage information"
+                echo ""
+                echo "LibraFoto installation is now fully interactive."
+                echo "All options will be presented during the installation process."
+                echo ""
+                echo "Use --help for more information."
                 exit 1
                 ;;
         esac
@@ -824,59 +817,48 @@ main() {
     trap cleanup EXIT
     log_init "LibraFoto Installation"
     
-    # Handle kiosk repair mode
-    if [[ "$repair_kiosk" == "true" ]]; then
-        show_install_banner
-        check_root
-        
-        if [[ -f "$KIOSK_SCRIPT" ]]; then
-            kiosk_full_setup "1/1"
-            log_success "Kiosk mode repaired. Reboot to apply changes."
-            if confirm_prompt "Would you like to reboot now?" "Y"; then
-                log_info "Rebooting in 5 seconds..."
-                sleep 5
-                reboot
-            fi
-        else
-            log_error "Kiosk setup script not found: $KIOSK_SCRIPT"
-            exit 1
-        fi
-        exit 0
-    fi
-    
-    # Show banner and overview
+    # Show banner
     show_install_banner
-    show_overview
     
-    # Confirm installation
-    if ! confirm_prompt "Do you want to proceed with the installation?" "Y"; then
-        echo "Installation cancelled."
-        exit 0
-    fi
+    # Check root privileges early (before showing preview)
+    check_root
     
     echo ""
+    echo -e "${CYAN}This script will guide you through installing LibraFoto on your Raspberry Pi.${NC}"
+    echo ""
+    echo "First, let's run some system checks..."
+    echo ""
     
-    # Ask about deploy mode (unless set via flags)
-    if [[ -z "$INSTALL_DEPLOY_MODE" ]]; then
-        echo ""
-        echo -e "${BOLD}Deployment Method${NC}"
-        echo ""
-        echo "  1) ${CYAN}Pre-built images from GitHub${NC} (recommended, faster)"
-        echo "     Downloads ready-to-run images. No compilation needed."
-        echo ""
-        echo "  2) ${CYAN}Build from source${NC} (slower, 10-20 min on Pi)"
-        echo "     Compiles images locally from the repository source code."
-        echo ""
-        
-        if confirm_prompt "Use pre-built images from GitHub? (No = build from source)" "Y"; then
-            INSTALL_DEPLOY_MODE="ghcr"
-        else
-            INSTALL_DEPLOY_MODE="build"
-        fi
+    # Run system validation checks
+    run_system_checks
+    
+    # Show preview of what will be installed
+    show_install_preview "$SCRIPT_DIR"
+    
+    # Now ask configuration questions
+    echo -e "${BOLD}Configuration Questions:${NC}"
+    echo ""
+    
+    # Question 1: Deployment method
+    echo -e "${CYAN}1. Deployment Method${NC}"
+    echo ""
+    echo "  a) ${BOLD}Pre-built images from GitHub${NC} (recommended, faster)"
+    echo "     Downloads ready-to-run images. No compilation needed on your Pi."
+    echo ""
+    echo "  b) ${BOLD}Build from source${NC} (slower, 10-20 min on Pi)"
+    echo "     Compiles images locally from the repository source code."
+    echo ""
+    
+    local deploy_mode
+    if confirm_prompt "Use pre-built images from GitHub? (No = build from source)" "Y"; then
+        deploy_mode="ghcr"
+    else
+        deploy_mode="build"
     fi
     
-    # For GHCR mode with a prerelease version, ask the user
-    if [[ "$INSTALL_DEPLOY_MODE" == "ghcr" ]]; then
+    # For GHCR mode with a prerelease version, ask about using pre-release images
+    local force_stable=false
+    if [[ "$deploy_mode" == "ghcr" ]]; then
         local current_version="1.0.0"
         if [[ -f "$SCRIPT_DIR/.version" ]]; then
             current_version=$(cat "$SCRIPT_DIR/.version")
@@ -893,51 +875,54 @@ main() {
             echo ""
             
             if ! confirm_prompt "Use pre-release images ($current_version)?" "Y"; then
-                # User wants stable - we'll use 'latest' tag regardless of .version
                 log_info "Will use latest stable release images"
-                # Override to force 'latest' tag in setup_application
-                export INSTALL_FORCE_STABLE=true
+                force_stable=true
             fi
         fi
-        
-        log_success "Deploy mode: Pre-built GitHub images"
-    else
-        log_success "Deploy mode: Build from source"
     fi
     
+    log_success "Deploy mode: $([ "$deploy_mode" == "ghcr" ] && echo "Pre-built GitHub images" || echo "Build from source")"
+    
+    # Question 2: Kiosk mode
+    echo ""
+    echo -e "${CYAN}2. Kiosk Mode Configuration${NC}"
+    echo ""
+    echo "Kiosk mode configures this Pi to automatically display the slideshow"
+    echo "fullscreen on boot. This is recommended for dedicated photo frames."
     echo ""
     
-    # Ask about kiosk mode before starting (unless --skip-kiosk was passed)
     local install_kiosk=false
-    if [[ "$skip_kiosk" != "true" ]]; then
-        echo ""
-        echo -e "${BOLD}Kiosk Mode Configuration${NC}"
-        echo ""
-        echo "Kiosk mode configures this Pi to automatically display the slideshow"
-        echo "fullscreen on boot. This is recommended for dedicated photo frames."
-        echo ""
-        if confirm_prompt "Would you like to enable kiosk mode?" "Y"; then
-            install_kiosk=true
-        else
-            log_info "Kiosk mode will not be installed"
-            log_info "You can enable it later with: sudo bash scripts/kiosk-setup.sh"
-        fi
+    if confirm_prompt "Would you like to enable kiosk mode?" "Y"; then
+        install_kiosk=true
+        log_success "Kiosk mode will be installed"
+    else
+        log_info "Kiosk mode will not be installed"
+        log_info "You can enable it later with: sudo bash scripts/kiosk-setup.sh"
+    fi
+    
+    # Question 3: Final confirmation
+    echo ""
+    echo -e "${CYAN}3. Confirmation${NC}"
+    echo ""
+    echo "Ready to install with:"
+    echo "  • Deployment: $([ "$deploy_mode" == "ghcr" ] && echo "GHCR images" || echo "Build from source")"
+    echo "  • Kiosk mode: $([ "$install_kiosk" == "true" ] && echo "Enabled" || echo "Disabled")"
+    echo ""
+    
+    if ! confirm_prompt "Proceed with installation?" "Y"; then
+        echo "Installation cancelled."
+        exit 0
     fi
     
     echo ""
     
-    # Check root privileges
-    check_root
+    # Set environment variables for installation functions
+    export INSTALL_DEPLOY_MODE="$deploy_mode"
+    export INSTALL_FORCE_STABLE="$force_stable"
     
     # Run installation steps
-    run_system_checks
-    
-    if [[ "$skip_docker" != "true" ]]; then
-        install_docker
-        configure_swap
-    else
-        log_info "Skipping Docker installation (--skip-docker)"
-    fi
+    install_docker
+    configure_swap
     
     if [[ "$install_kiosk" == "true" ]]; then
         kiosk_full_setup "3/6"

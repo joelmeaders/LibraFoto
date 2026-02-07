@@ -412,3 +412,260 @@ check_internet() {
     fi
     return 1
 }
+
+# =============================================================================
+# Resource Management & Tracking
+# =============================================================================
+
+# Global arrays for operation tracking (declare once)
+declare -a TRACKED_OPERATIONS=()
+declare -a TRACKED_RESULTS=()
+declare -a TRACKED_ERRORS=()
+
+# List Docker resources (containers, volumes, networks, images)
+# Usage: list_docker_resources "/path/to/librafoto"
+list_docker_resources() {
+    local root_dir="${1:-.}"
+    local compose_file
+    compose_file=$(get_compose_file "$root_dir")
+    
+    echo -e "\n${BOLD}Docker Resources:${NC}"
+    
+    if check_docker && [[ -f "$compose_file" ]]; then
+        echo -e "\n  ${CYAN}Containers:${NC}"
+        if docker compose -f "$compose_file" ps --format "table {{.Name}}\t{{.Status}}" 2>/dev/null | tail -n +2 | grep -q .; then
+            docker compose -f "$compose_file" ps --format "    {{.Name}} - {{.Status}}" 2>/dev/null
+        else
+            echo "    (none running)"
+        fi
+        
+        echo -e "\n  ${CYAN}Volumes:${NC}"
+        if docker volume ls --format "{{.Name}}" | grep -iE "librafoto|docker_" | grep -q .; then
+            docker volume ls --format "{{.Name}}" | grep -iE "librafoto|docker_" | sed 's/^/    /'
+        else
+            echo "    (none found)"
+        fi
+        
+        echo -e "\n  ${CYAN}Networks:${NC}"
+        if docker network ls --format "{{.Name}}" | grep -iE "librafoto|docker_" | grep -q .; then
+            docker network ls --format "{{.Name}}" | grep -iE "librafoto|docker_" | sed 's/^/    /'
+        else
+            echo "    (none found)"
+        fi
+        
+        echo -e "\n  ${CYAN}Images:${NC}"
+        if docker images --format "{{.Repository}}:{{.Tag}}" | grep -iE "librafoto|docker-" | grep -q .; then
+            docker images --format "    {{.Repository}}:{{.Tag}} ({{.Size}})" | grep -iE "librafoto|docker-"
+        else
+            echo "    (none found)"
+        fi
+    else
+        echo "    (Docker not available or compose file not found)"
+    fi
+}
+
+# List kiosk-related files and services
+list_kiosk_files() {
+    local pi_home
+    pi_home=$(get_pi_home)
+    
+    echo -e "\n${BOLD}Kiosk Configuration:${NC}"
+    
+    local files=(
+        "$pi_home/start-kiosk.sh"
+        "$pi_home/.config/autostart/librafoto-kiosk.desktop"
+        "/etc/xdg/lxsession/LXDE-pi/autostart"
+        "$pi_home/.config/lxsession/LXDE-pi/autostart"
+        "/etc/lightdm/lightdm.conf"
+    )
+    
+    local found_any=false
+    for file in "${files[@]}"; do
+        if [[ -f "$file" ]]; then
+            echo "    ✓ $file"
+            found_any=true
+        fi
+    done
+    
+    # Check for autostart entries
+    if grep -q "start-kiosk.sh\|LibraFoto" /etc/xdg/lxsession/LXDE-pi/autostart 2>/dev/null || \
+       grep -q "start-kiosk.sh\|LibraFoto" "$pi_home/.config/lxsession/LXDE-pi/autostart" 2>/dev/null; then
+        echo "    ✓ Autostart entries configured"
+        found_any=true
+    fi
+    
+    # Check for systemd services
+    if systemctl list-unit-files "librafoto*.service" 2>/dev/null | grep -q librafoto; then
+        echo -e "\n  ${CYAN}Systemd Services:${NC}"
+        systemctl list-unit-files "librafoto*.service" --no-pager 2>/dev/null | grep librafoto | sed 's/^/    /'
+        found_any=true
+    fi
+    
+    if [[ "$found_any" == false ]]; then
+        echo "    (no kiosk configuration found)"
+    fi
+}
+
+# List configuration files and directories
+# Usage: list_config_files "/path/to/librafoto"
+list_config_files() {
+    local root_dir="${1:-.}"
+    
+    echo -e "\n${BOLD}Configuration & Data:${NC}"
+    
+    if [[ -f "$root_dir/docker/.env" ]]; then
+        echo "    ✓ $root_dir/docker/.env"
+    else
+        echo "    ✗ $root_dir/docker/.env (not created yet)"
+    fi
+    
+    if [[ -d "$root_dir/data" ]]; then
+        local size
+        size=$(du -sh "$root_dir/data" 2>/dev/null | cut -f1 || echo "unknown")
+        echo "    ✓ $root_dir/data/ ($size)"
+    else
+        echo "    ✗ $root_dir/data/ (not created yet)"
+    fi
+    
+    if [[ -d "$root_dir/backups" ]]; then
+        local count
+        count=$(find "$root_dir/backups" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l)
+        echo "    ✓ $root_dir/backups/ ($count backup(s))"
+    else
+        echo "    ✗ $root_dir/backups/ (not created yet)"
+    fi
+}
+
+# Track an operation for later summary
+# Usage: track_operation "Stop containers" "docker compose down"
+# Returns: exit code of the command
+track_operation() {
+    local description="$1"
+    shift
+    local command=("$@")
+    
+    # Execute the command and capture result
+    local output
+    local exit_code
+    if output=$("${command[@]}" 2>&1); then
+        exit_code=0
+    else
+        exit_code=$?
+    fi
+    
+    # Store the operation
+    TRACKED_OPERATIONS+=("$description")
+    TRACKED_RESULTS+=("$exit_code")
+    if [[ $exit_code -ne 0 ]]; then
+        TRACKED_ERRORS+=("$output")
+    else
+        TRACKED_ERRORS+=("")
+    fi
+    
+    return $exit_code
+}
+
+# Show summary of all tracked operations
+show_operation_summary() {
+    local success_count=0
+    local failure_count=0
+    
+    echo -e "\n${BOLD}═══════════════════════════════════════════════════════${NC}"
+    echo -e "${BOLD}Operation Summary${NC}"
+    echo -e "${BOLD}═══════════════════════════════════════════════════════${NC}\n"
+    
+    for i in "${!TRACKED_OPERATIONS[@]}"; do
+        local description="${TRACKED_OPERATIONS[$i]}"
+        local result="${TRACKED_RESULTS[$i]}"
+        local error="${TRACKED_ERRORS[$i]}"
+        
+        if [[ "$result" -eq 0 ]]; then
+            echo -e "  ${GREEN}✓${NC} $description"
+            ((success_count++))
+        else
+            echo -e "  ${RED}✗${NC} $description"
+            if [[ -n "$error" ]]; then
+                echo -e "    ${YELLOW}Error:${NC} $(echo "$error" | head -1)"
+            fi
+            ((failure_count++))
+        fi
+    done
+    
+    echo -e "\n${BOLD}Results:${NC} ${GREEN}${success_count} succeeded${NC}, ${RED}${failure_count} failed${NC}\n"
+    
+    if [[ $failure_count -gt 0 ]]; then
+        echo -e "${YELLOW}Some operations failed. Items may need manual cleanup.${NC}"
+        return 1
+    fi
+    return 0
+}
+
+# Validate that resources were actually removed
+# Usage: validate_removal "containers" "volumes" "kiosk"
+validate_removal() {
+    local root_dir
+    root_dir=$(find_librafoto_root "$(pwd)") || root_dir="."
+    local failed_validations=()
+    
+    for resource_type in "$@"; do
+        case "$resource_type" in
+            containers)
+                if check_docker; then
+                    local compose_file
+                    compose_file=$(get_compose_file "$root_dir")
+                    if docker compose -f "$compose_file" ps -q 2>/dev/null | grep -q .; then
+                        failed_validations+=("Containers still running")
+                    fi
+                fi
+                ;;
+            volumes)
+                if check_docker; then
+                    if docker volume ls --format "{{.Name}}" | grep -qiE "librafoto|docker_"; then
+                        failed_validations+=("Volumes still exist")
+                    fi
+                fi
+                ;;
+            images)
+                if check_docker; then
+                    if docker images --format "{{.Repository}}" | grep -qiE "librafoto|docker-"; then
+                        failed_validations+=("Images still exist")
+                    fi
+                fi
+                ;;
+            kiosk)
+                local pi_home
+                pi_home=$(get_pi_home)
+                if [[ -f "$pi_home/start-kiosk.sh" ]] || \
+                   [[ -f "$pi_home/.config/autostart/librafoto-kiosk.desktop" ]] || \
+                   systemctl list-unit-files "librafoto*.service" 2>/dev/null | grep -q librafoto; then
+                    failed_validations+=("Kiosk files/services still exist")
+                fi
+                ;;
+            config)
+                if [[ -f "$root_dir/docker/.env" ]]; then
+                    failed_validations+=("Configuration files still exist")
+                fi
+                ;;
+            data)
+                if [[ -d "$root_dir/data" ]] || [[ -d "$root_dir/backups" ]]; then
+                    failed_validations+=("Data directories still exist")
+                fi
+                ;;
+        esac
+    done
+    
+    if [[ ${#failed_validations[@]} -gt 0 ]]; then
+        for failure in "${failed_validations[@]}"; do
+            echo "$failure"
+        done
+        return 1
+    fi
+    return 0
+}
+
+# Reset tracked operations (call at start of script if needed)
+reset_operation_tracking() {
+    TRACKED_OPERATIONS=()
+    TRACKED_RESULTS=()
+    TRACKED_ERRORS=()
+}

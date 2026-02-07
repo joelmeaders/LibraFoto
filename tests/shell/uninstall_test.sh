@@ -19,32 +19,32 @@ test_uninstall_help_shows_usage() {
     assertEquals 0 $?
 }
 
-test_uninstall_help_mentions_purge_flag() {
+test_uninstall_help_mentions_interactive_features() {
     local output
     output=$(bash "$UNINSTALL_SCRIPT" --help 2>&1)
-    echo "$output" | grep -q "\-\-purge"
-    assertEquals "--help should mention --purge" 0 $?
+    echo "$output" | grep -q "interactive"
+    assertEquals "--help should mention interactive" 0 $?
 }
 
-test_uninstall_help_mentions_force_flag() {
+test_uninstall_help_mentions_confirmation() {
     local output
     output=$(bash "$UNINSTALL_SCRIPT" --help 2>&1)
-    echo "$output" | grep -q "\-\-force"
-    assertEquals "--help should mention --force" 0 $?
+    echo "$output" | grep -q "confirm\|asked"
+    assertEquals "--help should mention confirmation" 0 $?
 }
 
-test_uninstall_help_mentions_dry_run_flag() {
+test_uninstall_help_mentions_images_removal() {
     local output
     output=$(bash "$UNINSTALL_SCRIPT" --help 2>&1)
-    echo "$output" | grep -q "\-\-dry-run"
-    assertEquals "--help should mention --dry-run" 0 $?
+    echo "$output" | grep -qi "images"
+    assertEquals "--help should mention images removal" 0 $?
 }
 
-test_uninstall_help_mentions_keep_docker_flag() {
+test_uninstall_help_mentions_data_preservation() {
     local output
     output=$(bash "$UNINSTALL_SCRIPT" --help 2>&1)
-    echo "$output" | grep -q "\-\-keep-docker"
-    assertEquals "--help should mention --keep-docker" 0 $?
+    echo "$output" | grep -qi "data\|photos"
+    assertEquals "--help should mention data/photos" 0 $?
 }
 
 test_uninstall_rejects_unknown_option() {
