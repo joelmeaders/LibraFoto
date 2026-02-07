@@ -580,7 +580,7 @@ main() {
     echo ""
     echo "  Docker images contain the LibraFoto application code."
     echo "  Removing them will free up disk space (~500MB)."
-    echo "  You can always re-download them if you reinstall."
+    echo "  They will be rebuilt or reloaded if you reinstall."
     echo ""
     local remove_images=false
     if confirm_prompt "Remove Docker images?" "N"; then

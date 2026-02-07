@@ -77,10 +77,10 @@ main (stable versions only)
   ├── feature/xyz (prerelease versions)
   │     └── PR → main
   │
-  └── Tags
-        ├── v1.2.0-alpha.1 → Docker images only
-        ├── v1.2.0-beta.1  → Docker images only
-        └── v1.2.0         → Docker images + GitHub Release
+  └── Releases
+        ├── Push v1.2.0-alpha.1 tag → Prerelease (tag required)
+        ├── Push v1.2.0-beta.1 tag  → Prerelease (tag required)
+        └── Push to main with 1.2.0 → Stable Release (automatic, no tag needed)
 ```
 
 ### Creating a Feature Branch
@@ -217,19 +217,21 @@ LibraFoto.Modules.{Name}/
 Tag a prerelease to build Docker images for testing:
 
 ```bash
-# Ensure .version matches
+# On your feature branch, ensure .version has prerelease suffix
 echo "1.3.0-alpha.1" > .version
 git add .version && git commit -m "Prepare 1.3.0-alpha.1"
 git push
 
-# Create tag
+# Create and push tag
 git tag v1.3.0-alpha.1
-git push --tags
+git push origin v1.3.0-alpha.1
 ```
 
-**Result**: Docker images tagged `1.3.0-alpha.1` (no GitHub Release)
+**Result**: Docker images built and GitHub prerelease created with platform-specific zips
 
 ### Stable Release
+
+**Stable releases are triggered automatically by pushing a stable version to `main`** (no tag required):
 
 1. **Update version to stable** on main:
 
@@ -238,32 +240,32 @@ git push --tags
    git pull
    echo "1.3.0" > .version
    git add .version && git commit -m "Release 1.3.0"
-   git push
+   git push origin main
    ```
 
-2. **Create release tag**:
-
-   ```bash
-   git tag v1.3.0
-   git push --tags
-   ```
+**That's it!** The release workflow will:
+- Detect the stable version
+- Build Docker images for both architectures
+- Create platform-specific release zips
+- Generate a GitHub Release with changelog
+- Automatically create and push the `v1.3.0` tag
 
 **Result**:
 
-- Docker images: `1.3.0`, `1.3`, `1`, `latest`
+- Docker images: `1.3.0`
 - GitHub Release created with:
-  - `docker-compose.yml`
-  - `install.sh`
-  - `update.sh`
-  - `.env.template`
+  - `librafoto-v1.3.0-amd64.zip`
+  - `librafoto-v1.3.0-arm64.zip`
+  - Auto-generated changelog
+  - Installation instructions
+- Git tag `v1.3.0` created automatically
 
-### Docker Image Tags
+### Release Triggers
 
-| Tag              | Description                           |
-| ---------------- | ------------------------------------- |
-| `v1.2.0-alpha.1` | Pre-release: `1.2.0-alpha.1` only     |
-| `v1.2.0`         | Stable: `1.2.0`, `1.2`, `1`, `latest` |
-| Push to `main`   | Branch: `main`                        |
+| Version Type | Trigger | Example |
+| ------------ | ------- | ------- |
+| Stable | Push to `main` with stable `.version` | `1.3.0` on main → automatic release |
+| Prerelease | Push tag matching `.version` | `git push origin v1.3.0-alpha.1` |
 
 ---
 

@@ -30,7 +30,7 @@ test_install_help_mentions_interactive_features() {
 test_install_help_mentions_deployment_method() {
     local output
     output=$(bash "$INSTALL_SCRIPT" --help 2>&1)
-    echo "$output" | grep -q "Deployment.*method\|GHCR.*images\|build from source"
+    echo "$output" | grep -q "release.*zip\|build.*source\|Deploy\|deploy"
     assertEquals "--help should mention deployment options" 0 $?
 }
 

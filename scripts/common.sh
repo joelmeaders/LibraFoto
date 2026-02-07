@@ -308,6 +308,9 @@ find_librafoto_root() {
 # Deploy Mode Utilities
 # =============================================================================
 
+# GitHub repository for release downloads
+readonly GITHUB_REPO="librafoto/librafoto"
+
 # Read a variable from docker/.env file
 # Usage: read_env_var "DEPLOY_MODE" "/path/to/librafoto"
 read_env_var() {
@@ -320,7 +323,7 @@ read_env_var() {
     fi
 }
 
-# Get the current deploy mode (build or ghcr)
+# Get the current deploy mode (build or release)
 # Usage: get_deploy_mode "/path/to/librafoto"
 get_deploy_mode() {
     local root_dir="${1:-.}"
@@ -336,8 +339,8 @@ get_compose_file() {
     local mode
     mode=$(get_deploy_mode "$root_dir")
 
-    if [[ "$mode" == "ghcr" ]]; then
-        echo "$root_dir/docker/docker-compose.ghcr.yml"
+    if [[ "$mode" == "release" ]]; then
+        echo "$root_dir/docker/docker-compose.release.yml"
     else
         echo "$root_dir/docker/docker-compose.yml"
     fi
@@ -350,36 +353,15 @@ get_compose_filename() {
     local mode
     mode=$(get_deploy_mode "$root_dir")
 
-    if [[ "$mode" == "ghcr" ]]; then
-        echo "docker-compose.ghcr.yml"
+    if [[ "$mode" == "release" ]]; then
+        echo "docker-compose.release.yml"
     else
         echo "docker-compose.yml"
     fi
 }
 
-# Check if a version string is a pre-release
-# Matches: 1.0.0-alpha.1, 1.0.0-beta.2, 1.0.0-rc.1
-# Usage: is_prerelease_version "0.1.0-alpha.1" && echo "prerelease"
-is_prerelease_version() {
-    local version="$1"
-    [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+-(alpha|beta|rc)\.[0-9]+$ ]]
-}
-
-# Get the GHCR image tag for a given version
-# Stable versions (1.0.0) -> "latest"
-# Pre-release versions (0.1.0-alpha.1) -> "0.1.0-alpha.1"
-# Usage: get_image_tag_for_version "0.1.0-alpha.1"
-get_image_tag_for_version() {
-    local version="$1"
-    if is_prerelease_version "$version"; then
-        echo "$version"
-    else
-        echo "latest"
-    fi
-}
-
 # Update or add a variable in docker/.env file
-# Usage: set_env_var "DEPLOY_MODE" "ghcr" "/path/to/librafoto"
+# Usage: set_env_var "DEPLOY_MODE" "release" "/path/to/librafoto"
 set_env_var() {
     local var_name="$1"
     local var_value="$2"
@@ -398,6 +380,169 @@ set_env_var() {
         # Append new variable
         echo "${var_name}=${var_value}" >> "$env_file"
     fi
+}
+
+# =============================================================================
+# Release Mode Utilities
+# =============================================================================
+
+# Detect CPU architecture and return docker-style name
+# Returns: arm64 or amd64
+detect_architecture() {
+    local arch
+    arch=$(uname -m)
+    case "$arch" in
+        aarch64|arm64) echo "arm64" ;;
+        x86_64|amd64)  echo "amd64" ;;
+        *)             echo "$arch"  ;;
+    esac
+}
+
+# Check if the install directory contains pre-built release images
+# Usage: is_release_mode "/path/to/librafoto"
+is_release_mode() {
+    local root_dir="${1:-.}"
+    local images_dir="$root_dir/images"
+
+    if [[ -d "$images_dir" ]] && ls "$images_dir"/*.tar &>/dev/null; then
+        return 0
+    fi
+    return 1
+}
+
+# Load Docker images from tar files in a directory
+# Usage: load_images_from_dir "/path/to/librafoto"
+load_images_from_dir() {
+    local root_dir="${1:-.}"
+    local images_dir="$root_dir/images"
+    local loaded=0
+    local failed=0
+
+    if [[ ! -d "$images_dir" ]]; then
+        log_error "Images directory not found: $images_dir"
+        return 1
+    fi
+
+    for tar_file in "$images_dir"/*.tar; do
+        if [[ ! -f "$tar_file" ]]; then
+            continue
+        fi
+
+        local filename
+        filename=$(basename "$tar_file")
+        log_info "Loading image: $filename..."
+
+        if docker load -i "$tar_file" >> "${LOG_FILE:-/tmp/librafoto.log}" 2>&1; then
+            log_success "Loaded: $filename"
+            ((loaded++))
+        else
+            log_error "Failed to load: $filename"
+            ((failed++))
+        fi
+    done
+
+    if [[ $failed -gt 0 ]]; then
+        log_error "$failed image(s) failed to load"
+        return 1
+    fi
+
+    if [[ $loaded -eq 0 ]]; then
+        log_error "No .tar image files found in $images_dir"
+        return 1
+    fi
+
+    log_success "$loaded image(s) loaded successfully"
+    return 0
+}
+
+# Query GitHub Releases API for the latest release
+# Outputs two lines: VERSION and DOWNLOAD_URL for the current platform's zip
+# Usage: eval "$(get_github_latest_release)"
+#   Then use: $RELEASE_VERSION, $RELEASE_DOWNLOAD_URL, $RELEASE_BODY
+get_github_latest_release() {
+    local arch
+    arch=$(detect_architecture)
+    local api_url="https://api.github.com/repos/${GITHUB_REPO}/releases/latest"
+
+    local response
+    response=$(curl -fsSL --connect-timeout 10 "$api_url" 2>/dev/null) || {
+        echo "RELEASE_VERSION=\"\""
+        echo "RELEASE_DOWNLOAD_URL=\"\""
+        echo "RELEASE_BODY=\"\""
+        return 1
+    }
+
+    # Extract tag name (remove leading 'v')
+    local tag
+    tag=$(echo "$response" | grep '"tag_name"' | head -1 | sed 's/.*"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
+    local version="${tag#v}"
+
+    # Extract download URL for this platform's zip
+    local download_url
+    download_url=$(echo "$response" | grep '"browser_download_url"' | grep "${arch}.zip" | head -1 | sed 's/.*"browser_download_url"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
+
+    # Extract release body (first 500 chars for changelog preview)
+    local body
+    body=$(echo "$response" | grep '"body"' | head -1 | sed 's/.*"body"[[:space:]]*:[[:space:]]*"\(.*\)".*/\1/' | head -c 500)
+
+    echo "RELEASE_VERSION=\"$version\""
+    echo "RELEASE_DOWNLOAD_URL=\"$download_url\""
+    echo "RELEASE_BODY=\"$body\""
+}
+
+# Download and extract a release zip to a temporary directory
+# Usage: download_release_zip "https://.../.zip" "/tmp/librafoto-update"
+# Returns: 0 on success, 1 on failure
+download_release_zip() {
+    local url="$1"
+    local dest_dir="$2"
+
+    if [[ -z "$url" ]]; then
+        log_error "No download URL provided"
+        return 1
+    fi
+
+    mkdir -p "$dest_dir"
+    local zip_file="$dest_dir/librafoto-release.zip"
+
+    log_info "Downloading release from GitHub..."
+    if ! curl -fSL --progress-bar --connect-timeout 30 -o "$zip_file" "$url"; then
+        log_error "Download failed"
+        return 1
+    fi
+
+    log_info "Extracting release archive..."
+    if ! unzip -qo "$zip_file" -d "$dest_dir" 2>> "${LOG_FILE:-/tmp/librafoto.log}"; then
+        log_error "Failed to extract archive"
+        return 1
+    fi
+
+    # Clean up the zip file to save space
+    rm -f "$zip_file"
+
+    log_success "Release downloaded and extracted to $dest_dir"
+    return 0
+}
+
+# Compare two semver version strings
+# Returns: 0 if v1 < v2, 1 if v1 >= v2
+# Usage: is_version_newer "1.0.0" "1.1.0" && echo "update available"
+is_version_newer() {
+    local current="$1"
+    local remote="$2"
+
+    if [[ "$current" == "$remote" ]]; then
+        return 1
+    fi
+
+    # Use sort -V for version comparison
+    local oldest
+    oldest=$(printf '%s\n%s' "$current" "$remote" | sort -V | head -1)
+
+    if [[ "$oldest" == "$current" ]]; then
+        return 0  # current is older, update available
+    fi
+    return 1  # current is same or newer
 }
 
 # =============================================================================

@@ -1,34 +1,45 @@
 name: Release
 
-# Only create GitHub Releases for stable version tags
-# Pre-release tags (v1.0.0-alpha.1) are handled by docker-build.yml only
+# Build Docker images, package platform-specific zip releases, and create GitHub Release.
+# Stable releases: Triggered by pushes to main branch with stable version in .version
+# Prereleases: Triggered by version tags (e.g., v1.2.0-alpha.1)
 on:
   push:
+    branches:
+      - main
     tags:
-      - 'v*.*.*'  # Trigger on all version tags, filter pre-releases below
+      - 'v*.*.*'
 
 permissions:
   contents: write
-  packages: read
 
 jobs:
+  # ==========================================================================
+  # Validate version and determine release type
+  # ==========================================================================
   validate:
     name: Validate Release
     runs-on: ubuntu-latest
-    # Skip if tag contains a hyphen (pre-release) - safety check
-    if: ${{ !contains(github.ref_name, '-') }}
     outputs:
       version: ${{ steps.version.outputs.VERSION }}
+      is_prerelease: ${{ steps.version.outputs.IS_PRERELEASE }}
+      should_release: ${{ steps.check.outputs.SHOULD_RELEASE }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Get version from tag
-        id: tag
+      - name: Detect trigger type
+        id: trigger
         run: |
-          TAG_VERSION="${GITHUB_REF_NAME#v}"
-          echo "TAG_VERSION=${TAG_VERSION}" >> $GITHUB_OUTPUT
-          echo "Tag version: $TAG_VERSION"
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            echo "TRIGGER_TYPE=tag" >> $GITHUB_OUTPUT
+            TAG_VERSION="${GITHUB_REF_NAME#v}"
+            echo "TAG_VERSION=${TAG_VERSION}" >> $GITHUB_OUTPUT
+            echo "Triggered by tag: ${TAG_VERSION}"
+          else
+            echo "TRIGGER_TYPE=branch" >> $GITHUB_OUTPUT
+            echo "Triggered by push to branch: ${{ github.ref_name }}"
+          fi
 
       - name: Read version file
         id: version
@@ -37,116 +48,328 @@ jobs:
           echo "VERSION=${FILE_VERSION}" >> $GITHUB_OUTPUT
           echo "File version: $FILE_VERSION"
 
-      - name: Validate version match
+          # Detect pre-release
+          if [[ "$FILE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+-(alpha|beta|rc)\.[0-9]+$ ]]; then
+            echo "IS_PRERELEASE=true" >> $GITHUB_OUTPUT
+            echo "Detected prerelease version"
+          else
+            echo "IS_PRERELEASE=false" >> $GITHUB_OUTPUT
+            echo "Detected stable version"
+          fi
+
+      - name: Validate and determine if release should be created
+        id: check
         run: |
-          TAG_VERSION="${{ steps.tag.outputs.TAG_VERSION }}"
+          TRIGGER_TYPE="${{ steps.trigger.outputs.TRIGGER_TYPE }}"
           FILE_VERSION="${{ steps.version.outputs.VERSION }}"
+          IS_PRERELEASE="${{ steps.version.outputs.IS_PRERELEASE }}"
 
-          if [[ "$TAG_VERSION" != "$FILE_VERSION" ]]; then
-            echo "::error::Tag version ($TAG_VERSION) does not match .version file ($FILE_VERSION)"
-            exit 1
+          if [[ "$TRIGGER_TYPE" == "tag" ]]; then
+            # Tag trigger - validate tag matches .version (for prereleases)
+            TAG_VERSION="${{ steps.trigger.outputs.TAG_VERSION }}"
+            
+            if [[ "$TAG_VERSION" != "$FILE_VERSION" ]]; then
+              echo "::error::Tag version ($TAG_VERSION) does not match .version file ($FILE_VERSION)"
+              exit 1
+            fi
+            
+            if [[ "$IS_PRERELEASE" != "true" ]]; then
+              echo "::error::Tag-based releases are only for prereleases (alpha/beta/rc)"
+              echo "::error::For stable releases, push to main branch instead"
+              exit 1
+            fi
+            
+            echo "SHOULD_RELEASE=true" >> $GITHUB_OUTPUT
+            echo "✅ Prerelease version $FILE_VERSION validated for tag-based release"
+            
+          else
+            # Branch push - only create release for stable versions on main
+            if [[ "$IS_PRERELEASE" == "true" ]]; then
+              echo "⏭️  Skipping release - prerelease version on main branch"
+              echo "::notice::Prerelease versions should use tags (e.g., git tag v${FILE_VERSION})"
+              echo "SHOULD_RELEASE=false" >> $GITHUB_OUTPUT
+            else
+              echo "SHOULD_RELEASE=true" >> $GITHUB_OUTPUT
+              echo "✅ Stable version $FILE_VERSION validated for main branch release"
+            fi
           fi
 
-          # Validate stable version format for releases
-          STABLE_PATTERN="^[0-9]+\.[0-9]+\.[0-9]+$"
-          if [[ ! "$FILE_VERSION" =~ $STABLE_PATTERN ]]; then
-            echo "::error::Release tags must use stable versions (#.#.#), not prerelease versions"
-            echo "::error::Found: $FILE_VERSION"
-            exit 1
-          fi
+  # ==========================================================================
+  # Build Docker images per platform and save as tar files
+  # ==========================================================================
+  build-images:
+    name: Build Images (${{ matrix.arch }})
+    runs-on: ubuntu-latest
+    needs: validate
+    if: needs.validate.outputs.should_release == 'true'
+    strategy:
+      matrix:
+        arch: [amd64, arm64]
+        include:
+          - arch: amd64
+            platform: linux/amd64
+          - arch: arm64
+            platform: linux/arm64
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-          echo "✅ Version $FILE_VERSION validated for release"
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Create output directory
+        run: mkdir -p images
+
+      - name: Build API image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: docker/Dockerfile.api
+          platforms: ${{ matrix.platform }}
+          push: false
+          tags: librafoto-api:${{ needs.validate.outputs.version }}
+          build-args: |
+            VERSION=${{ needs.validate.outputs.version }}
+          outputs: type=docker,dest=images/librafoto-api.tar
+          cache-from: type=gha,scope=api-${{ matrix.arch }}
+          cache-to: type=gha,scope=api-${{ matrix.arch }},mode=max
+
+      - name: Build Display UI image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: docker/Dockerfile.display
+          platforms: ${{ matrix.platform }}
+          push: false
+          tags: librafoto-display-ui:${{ needs.validate.outputs.version }}
+          build-args: |
+            VERSION=${{ needs.validate.outputs.version }}
+          outputs: type=docker,dest=images/librafoto-display-ui.tar
+          cache-from: type=gha,scope=display-${{ matrix.arch }}
+          cache-to: type=gha,scope=display-${{ matrix.arch }},mode=max
+
+      - name: Build Admin UI image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: docker/Dockerfile.admin
+          platforms: ${{ matrix.platform }}
+          push: false
+          tags: librafoto-admin-ui:${{ needs.validate.outputs.version }}
+          build-args: |
+            VERSION=${{ needs.validate.outputs.version }}
+          outputs: type=docker,dest=images/librafoto-admin-ui.tar
+          cache-from: type=gha,scope=admin-${{ matrix.arch }}
+          cache-to: type=gha,scope=admin-${{ matrix.arch }},mode=max
+
+      - name: Build Proxy image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: docker/Dockerfile.proxy
+          platforms: ${{ matrix.platform }}
+          push: false
+          tags: librafoto-proxy:${{ needs.validate.outputs.version }}
+          build-args: |
+            VERSION=${{ needs.validate.outputs.version }}
+          outputs: type=docker,dest=images/librafoto-proxy.tar
+          cache-from: type=gha,scope=proxy-${{ matrix.arch }}
+          cache-to: type=gha,scope=proxy-${{ matrix.arch }},mode=max
+
+      - name: Show image sizes
+        run: |
+          echo "Image tar sizes for ${{ matrix.arch }}:"
+          ls -lh images/
+          echo ""
+          echo "Total: $(du -sh images/ | cut -f1)"
+
+      - name: Upload image artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: images-${{ matrix.arch }}
+          path: images/
+          retention-days: 1
+
+  # ==========================================================================
+  # Package platform-specific zip releases and create GitHub Release
+  # ==========================================================================
   create-release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
-    needs: validate
+    needs: [validate, build-images]
+    if: needs.validate.outputs.should_release == 'true'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      - name: Create tag for stable releases from main
+        if: needs.validate.outputs.is_prerelease == 'false'
+        run: |
+          VERSION="${{ needs.validate.outputs.version }}"
+          TAG_NAME="v${VERSION}"
+          
+          # Check if tag already exists
+          if git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
+            echo "Tag $TAG_NAME already exists, skipping creation"
+          else
+            echo "Creating tag $TAG_NAME for stable release"
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git tag -a "$TAG_NAME" -m "Release ${VERSION}"
+            git push origin "$TAG_NAME"
+            echo "✅ Created and pushed tag $TAG_NAME"
+          fi
+
+      - name: Download amd64 images
+        uses: actions/download-artifact@v4
+        with:
+          name: images-amd64
+          path: staging/amd64/images/
+
+      - name: Download arm64 images
+        uses: actions/download-artifact@v4
+        with:
+          name: images-arm64
+          path: staging/arm64/images/
+
+      - name: Package release zips
+        run: |
+          VERSION="${{ needs.validate.outputs.version }}"
+
+          for ARCH in amd64 arm64; do
+            RELEASE_DIR="staging/${ARCH}"
+
+            # Copy scripts
+            cp install.sh "${RELEASE_DIR}/"
+            cp update.sh "${RELEASE_DIR}/"
+            cp uninstall.sh "${RELEASE_DIR}/"
+            cp .version "${RELEASE_DIR}/"
+
+            # Copy scripts directory
+            mkdir -p "${RELEASE_DIR}/scripts"
+            cp scripts/*.sh "${RELEASE_DIR}/scripts/"
+
+            # Copy release compose file
+            mkdir -p "${RELEASE_DIR}/docker"
+            cp docker/docker-compose.release.yml "${RELEASE_DIR}/docker/"
+
+            # Create the zip
+            cd "staging/${ARCH}"
+            zip -r "../../librafoto-v${VERSION}-${ARCH}.zip" \
+              install.sh update.sh uninstall.sh .version \
+              scripts/ docker/ images/
+            cd ../..
+
+            echo "Created: librafoto-v${VERSION}-${ARCH}.zip"
+            ls -lh "librafoto-v${VERSION}-${ARCH}.zip"
+          done
+
       - name: Generate changelog
         id: changelog
         run: |
-          # Get the previous tag
-          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          VERSION="${{ needs.validate.outputs.version }}"
+          IS_PRERELEASE="${{ needs.validate.outputs.is_prerelease }}"
 
-          echo "## What's Changed" > CHANGELOG.md
-          echo "" >> CHANGELOG.md
+          # Get the previous tag (or release)
+          if [[ "$IS_PRERELEASE" == "true" ]]; then
+            # For prereleases, find the previous prerelease or stable tag
+            PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          else
+            # For stable releases, find the previous stable release tag
+            PREV_TAG=$(git tag -l --sort=-v:refname | grep -v -E '-(alpha|beta|rc)\.' | grep -v "^v${VERSION}$" | head -n 1 || echo "")
+          fi
+
+          cat > CHANGELOG.md << 'HEADER'
+          ## What's Changed
+
+          HEADER
 
           if [[ -n "$PREV_TAG" ]]; then
             echo "Changes since $PREV_TAG:" >> CHANGELOG.md
             echo "" >> CHANGELOG.md
-            git log --pretty=format:"- %s (%h)" ${PREV_TAG}..HEAD >> CHANGELOG.md
+            # For stable releases from main, compare against the previous tag
+            if [[ "$IS_PRERELEASE" == "false" ]]; then
+              git log --pretty=format:"- %s (%h)" ${PREV_TAG}..HEAD >> CHANGELOG.md
+            else
+              # For prereleases (tagged), use the tag in comparison
+              git log --pretty=format:"- %s (%h)" ${PREV_TAG}..HEAD >> CHANGELOG.md
+            fi
           else
             echo "Initial release" >> CHANGELOG.md
           fi
 
-          echo "" >> CHANGELOG.md
-          echo "" >> CHANGELOG.md
-          echo "## Docker Images" >> CHANGELOG.md
-          echo "" >> CHANGELOG.md
-          echo "Pull the images from GitHub Container Registry:" >> CHANGELOG.md
-          echo "" >> CHANGELOG.md
-          echo "\`\`\`bash" >> CHANGELOG.md
-          echo "docker pull ghcr.io/${{ github.repository }}-api:${{ needs.validate.outputs.version }}" >> CHANGELOG.md
-          echo "docker pull ghcr.io/${{ github.repository }}-admin-ui:${{ needs.validate.outputs.version }}" >> CHANGELOG.md
-          echo "docker pull ghcr.io/${{ github.repository }}-display-ui:${{ needs.validate.outputs.version }}" >> CHANGELOG.md
-          echo "docker pull ghcr.io/${{ github.repository }}-proxy:${{ needs.validate.outputs.version }}" >> CHANGELOG.md
-          echo "\`\`\`" >> CHANGELOG.md
-          echo "" >> CHANGELOG.md
-          echo "## Quick Install (Raspberry Pi)" >> CHANGELOG.md
-          echo "" >> CHANGELOG.md
-          echo "\`\`\`bash" >> CHANGELOG.md
-          echo "curl -sSL https://raw.githubusercontent.com/${{ github.repository }}/main/install.sh | sudo bash" >> CHANGELOG.md
-          echo "\`\`\`" >> CHANGELOG.md
+          cat >> CHANGELOG.md << EOF
 
-      - name: Prepare release assets
-        run: |
-          mkdir -p release-assets
-          cp docker/docker-compose.yml release-assets/
-          cp docker/docker-compose.ghcr.yml release-assets/
-          cp install.sh release-assets/
-          cp update.sh release-assets/
+          ## Installation
 
-          # Create .env template
-          cat > release-assets/.env.template << 'EOF'
-          # LibraFoto Environment Configuration
-          # Copy this file to .env and update the values
+          ### Quick Install (Raspberry Pi)
 
-          # Host IP address (used for QR codes)
-          LIBRAFOTO_HOST_IP=
+          1. Download the zip for your platform:
+             - **arm64** (Raspberry Pi 3/4/5): \`librafoto-v${VERSION}-arm64.zip\`
+             - **amd64** (x86_64 servers): \`librafoto-v${VERSION}-amd64.zip\`
 
-          # JWT signing key (generate with: openssl rand -base64 32)
-          JWT_KEY=change-this-secret-key-in-production-minimum-32-characters
+          2. Extract and install:
+          \`\`\`bash
+          unzip librafoto-v${VERSION}-arm64.zip -d librafoto
+          cd librafoto
+          sudo ./install.sh
+          \`\`\`
 
-          # Application version
-          VERSION=${{ needs.validate.outputs.version }}
+          ### Build from Source
 
-          # Deploy mode: 'build' (local source build) or 'ghcr' (pre-built GitHub images)
-          DEPLOY_MODE=ghcr
+          \`\`\`bash
+          git clone https://github.com/${{ github.repository }}.git
+          cd librafoto
+          sudo ./install.sh
+          \`\`\`
 
-          # GHCR image tag (used when DEPLOY_MODE=ghcr)
-          LIBRAFOTO_IMAGE_TAG=latest
+          ## Updating
 
-          # Optional: Google Photos Integration
-          # GooglePhotos__ClientId=
-          # GooglePhotos__ClientSecret=
+          If you installed from a release zip, run:
+          \`\`\`bash
+          sudo ./update.sh
+          \`\`\`
+          The update script will automatically detect and download the latest release.
           EOF
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: v${{ needs.validate.outputs.version }}
           name: LibraFoto v${{ needs.validate.outputs.version }}
           body_path: CHANGELOG.md
           draft: false
-          prerelease: false
+          prerelease: ${{ needs.validate.outputs.is_prerelease == 'true' }}
           files: |
-            release-assets/docker-compose.yml
-            release-assets/docker-compose.ghcr.yml
-            release-assets/install.sh
-            release-assets/update.sh
-            release-assets/.env.template
-          generate_release_notes: false
+            librafoto-v${{ needs.validate.outputs.version }}-amd64.zip
+            librafoto-v${{ needs.validate.outputs.version }}-arm64.zip
+
+      - name: Release summary
+        run: |
+          VERSION="${{ needs.validate.outputs.version }}"
+          IS_PRE="${{ needs.validate.outputs.is_prerelease }}"
+
+          if [[ "$IS_PRE" == "true" ]]; then
+            echo "## Pre-release Created :test_tube:" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Trigger:** Tag push (v${VERSION})" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## Release Created :rocket:" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Trigger:** Push to main branch" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${VERSION}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Release Assets" >> $GITHUB_STEP_SUMMARY
+          echo "| Asset | Size |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|------|" >> $GITHUB_STEP_SUMMARY
+          for ARCH in amd64 arm64; do
+            SIZE=$(ls -lh "librafoto-v${VERSION}-${ARCH}.zip" | awk '{print $5}')
+            echo "| librafoto-v${VERSION}-${ARCH}.zip | ${SIZE} |" >> $GITHUB_STEP_SUMMARY
+          done

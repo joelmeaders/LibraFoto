@@ -194,15 +194,15 @@ test_get_deploy_mode_defaults_to_build() {
     assertEquals "build" "$mode"
 }
 
-test_get_deploy_mode_reads_ghcr_from_env() {
+test_get_deploy_mode_reads_release_from_env() {
     local temp_dir
     temp_dir=$(make_temp_dir)
     mkdir -p "$temp_dir/docker"
-    echo "DEPLOY_MODE=ghcr" > "$temp_dir/docker/.env"
+    echo "DEPLOY_MODE=release" > "$temp_dir/docker/.env"
 
     local mode
     mode=$(get_deploy_mode "$temp_dir")
-    assertEquals "ghcr" "$mode"
+    assertEquals "release" "$mode"
 }
 
 test_get_compose_file_returns_default_for_build_mode() {
@@ -214,15 +214,15 @@ test_get_compose_file_returns_default_for_build_mode() {
     assertEquals "$temp_dir/docker/docker-compose.yml" "$file"
 }
 
-test_get_compose_file_returns_ghcr_compose_for_ghcr_mode() {
+test_get_compose_file_returns_release_compose_for_release_mode() {
     local temp_dir
     temp_dir=$(make_temp_dir)
     mkdir -p "$temp_dir/docker"
-    echo "DEPLOY_MODE=ghcr" > "$temp_dir/docker/.env"
+    echo "DEPLOY_MODE=release" > "$temp_dir/docker/.env"
 
     local file
     file=$(get_compose_file "$temp_dir")
-    assertEquals "$temp_dir/docker/docker-compose.ghcr.yml" "$file"
+    assertEquals "$temp_dir/docker/docker-compose.release.yml" "$file"
 }
 
 test_get_compose_filename_returns_default_for_build() {
@@ -234,62 +234,72 @@ test_get_compose_filename_returns_default_for_build() {
     assertEquals "docker-compose.yml" "$name"
 }
 
-test_get_compose_filename_returns_ghcr_for_ghcr() {
+test_get_compose_filename_returns_release_for_release() {
     local temp_dir
     temp_dir=$(make_temp_dir)
     mkdir -p "$temp_dir/docker"
-    echo "DEPLOY_MODE=ghcr" > "$temp_dir/docker/.env"
+    echo "DEPLOY_MODE=release" > "$temp_dir/docker/.env"
 
     local name
     name=$(get_compose_filename "$temp_dir")
-    assertEquals "docker-compose.ghcr.yml" "$name"
+    assertEquals "docker-compose.release.yml" "$name"
 }
 
 # =============================================================================
-# Prerelease version tests
+# Version comparison tests
 # =============================================================================
 
-test_is_prerelease_version_detects_alpha() {
-    is_prerelease_version "1.0.0-alpha.1"
+test_is_version_newer_detects_newer() {
+    is_version_newer "1.0.0" "1.1.0"
     assertEquals 0 $?
 }
 
-test_is_prerelease_version_detects_beta() {
-    is_prerelease_version "2.3.1-beta.5"
-    assertEquals 0 $?
-}
-
-test_is_prerelease_version_detects_rc() {
-    is_prerelease_version "0.9.0-rc.2"
-    assertEquals 0 $?
-}
-
-test_is_prerelease_version_rejects_stable() {
-    is_prerelease_version "1.0.0"
+test_is_version_newer_detects_same() {
+    is_version_newer "1.0.0" "1.0.0"
     assertNotEquals 0 $?
 }
 
-test_is_prerelease_version_rejects_plain_text() {
-    is_prerelease_version "not-a-version"
+test_is_version_newer_detects_older() {
+    is_version_newer "1.1.0" "1.0.0"
     assertNotEquals 0 $?
 }
 
-test_get_image_tag_for_version_returns_latest_for_stable() {
-    local tag
-    tag=$(get_image_tag_for_version "1.0.0")
-    assertEquals "latest" "$tag"
+test_is_version_newer_with_prerelease() {
+    is_version_newer "0.1.0-alpha.1" "0.1.0-alpha.2"
+    assertEquals 0 $?
 }
 
-test_get_image_tag_for_version_returns_version_for_prerelease() {
-    local tag
-    tag=$(get_image_tag_for_version "0.1.0-alpha.1")
-    assertEquals "0.1.0-alpha.1" "$tag"
+# =============================================================================
+# Release mode detection tests
+# =============================================================================
+
+test_is_release_mode_true_when_images_exist() {
+    local temp_dir
+    temp_dir=$(make_temp_dir)
+    mkdir -p "$temp_dir/images"
+    touch "$temp_dir/images/librafoto-api.tar"
+
+    ( cd "$temp_dir" && is_release_mode )
+    assertEquals 0 $?
 }
 
-test_get_image_tag_for_version_returns_version_for_beta() {
-    local tag
-    tag=$(get_image_tag_for_version "2.0.0-beta.3")
-    assertEquals "2.0.0-beta.3" "$tag"
+test_is_release_mode_false_when_no_images() {
+    local temp_dir
+    temp_dir=$(make_temp_dir)
+
+    ( cd "$temp_dir" && is_release_mode )
+    assertNotEquals 0 $?
+}
+
+# =============================================================================
+# Architecture detection tests
+# =============================================================================
+
+test_detect_architecture_returns_value() {
+    local arch
+    arch=$(detect_architecture)
+    # Should return either amd64 or arm64
+    assertTrue "arch should be amd64 or arm64" "[ \"$arch\" = \"amd64\" ] || [ \"$arch\" = \"arm64\" ]"
 }
 
 # =============================================================================

@@ -3,7 +3,7 @@ name: librafoto
 services:
   api:
     container_name: librafoto-api
-    image: ghcr.io/librafoto/librafoto-api:${LIBRAFOTO_IMAGE_TAG:-latest}
+    image: librafoto-api:${VERSION:-latest}
     # Internal only - accessed via proxy at /api
     expose:
       - "8080"
@@ -36,7 +36,7 @@ services:
 
   display-ui:
     container_name: librafoto-display-ui
-    image: ghcr.io/librafoto/librafoto-display-ui:${LIBRAFOTO_IMAGE_TAG:-latest}
+    image: librafoto-display-ui:${VERSION:-latest}
     # Internal only - accessed via proxy
     expose:
       - "80"
@@ -61,7 +61,7 @@ services:
 
   admin-ui:
     container_name: librafoto-admin-ui
-    image: ghcr.io/librafoto/librafoto-admin-ui:${LIBRAFOTO_IMAGE_TAG:-latest}
+    image: librafoto-admin-ui:${VERSION:-latest}
     # Internal only - accessed via proxy
     expose:
       - "80"
@@ -86,7 +86,7 @@ services:
 
   proxy:
     container_name: librafoto-proxy
-    image: ghcr.io/librafoto/librafoto-proxy:${LIBRAFOTO_IMAGE_TAG:-latest}
+    image: librafoto-proxy:${VERSION:-latest}
     ports:
       - "80:80"
     depends_on:

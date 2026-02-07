@@ -80,19 +80,26 @@ DESCRIPTION:
     including Docker installation, kiosk mode configuration, and container
     deployment.
 
-    The installation is interactive. You'll be shown a preview of what will
-    be installed and configured, then prompted for your preferences:
-    - Deployment method (pre-built GHCR images or build from source)
-    - Kiosk mode configuration (fullscreen slideshow on boot)
+    There are two ways to install LibraFoto:
 
-    Your choices are saved and respected by the update script.
+    1. Release zip (recommended): Download the release zip from GitHub,
+       extract it, and run this script. Pre-built container images are
+       included — no compilation or internet needed for deployment.
+
+    2. Clone & build: Clone the git repository and run this script.
+       Container images will be built locally from source code.
+
+    The script auto-detects which mode to use based on whether pre-built
+    images are present in the images/ directory.
+
+    You'll also be prompted for kiosk mode configuration (fullscreen
+    slideshow on boot).
 
 REQUIREMENTS:
     - Raspberry Pi 4 or later
     - Raspberry Pi OS 64-bit with Desktop (Bookworm or later)
-    - Internet connection
+    - Internet connection (for Docker install; not needed if using release zip)
     - At least 2GB RAM
-    - Run from the cloned LibraFoto repository directory
 
 EXAMPLES:
     sudo ./install.sh                # Interactive installation
@@ -105,6 +112,7 @@ EOF
 
 show_install_preview() {
     local script_dir="${1:-.}"
+    local deploy_mode="${2:-build}"
     local pi_home
     pi_home=$(get_pi_home)
     
@@ -113,10 +121,14 @@ show_install_preview() {
     echo -e "${BOLD}Installation Preview${NC}"
     echo -e "${BOLD}═══════════════════════════════════════════════════════${NC}"
     
+    echo -e "\n${BOLD}Deploy Mode:${NC} $([ "$deploy_mode" == "release" ] && echo "Pre-built images (from release zip)" || echo "Build from source (cloned repo)")"
+    
     echo -e "\n${BOLD}System Modifications:${NC}"
     echo "    • Docker and Docker Compose (if not installed)"
     echo "    • User added to 'docker' group"
-    echo "    • Swap file increased to 2GB (if building from source)"
+    if [[ "$deploy_mode" == "build" ]]; then
+        echo "    • Swap file increased to 2GB (for building images)"
+    fi
     
     echo -e "\n${BOLD}Directories to Create:${NC}"
     echo "    • $script_dir/data/ (photos and database, mode 755)"
@@ -126,14 +138,17 @@ show_install_preview() {
     echo "      - LIBRAFOTO_HOST_IP (auto-detected)"
     echo "      - JWT_KEY (generated securely)"
     echo "      - VERSION (from .version file)"
-    echo "      - DEPLOY_MODE (based on your choice)"
-    echo "      - LIBRAFOTO_IMAGE_TAG (for GHCR mode)"
+    echo "      - DEPLOY_MODE ($deploy_mode)"
     
     echo -e "\n${BOLD}Docker Resources (from compose file):${NC}"
     echo "    • Containers: librafoto-api, librafoto-admin, librafoto-display, librafoto-proxy"
     echo "    • Network: librafoto_default"
     echo "    • Volume: librafoto-data"
-    echo "    • Images: depends on deployment method (pulled or built)"
+    if [[ "$deploy_mode" == "release" ]]; then
+        echo "    • Images: loaded from pre-built tar files"
+    else
+        echo "    • Images: built locally from source code"
+    fi
     
     echo -e "\n${BOLD}Kiosk Mode Files (if enabled):${NC}"
     echo "    • $pi_home/start-kiosk.sh (startup script)"
@@ -232,15 +247,25 @@ check_repo_files() {
     local script_dir
     script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     
-    if [[ ! -f "$script_dir/docker/docker-compose.yml" ]]; then
-        log_error "docker/docker-compose.yml not found"
-        log_info "Please run this script from the cloned LibraFoto repository"
-        return 1
-    fi
-    
-    # Dockerfile check is only needed for build-from-source mode
-    # GHCR mode uses pre-built images, so source files are optional
-    if [[ "${INSTALL_DEPLOY_MODE:-}" != "ghcr" ]]; then
+    if [[ "${INSTALL_DEPLOY_MODE:-}" == "release" ]]; then
+        # Release mode: need compose file and image tars
+        if [[ ! -f "$script_dir/docker/docker-compose.release.yml" ]]; then
+            log_error "docker/docker-compose.release.yml not found"
+            log_info "This doesn't appear to be a valid LibraFoto release"
+            return 1
+        fi
+        if ! is_release_mode "$script_dir"; then
+            log_error "Pre-built images not found in images/ directory"
+            log_info "Please ensure you extracted the complete release zip"
+            return 1
+        fi
+    else
+        # Build mode: need build compose file and Dockerfiles
+        if [[ ! -f "$script_dir/docker/docker-compose.yml" ]]; then
+            log_error "docker/docker-compose.yml not found"
+            log_info "Please run this script from the cloned LibraFoto repository"
+            return 1
+        fi
         if [[ ! -f "$script_dir/docker/Dockerfile.api" ]]; then
             log_error "Source files not found"
             log_info "Please ensure you have cloned the complete repository"
@@ -256,8 +281,12 @@ check_internet_connectivity() {
     log_info "Checking internet connectivity..."
     
     if ! check_internet; then
+        if [[ "${INSTALL_DEPLOY_MODE:-}" == "release" ]]; then
+            log_warn "No internet connection detected (may be needed for Docker install)"
+            return 0
+        fi
         log_error "No internet connection detected"
-        log_info "Internet is required for Docker installation and image downloads"
+        log_info "Internet is required for Docker installation and image builds"
         return 1
     fi
     
@@ -356,7 +385,7 @@ install_docker() {
 
 configure_swap() {
     # Swap increase is only needed for building images locally
-    if [[ "${INSTALL_DEPLOY_MODE:-build}" == "ghcr" ]]; then
+    if [[ "${INSTALL_DEPLOY_MODE:-build}" == "release" ]]; then
         log_info "Skipping swap configuration (using pre-built images)"
         return 0
     fi
@@ -452,17 +481,6 @@ setup_application() {
         version=$(cat "$script_dir/.version")
     fi
     
-    # Determine image tag for GHCR mode
-    local image_tag="latest"
-    if [[ "$deploy_mode" == "ghcr" ]]; then
-        if [[ "${INSTALL_FORCE_STABLE:-}" == "true" ]]; then
-            image_tag="latest"
-        else
-            image_tag=$(get_image_tag_for_version "$version")
-        fi
-        log_info "GHCR image tag: $image_tag"
-    fi
-    
     # Create .env file
     local env_file="$docker_dir/.env"
     log_info "Creating environment configuration..."
@@ -485,17 +503,13 @@ JWT_KEY=$jwt_key
 # Application version
 VERSION=$version
 
-# Deploy mode: 'build' (local source build) or 'ghcr' (pre-built GitHub images)
+# Deploy mode: 'build' (local source build) or 'release' (pre-built images from zip)
 DEPLOY_MODE=$deploy_mode
-
-# GHCR image tag (used when DEPLOY_MODE=ghcr)
-# 'latest' for stable releases, or a version like '0.1.0-alpha.1' for pre-releases
-LIBRAFOTO_IMAGE_TAG=$image_tag
 
 EOF
 
-    if [[ "$deploy_mode" == "ghcr" ]]; then
-        log_success "Configured for pre-built GitHub images (tag: $image_tag)"
+    if [[ "$deploy_mode" == "release" ]]; then
+        log_success "Configured for pre-built release images"
     else
         log_success "Configured for local source build"
     fi
@@ -517,17 +531,17 @@ deploy_containers() {
     
     cd "$docker_dir"
     
-    if [[ "$deploy_mode" == "ghcr" ]]; then
-        # Pull pre-built images from GitHub Container Registry
-        log_info "Pulling pre-built images from GitHub Container Registry..."
+    if [[ "$deploy_mode" == "release" ]]; then
+        # Load pre-built images from tar files
+        log_info "Loading pre-built container images..."
         echo ""
         
-        if ! docker compose -f "$compose_file" pull 2>&1 | tee -a "$LOG_FILE"; then
-            log_error "Failed to pull images. Check $LOG_FILE for details."
+        if ! load_images_from_dir "$script_dir"; then
+            log_error "Failed to load images. Check $LOG_FILE for details."
             exit 1
         fi
         
-        log_success "Container images pulled successfully"
+        log_success "Container images loaded successfully"
     else
         # Build images locally from source
         export DOCKER_BUILDKIT=1
@@ -737,7 +751,7 @@ show_post_install() {
     local compose_file
     compose_file=$(get_compose_filename "$SCRIPT_DIR")
     
-    echo -e "${BOLD}Deploy Mode:${NC} $([ "$deploy_mode" == "ghcr" ] && echo "Pre-built GitHub images" || echo "Local source build")"
+    echo -e "${BOLD}Deploy Mode:${NC} $([ "$deploy_mode" == "release" ] && echo "Pre-built images (release zip)" || echo "Local source build")"
     echo ""
     
     echo -e "${BOLD}Useful Commands:${NC}"
@@ -829,63 +843,29 @@ main() {
     echo "First, let's run some system checks..."
     echo ""
     
+    # Auto-detect deploy mode based on presence of pre-built images
+    local deploy_mode
+    if is_release_mode "$SCRIPT_DIR"; then
+        deploy_mode="release"
+        log_success "Detected release installation (pre-built images found)"
+    else
+        deploy_mode="build"
+        log_success "Detected source installation (will build from repository)"
+    fi
+    export INSTALL_DEPLOY_MODE="$deploy_mode"
+    
     # Run system validation checks
     run_system_checks
     
     # Show preview of what will be installed
-    show_install_preview "$SCRIPT_DIR"
+    show_install_preview "$SCRIPT_DIR" "$deploy_mode"
     
     # Now ask configuration questions
     echo -e "${BOLD}Configuration Questions:${NC}"
     echo ""
     
-    # Question 1: Deployment method
-    echo -e "${CYAN}1. Deployment Method${NC}"
-    echo ""
-    echo "  a) ${BOLD}Pre-built images from GitHub${NC} (recommended, faster)"
-    echo "     Downloads ready-to-run images. No compilation needed on your Pi."
-    echo ""
-    echo "  b) ${BOLD}Build from source${NC} (slower, 10-20 min on Pi)"
-    echo "     Compiles images locally from the repository source code."
-    echo ""
-    
-    local deploy_mode
-    if confirm_prompt "Use pre-built images from GitHub? (No = build from source)" "Y"; then
-        deploy_mode="ghcr"
-    else
-        deploy_mode="build"
-    fi
-    
-    # For GHCR mode with a prerelease version, ask about using pre-release images
-    local force_stable=false
-    if [[ "$deploy_mode" == "ghcr" ]]; then
-        local current_version="1.0.0"
-        if [[ -f "$SCRIPT_DIR/.version" ]]; then
-            current_version=$(cat "$SCRIPT_DIR/.version")
-        fi
-        
-        if is_prerelease_version "$current_version"; then
-            echo ""
-            echo -e "${YELLOW}${BOLD}Pre-release Version Detected${NC}"
-            echo ""
-            echo "  Current version: ${BOLD}$current_version${NC}"
-            echo ""
-            echo "  Pre-release images may be less stable but include the latest features."
-            echo "  Choosing 'No' will use the latest stable release instead."
-            echo ""
-            
-            if ! confirm_prompt "Use pre-release images ($current_version)?" "Y"; then
-                log_info "Will use latest stable release images"
-                force_stable=true
-            fi
-        fi
-    fi
-    
-    log_success "Deploy mode: $([ "$deploy_mode" == "ghcr" ] && echo "Pre-built GitHub images" || echo "Build from source")"
-    
-    # Question 2: Kiosk mode
-    echo ""
-    echo -e "${CYAN}2. Kiosk Mode Configuration${NC}"
+    # Question 1: Kiosk mode
+    echo -e "${CYAN}1. Kiosk Mode Configuration${NC}"
     echo ""
     echo "Kiosk mode configures this Pi to automatically display the slideshow"
     echo "fullscreen on boot. This is recommended for dedicated photo frames."
@@ -900,12 +880,12 @@ main() {
         log_info "You can enable it later with: sudo bash scripts/kiosk-setup.sh"
     fi
     
-    # Question 3: Final confirmation
+    # Question 2: Final confirmation
     echo ""
-    echo -e "${CYAN}3. Confirmation${NC}"
+    echo -e "${CYAN}2. Confirmation${NC}"
     echo ""
     echo "Ready to install with:"
-    echo "  • Deployment: $([ "$deploy_mode" == "ghcr" ] && echo "GHCR images" || echo "Build from source")"
+    echo "  • Deploy mode: $([ "$deploy_mode" == "release" ] && echo "Pre-built images" || echo "Build from source")"
     echo "  • Kiosk mode: $([ "$install_kiosk" == "true" ] && echo "Enabled" || echo "Disabled")"
     echo ""
     
@@ -915,10 +895,6 @@ main() {
     fi
     
     echo ""
-    
-    # Set environment variables for installation functions
-    export INSTALL_DEPLOY_MODE="$deploy_mode"
-    export INSTALL_FORCE_STABLE="$force_stable"
     
     # Run installation steps
     install_docker
