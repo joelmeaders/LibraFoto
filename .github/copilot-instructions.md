@@ -28,15 +28,18 @@
 **Single source of truth**: `.version` file at repository root.
 
 **Format**:
+
 - Stable: `1.2.0` (main branch only)
 - Prerelease: `1.2.0-alpha.1`, `1.2.0-beta.2`, `1.2.0-rc.1` (feature branches only)
 
 **CI Enforcement**:
+
 - Main branch: Fails if `.version` has prerelease suffix
 - Feature branches: Fails if `.version` is stable
 - Check locally: `cat .version`
 
 **Starting a feature**:
+
 ```bash
 git checkout -b feature/xyz
 echo "1.3.0-alpha.1" > .version
@@ -91,18 +94,21 @@ cd apps/admin && npm start       # Port 4200
 Production uses Docker Compose with two **deploy modes** auto-detected by install/update scripts:
 
 **1. Build mode** (clone from GitHub):
+
 - Uses `docker/docker-compose.yml`
 - Builds images locally from source
 - Requires Docker, git, and build tools
 - Slower initial setup, suitable for development deployments
 
 **2. Release mode** (download release zip):
+
 - Uses `docker/docker-compose.release.yml`
 - Loads pre-built images from `images/*.tar` files
 - No compilation needed, faster deployment
 - Suitable for Raspberry Pi and production
 
 **Detection logic** (see `scripts/common.sh`):
+
 ```bash
 # Auto-detect: checks if images/*.tar files exist
 get_deploy_mode()  # Returns "build" or "release"
@@ -110,6 +116,7 @@ get_compose_file() # Returns docker-compose.yml or docker-compose.release.yml
 ```
 
 **Manual deployment**:
+
 ```bash
 cd docker
 docker compose -f docker-compose.yml up -d  # Build mode
@@ -223,6 +230,7 @@ AppHost is **dev-only**. Production uses Docker DNS for service discovery. See [
 LibraFoto includes sophisticated shell scripts for installation, updates, and uninstallation. Key patterns:
 
 **Common helpers** (`scripts/common.sh`):
+
 ```bash
 # Always source from your script
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -240,12 +248,14 @@ compose_file=$(get_compose_file "$LIBRAFOTO_DIR")  # Returns correct compose fil
 ```
 
 **Interactive-first design** (see `install.sh`, `update.sh`, `uninstall.sh`):
+
 - Parse only `--help`/`-h` flag, show help and exit
 - All behavior is interactive with clear prompts
 - Use `N` (no) as default for destructive operations
 - Show dry-run preview before asking for confirmation
 
 **Error tracking** (for multi-step operations):
+
 ```bash
 # Initialize tracking
 declare -A operation_status
@@ -254,12 +264,14 @@ show_operation_summary  # Print table of all tracked operations
 ```
 
 **Testing with shUnit2**:
+
 - All scripts have tests in `tests/shell/`
 - Run with `bash tests/shell/run-tests.sh`
 - Must run in bash, not sh (uses bash-specific syntax)
 - On Windows: run inside WSL
 
 Example test structure:
+
 ```bash
 # tests/shell/common_test.sh
 testGetDeployMode() {
@@ -338,6 +350,7 @@ environment:
 ```
 
 **Data directory resolution** (see `LibraFotoDefaults.cs`):
+
 - Docker: `./data` (detected by `/app` or `/data` existence)
 - Linux: `~/.local/share/LibraFoto`
 - Windows: `%LOCALAPPDATA%\LibraFoto`
