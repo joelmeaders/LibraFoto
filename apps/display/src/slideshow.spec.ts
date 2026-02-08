@@ -438,7 +438,7 @@ describe("Slideshow", () => {
   describe("transitions", () => {
     it("should handle fade transition", async () => {
       vi.useFakeTimers({ shouldAdvanceTime: true });
-      
+
       const testPhoto: PhotoDto = {
         id: 1,
         url: "/api/media/photos/1",
@@ -671,12 +671,12 @@ describe("Slideshow", () => {
 
       const slideshow = new Slideshow(mockApiClient as any);
       expect(slideshow).toBeDefined(); // Keep for side effects
-      
+
       // Initially show blur background
       settingsCallback?.(createTestSettings({ imageFit: ImageFit.Contain }));
       const blurBg = document.getElementById("blur-background");
       expect(blurBg?.classList.contains("hidden")).toBe(false);
-      
+
       // Change to cover mode - should hide blur background
       settingsCallback?.(createTestSettings({ imageFit: ImageFit.Cover }));
       expect(blurBg?.classList.contains("hidden")).toBe(true);
@@ -686,7 +686,7 @@ describe("Slideshow", () => {
   describe("preloading", () => {
     it("should preload photos on start", async () => {
       vi.useFakeTimers({ shouldAdvanceTime: true });
-      
+
       const testPhoto: PhotoDto = {
         id: 1,
         url: "/api/media/photos/1",
@@ -710,7 +710,7 @@ describe("Slideshow", () => {
       await slideshow.start();
 
       expect(mockApiClient.preloadPhotosWithImages).toHaveBeenCalled();
-      
+
       slideshow.stop();
       vi.useRealTimers();
     });
@@ -769,7 +769,7 @@ describe("Slideshow", () => {
   describe("error handling", () => {
     it("should show error when start fails", async () => {
       vi.useFakeTimers({ shouldAdvanceTime: true });
-      
+
       mockApiClient.getSettings.mockRejectedValue(new Error("Network error"));
 
       const slideshow = new Slideshow(mockApiClient as any);
@@ -778,7 +778,7 @@ describe("Slideshow", () => {
       const errorIndicator = document.getElementById("error-indicator");
       expect(errorIndicator?.classList.contains("hidden")).toBe(false);
       expect(errorIndicator?.textContent).toContain("Failed to start");
-      
+
       slideshow.stop();
       vi.useRealTimers();
     });
@@ -878,7 +878,7 @@ describe("Slideshow", () => {
 
     it("should hide loading indicator after successful start", async () => {
       vi.useFakeTimers({ shouldAdvanceTime: true });
-      
+
       const testPhoto: PhotoDto = {
         id: 1,
         url: "/api/media/photos/1",
@@ -903,7 +903,7 @@ describe("Slideshow", () => {
 
       const loadingIndicator = document.getElementById("loading-indicator");
       expect(loadingIndicator?.classList.contains("hidden")).toBe(true);
-      
+
       slideshow.stop();
       vi.useRealTimers();
     });

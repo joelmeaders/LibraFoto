@@ -136,7 +136,7 @@ jobs:
             --report-trx \
             --coverage \
             --coverage-output-format cobertura || EXIT_CODE=$?
-          
+
           # If exit code is 7 (coverage tool issue) but all tests passed, continue
           # Otherwise, fail the build
           if [ "$EXIT_CODE" = "7" ]; then
