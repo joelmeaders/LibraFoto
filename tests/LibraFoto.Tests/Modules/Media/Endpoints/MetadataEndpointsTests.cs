@@ -1,4 +1,4 @@
-﻿using LibraFoto.Modules.Media.Services;
+using LibraFoto.Modules.Media.Services;
 using Microsoft.AspNetCore.Http;
 using NSubstitute;
 using TUnit.Core;

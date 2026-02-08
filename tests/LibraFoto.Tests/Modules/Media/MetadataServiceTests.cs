@@ -1,4 +1,4 @@
-﻿using LibraFoto.Modules.Media.Services;
+using LibraFoto.Modules.Media.Services;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.PixelFormats;
@@ -68,6 +68,7 @@ namespace LibraFoto.Tests.Modules.Media
         }
 
         [Test]
+        [NotInParallel]
         public async Task ExtractMetadataAsync_FromStream_ReturnsMetadata()
         {
             // Arrange

@@ -16,8 +16,8 @@ namespace LibraFoto.Modules.Auth
         /// </summary>
         public static IServiceCollection AddAuthModule(this IServiceCollection services)
         {
-            // Register auth services
-            services.AddScoped<IAuthService, AuthService>();
+            // Register auth services (singleton for AuthService to maintain token state, scoped for others)
+            services.AddSingleton<IAuthService, AuthService>();
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<ISetupService, SetupService>();
             services.AddScoped<IGuestLinkService, GuestLinkService>();

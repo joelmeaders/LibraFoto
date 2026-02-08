@@ -10,6 +10,7 @@ namespace LibraFoto.Tests.Modules.Media
     {
         private GeocodingService _service = null!;
         private MockHttpMessageHandler _mockHandler = null!;
+        private HttpClient _httpClient = null!;
 
         [Before(Test)]
         public async Task Setup()
@@ -20,12 +21,20 @@ namespace LibraFoto.Tests.Modules.Media
                     Content = new StringContent("{}")
                 }));
 
-            var httpClient = new HttpClient(_mockHandler)
+            _httpClient = new HttpClient(_mockHandler)
             {
                 BaseAddress = new Uri("https://nominatim.openstreetmap.org/")
             };
 
-            _service = new GeocodingService(httpClient);
+            _service = new GeocodingService(_httpClient);
+            await Task.CompletedTask;
+        }
+
+        [After(Test)]
+        public async Task Cleanup()
+        {
+            _httpClient?.Dispose();
+            _mockHandler?.Dispose();
             await Task.CompletedTask;
         }
 
@@ -104,17 +113,17 @@ namespace LibraFoto.Tests.Modules.Media
         public async Task ReverseGeocodeAsync_ExceptionThrown_ReturnsEmptyResult()
         {
             // Arrange - handler throws an exception to simulate network error
-            _mockHandler = new MockHttpMessageHandler(_ =>
+            var mockHandler = new MockHttpMessageHandler(_ =>
                 throw new HttpRequestException("Network error"));
 
-            var httpClient = new HttpClient(_mockHandler)
+            var httpClient = new HttpClient(mockHandler)
             {
                 BaseAddress = new Uri("https://nominatim.openstreetmap.org/")
             };
-            _service = new GeocodingService(httpClient);
+            var service = new GeocodingService(httpClient);
 
             // Act
-            var result = await _service.ReverseGeocodeAsync(51.5074, -0.1278);
+            var result = await service.ReverseGeocodeAsync(51.5074, -0.1278);
 
             // Assert
             await Assert.That(result).IsNotNull();
@@ -122,6 +131,9 @@ namespace LibraFoto.Tests.Modules.Media
             await Assert.That(result.Longitude).IsEqualTo(-0.1278);
             await Assert.That(result.DisplayName).IsNull();
             await Assert.That(result.City).IsNull();
+
+            httpClient.Dispose();
+            mockHandler.Dispose();
         }
 
         [Test]
@@ -186,7 +198,7 @@ namespace LibraFoto.Tests.Modules.Media
             // Arrange
             HttpRequestMessage? capturedRequest = null;
 
-            _mockHandler = new MockHttpMessageHandler(request =>
+            var mockHandler = new MockHttpMessageHandler(request =>
             {
                 capturedRequest = request;
                 return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
@@ -199,14 +211,14 @@ namespace LibraFoto.Tests.Modules.Media
                 });
             });
 
-            var httpClient = new HttpClient(_mockHandler)
+            var httpClient = new HttpClient(mockHandler)
             {
                 BaseAddress = new Uri("https://nominatim.openstreetmap.org/")
             };
-            _service = new GeocodingService(httpClient);
+            var service = new GeocodingService(httpClient);
 
             // Act
-            await _service.ReverseGeocodeAsync(48.8566, 2.3522);
+            await service.ReverseGeocodeAsync(48.8566, 2.3522);
 
             // Assert
             await Assert.That(capturedRequest).IsNotNull();
@@ -214,6 +226,9 @@ namespace LibraFoto.Tests.Modules.Media
             await Assert.That(requestUrl).Contains("reverse?format=jsonv2");
             await Assert.That(requestUrl).Contains("lat=48.8566");
             await Assert.That(requestUrl).Contains("lon=2.3522");
+
+            httpClient.Dispose();
+            mockHandler.Dispose();
         }
 
         #endregion
@@ -263,6 +278,7 @@ namespace LibraFoto.Tests.Modules.Media
         #region BatchReverseGeocodeAsync Tests
 
         [Test]
+        [NotInParallel]
         public async Task BatchReverseGeocodeAsync_MultipleCoordinates_YieldsResultForEach()
         {
             // Arrange
@@ -274,7 +290,7 @@ namespace LibraFoto.Tests.Modules.Media
                 new { display_name = "Berlin, Germany", address = new { city = "Berlin", state = "Berlin", country = "Germany", country_code = "de" } }
             };
 
-            _mockHandler = new MockHttpMessageHandler(_ =>
+            var mockHandler = new MockHttpMessageHandler(_ =>
             {
                 var index = callCount < responses.Length ? callCount : responses.Length - 1;
                 callCount++;
@@ -284,11 +300,11 @@ namespace LibraFoto.Tests.Modules.Media
                 });
             });
 
-            var httpClient = new HttpClient(_mockHandler)
+            var httpClient = new HttpClient(mockHandler)
             {
                 BaseAddress = new Uri("https://nominatim.openstreetmap.org/")
             };
-            _service = new GeocodingService(httpClient);
+            var service = new GeocodingService(httpClient);
 
             var coordinates = new[]
             {
@@ -299,7 +315,7 @@ namespace LibraFoto.Tests.Modules.Media
 
             // Act
             var results = new List<GeocodingResult>();
-            await foreach (var result in _service.BatchReverseGeocodeAsync(coordinates))
+            await foreach (var result in service.BatchReverseGeocodeAsync(coordinates))
             {
                 results.Add(result);
             }
@@ -309,9 +325,13 @@ namespace LibraFoto.Tests.Modules.Media
             await Assert.That(results[0].City).IsEqualTo("Paris");
             await Assert.That(results[1].City).IsEqualTo("London");
             await Assert.That(results[2].City).IsEqualTo("Berlin");
+
+            httpClient.Dispose();
+            mockHandler.Dispose();
         }
 
         [Test]
+        [NotInParallel]
         public async Task BatchReverseGeocodeAsync_CancellationRequested_StopsYielding()
         {
             // Arrange
@@ -565,21 +585,24 @@ namespace LibraFoto.Tests.Modules.Media
 
         private void SetupMockResponse(HttpStatusCode statusCode, string content)
         {
+            _httpClient?.Dispose();
+            _mockHandler?.Dispose();
+
             _mockHandler = new MockHttpMessageHandler(_ =>
                 Task.FromResult(new HttpResponseMessage(statusCode)
                 {
                     Content = new StringContent(content, System.Text.Encoding.UTF8, "application/json")
                 }));
 
-            var httpClient = new HttpClient(_mockHandler)
+            _httpClient = new HttpClient(_mockHandler)
             {
                 BaseAddress = new Uri("https://nominatim.openstreetmap.org/")
             };
 
-            _service = new GeocodingService(httpClient);
+            _service = new GeocodingService(_httpClient);
         }
 
-        private class MockHttpMessageHandler : HttpMessageHandler
+        private sealed class MockHttpMessageHandler : HttpMessageHandler
         {
             private readonly Func<HttpRequestMessage, Task<HttpResponseMessage>> _handler;
 

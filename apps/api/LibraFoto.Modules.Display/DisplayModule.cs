@@ -19,8 +19,8 @@ namespace LibraFoto.Modules.Display
             // Register display settings service (scoped for per-request database context)
             services.AddScoped<IDisplaySettingsService, DisplaySettingsService>();
 
-            // Register slideshow service (scoped to use the same DbContext per request)
-            services.AddScoped<ISlideshowService, SlideshowService>();
+            // Register slideshow service as singleton (maintains state across requests, creates scoped DbContext internally)
+            services.AddSingleton<ISlideshowService, SlideshowService>();
 
             return services;
         }

@@ -4,6 +4,8 @@ using LibraFoto.Data.Enums;
 using LibraFoto.Modules.Display.Services;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using TUnit.Core;
@@ -14,7 +16,7 @@ namespace LibraFoto.Tests.Modules.Display
     {
         private SqliteConnection _connection = null!;
         private LibraFotoDbContext _db = null!;
-        private IDisplaySettingsService _settingsService = null!;
+        private ServiceProvider _serviceProvider = null!;
         private SlideshowService _service = null!;
         private static long _testIdCounter = 1000000; // Start from high number to avoid collisions
 
@@ -23,12 +25,27 @@ namespace LibraFoto.Tests.Modules.Display
         {
             _connection = new SqliteConnection($"Data Source=TestDb_{Guid.NewGuid():N};Mode=Memory;Cache=Shared");
             await _connection.OpenAsync();
+
+            // Create initial DbContext just to create schema
             var options = new DbContextOptionsBuilder<LibraFotoDbContext>()
                 .UseSqlite(_connection).Options;
             _db = new LibraFotoDbContext(options);
             await _db.Database.EnsureCreatedAsync();
-            _settingsService = new DisplaySettingsService(_db, NullLogger<DisplaySettingsService>.Instance);
-            _service = new SlideshowService(_db, _settingsService, NullLogger<SlideshowService>.Instance);
+
+            // Setup DI container - register factory that creates new DbContext per scope
+            var services = new ServiceCollection();
+            services.AddScoped<LibraFotoDbContext>(_ =>
+            {
+                var opts = new DbContextOptionsBuilder<LibraFotoDbContext>()
+                    .UseSqlite(_connection).Options;
+                return new LibraFotoDbContext(opts);
+            });
+            services.AddScoped<IDisplaySettingsService, DisplaySettingsService>();
+            services.AddSingleton<ISlideshowService, SlideshowService>();
+            services.AddSingleton(typeof(ILogger<>), typeof(NullLogger<>));
+
+            _serviceProvider = services.BuildServiceProvider();
+            _service = (SlideshowService)_serviceProvider.GetRequiredService<ISlideshowService>();
         }
 
         [After(Test)]
@@ -41,6 +58,7 @@ namespace LibraFoto.Tests.Modules.Display
                 _service.ResetSequence(setting.Id);
             }
 
+            _serviceProvider.Dispose();
             await _db.DisposeAsync();
             await _connection.DisposeAsync();
         }

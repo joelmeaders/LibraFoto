@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.IdentityModel.Tokens.Jwt;
+using System.Runtime.CompilerServices;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -7,18 +8,21 @@ using LibraFoto.Data;
 using LibraFoto.Modules.Auth.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
+
+[assembly: InternalsVisibleTo("LibraFoto.Tests")]
 
 namespace LibraFoto.Modules.Auth.Services
 {
     /// <summary>
     /// JWT-based authentication service implementation.
+    /// Registered as singleton to maintain token state, creates scoped DbContext per operation.
     /// </summary>
     public class AuthService : IAuthService
     {
-        private readonly LibraFotoDbContext _dbContext;
-        private readonly IUserService _userService;
+        private readonly IServiceScopeFactory _scopeFactory;
         private readonly IConfiguration _configuration;
         private readonly ILogger<AuthService> _logger;
 
@@ -30,13 +34,11 @@ namespace LibraFoto.Modules.Auth.Services
         private static readonly ConcurrentBag<string> _invalidatedTokens = new();
 
         public AuthService(
-            LibraFotoDbContext dbContext,
-            IUserService userService,
+            IServiceScopeFactory scopeFactory,
             IConfiguration configuration,
             ILogger<AuthService> logger)
         {
-            _dbContext = dbContext;
-            _userService = userService;
+            _scopeFactory = scopeFactory;
             _configuration = configuration;
             _logger = logger;
         }
@@ -44,8 +46,11 @@ namespace LibraFoto.Modules.Auth.Services
         /// <inheritdoc />
         public async Task<LoginResponse?> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default)
         {
+            using var scope = _scopeFactory.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<LibraFotoDbContext>();
+
             // Get user from database for validation
-            var user = await _dbContext.Users
+            var user = await dbContext.Users
                 .FirstOrDefaultAsync(u => u.Email.ToLower() == request.Email.ToLower(), cancellationToken);
 
             if (user == null)
@@ -63,7 +68,7 @@ namespace LibraFoto.Modules.Auth.Services
 
             // Update last login time
             user.LastLogin = DateTime.UtcNow;
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
 
             // Generate tokens
             var userDto = new UserDto(
@@ -100,7 +105,9 @@ namespace LibraFoto.Modules.Auth.Services
         /// <inheritdoc />
         public async Task<UserDto?> GetCurrentUserAsync(long userId, CancellationToken cancellationToken = default)
         {
-            return await _userService.GetUserByIdAsync(userId, cancellationToken);
+            using var scope = _scopeFactory.CreateScope();
+            var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
+            return await userService.GetUserByIdAsync(userId, cancellationToken);
         }
 
         /// <inheritdoc />
@@ -159,7 +166,10 @@ namespace LibraFoto.Modules.Auth.Services
                 return null;
             }
 
-            var user = await _userService.GetUserByIdAsync(tokenData.UserId, cancellationToken);
+            using var scope = _scopeFactory.CreateScope();
+            var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
+
+            var user = await userService.GetUserByIdAsync(tokenData.UserId, cancellationToken);
             if (user == null)
             {
                 _logger.LogWarning("User not found for refresh token: {UserId}", tokenData.UserId);
@@ -238,5 +248,15 @@ namespace LibraFoto.Modules.Auth.Services
         private int GetJwtExpirationMinutes() => int.Parse(_configuration["Jwt:ExpirationMinutes"] ?? "60");
 
         private int GetRefreshTokenExpirationDays() => int.Parse(_configuration["Jwt:RefreshTokenExpirationDays"] ?? "7");
+
+        /// <summary>
+        /// Clears all static token storage. For testing purposes only.
+        /// </summary>
+        internal static void ClearStaticState()
+        {
+            _refreshTokens.Clear();
+            _userRefreshTokens.Clear();
+            _invalidatedTokens.Clear();
+        }
     }
 }

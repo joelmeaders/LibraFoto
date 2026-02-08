@@ -38,6 +38,7 @@ namespace LibraFoto.Tests.Modules.Media
         }
 
         [Test]
+        [NotInParallel]
         public async Task GenerateThumbnailAsync_FromPath_CreatesThumbnail()
         {
             // Arrange
@@ -56,6 +57,7 @@ namespace LibraFoto.Tests.Modules.Media
         }
 
         [Test]
+        [NotInParallel]
         public async Task GenerateThumbnailAsync_FromStream_CreatesThumbnail()
         {
             // Arrange
@@ -86,6 +88,7 @@ namespace LibraFoto.Tests.Modules.Media
         }
 
         [Test]
+        [NotInParallel]
         public async Task OpenThumbnailStream_ReturnsStream_WhenThumbnailExists()
         {
             // Arrange
@@ -115,6 +118,7 @@ namespace LibraFoto.Tests.Modules.Media
         }
 
         [Test]
+        [NotInParallel]
         public async Task DeleteThumbnails_RemovesThumbnail()
         {
             // Arrange
@@ -145,6 +149,7 @@ namespace LibraFoto.Tests.Modules.Media
         }
 
         [Test]
+        [NotInParallel]
         public async Task GenerateThumbnailAsync_OrganizesByYearMonth()
         {
             // Arrange
@@ -161,6 +166,7 @@ namespace LibraFoto.Tests.Modules.Media
         }
 
         [Test]
+        [NotInParallel]
         public async Task GenerateThumbnailAsync_CanRegenerateThumbnail()
         {
             // Arrange
@@ -184,6 +190,7 @@ namespace LibraFoto.Tests.Modules.Media
         }
 
         [Test]
+        [NotInParallel]
         public async Task GetThumbnailPath_ReturnsPath_WhenThumbnailExists()
         {
             // Arrange
@@ -200,6 +207,7 @@ namespace LibraFoto.Tests.Modules.Media
         }
 
         [Test]
+        [NotInParallel]
         public async Task GetThumbnailAbsolutePath_ReturnsAbsolutePath_WhenThumbnailExists()
         {
             // Arrange

@@ -150,6 +150,7 @@ namespace LibraFoto.Tests.Modules.Media
         // ─── ProcessAsync (file path overload) ──────────────────────────
 
         [Test]
+        [NotInParallel]
         public async Task ProcessAsync_FilePath_WithValidImage_ReturnsTrue()
         {
             // Arrange

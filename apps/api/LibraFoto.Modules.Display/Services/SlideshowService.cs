@@ -4,6 +4,7 @@ using LibraFoto.Data.Entities;
 using LibraFoto.Data.Enums;
 using LibraFoto.Modules.Display.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace LibraFoto.Modules.Display.Services
@@ -11,37 +12,38 @@ namespace LibraFoto.Modules.Display.Services
     /// <summary>
     /// Service for managing slideshow photo queue and rotation.
     /// Handles next photo selection based on display settings.
+    /// Registered as singleton to maintain state, creates scoped DbContext per operation.
     /// </summary>
     public class SlideshowService : ISlideshowService
     {
-        private readonly LibraFotoDbContext _dbContext;
-        private readonly IDisplaySettingsService _settingsService;
+        private readonly IServiceScopeFactory _scopeFactory;
         private readonly ILogger<SlideshowService> _logger;
 
         // Thread-safe storage for slideshow state per settings ID
         private static readonly ConcurrentDictionary<long, SlideshowState> _states = new();
 
         public SlideshowService(
-            LibraFotoDbContext dbContext,
-            IDisplaySettingsService settingsService,
+            IServiceScopeFactory scopeFactory,
             ILogger<SlideshowService> logger)
         {
-            _dbContext = dbContext;
-            _settingsService = settingsService;
+            _scopeFactory = scopeFactory;
             _logger = logger;
         }
 
         /// <inheritdoc />
         public async Task<PhotoDto?> GetNextPhotoAsync(long? settingsId = null, CancellationToken cancellationToken = default)
         {
-            var settings = await GetSettingsAsync(settingsId, cancellationToken);
+            using var scope = _scopeFactory.CreateScope();
+            var settingsService = scope.ServiceProvider.GetRequiredService<IDisplaySettingsService>();
+
+            var settings = await GetSettingsAsync(settingsService, settingsId, cancellationToken);
             if (settings == null)
             {
                 return null;
             }
 
             var state = GetOrCreateState(settings.Id);
-            var photos = await GetFilteredPhotoIdsAsync(settings, cancellationToken);
+            var photos = await GetFilteredPhotoIdsAsync(scope, settings, cancellationToken);
 
             if (photos.Count == 0)
             {
@@ -69,13 +71,16 @@ namespace LibraFoto.Modules.Display.Services
             state.CurrentPhotoId = photoId;
 
             // Fetch full photo data
-            return await GetPhotoDtoByIdAsync(photoId, cancellationToken);
+            return await GetPhotoDtoByIdAsync(scope, photoId, cancellationToken);
         }
 
         /// <inheritdoc />
         public async Task<PhotoDto?> GetCurrentPhotoAsync(long? settingsId = null, CancellationToken cancellationToken = default)
         {
-            var settings = await GetSettingsAsync(settingsId, cancellationToken);
+            using var scope = _scopeFactory.CreateScope();
+            var settingsService = scope.ServiceProvider.GetRequiredService<IDisplaySettingsService>();
+
+            var settings = await GetSettingsAsync(settingsService, settingsId, cancellationToken);
             if (settings == null)
             {
                 return null;
@@ -89,20 +94,23 @@ namespace LibraFoto.Modules.Display.Services
                 return await GetNextPhotoAsync(settingsId, cancellationToken);
             }
 
-            return await GetPhotoDtoByIdAsync(state.CurrentPhotoId.Value, cancellationToken);
+            return await GetPhotoDtoByIdAsync(scope, state.CurrentPhotoId.Value, cancellationToken);
         }
 
         /// <inheritdoc />
         public async Task<IReadOnlyList<PhotoDto>> GetPreloadPhotosAsync(int count = 10, long? settingsId = null, CancellationToken cancellationToken = default)
         {
-            var settings = await GetSettingsAsync(settingsId, cancellationToken);
+            using var scope = _scopeFactory.CreateScope();
+            var settingsService = scope.ServiceProvider.GetRequiredService<IDisplaySettingsService>();
+
+            var settings = await GetSettingsAsync(settingsService, settingsId, cancellationToken);
             if (settings == null)
             {
                 return [];
             }
 
             var state = GetOrCreateState(settings.Id);
-            var photos = await GetFilteredPhotoIdsAsync(settings, cancellationToken);
+            var photos = await GetFilteredPhotoIdsAsync(scope, settings, cancellationToken);
 
             if (photos.Count == 0)
             {
@@ -132,7 +140,7 @@ namespace LibraFoto.Modules.Display.Services
             var result = new List<PhotoDto>();
             foreach (var id in preloadIds.Take(count))
             {
-                var dto = await GetPhotoDtoByIdAsync(id, cancellationToken);
+                var dto = await GetPhotoDtoByIdAsync(scope, id, cancellationToken);
                 if (dto != null)
                 {
                     result.Add(dto);
@@ -157,24 +165,28 @@ namespace LibraFoto.Modules.Display.Services
         /// <inheritdoc />
         public async Task<int> GetPhotoCountAsync(long? settingsId = null, CancellationToken cancellationToken = default)
         {
-            var settings = await GetSettingsAsync(settingsId, cancellationToken);
+            using var scope = _scopeFactory.CreateScope();
+            var settingsService = scope.ServiceProvider.GetRequiredService<IDisplaySettingsService>();
+
+            var settings = await GetSettingsAsync(settingsService, settingsId, cancellationToken);
             if (settings == null)
             {
                 return 0;
             }
 
-            var query = BuildPhotoQuery(settings);
+            var dbContext = scope.ServiceProvider.GetRequiredService<LibraFotoDbContext>();
+            var query = BuildPhotoQuery(dbContext, settings);
             return await query.CountAsync(cancellationToken);
         }
 
-        private async Task<DisplaySettingsDto?> GetSettingsAsync(long? settingsId, CancellationToken cancellationToken)
+        private async Task<DisplaySettingsDto?> GetSettingsAsync(IDisplaySettingsService settingsService, long? settingsId, CancellationToken cancellationToken)
         {
             if (settingsId.HasValue)
             {
-                return await _settingsService.GetByIdAsync(settingsId.Value, cancellationToken);
+                return await settingsService.GetByIdAsync(settingsId.Value, cancellationToken);
             }
 
-            return await _settingsService.GetActiveSettingsAsync(cancellationToken);
+            return await settingsService.GetActiveSettingsAsync(cancellationToken);
         }
 
         private SlideshowState GetOrCreateState(long settingsId)
@@ -182,15 +194,16 @@ namespace LibraFoto.Modules.Display.Services
             return _states.GetOrAdd(settingsId, _ => new SlideshowState());
         }
 
-        private async Task<List<long>> GetFilteredPhotoIdsAsync(DisplaySettingsDto settings, CancellationToken cancellationToken)
+        private async Task<List<long>> GetFilteredPhotoIdsAsync(IServiceScope scope, DisplaySettingsDto settings, CancellationToken cancellationToken)
         {
-            var query = BuildPhotoQuery(settings);
+            var dbContext = scope.ServiceProvider.GetRequiredService<LibraFotoDbContext>();
+            var query = BuildPhotoQuery(dbContext, settings);
             return await query.Select(p => p.Id).ToListAsync(cancellationToken);
         }
 
-        private IQueryable<Photo> BuildPhotoQuery(DisplaySettingsDto settings)
+        private IQueryable<Photo> BuildPhotoQuery(LibraFotoDbContext dbContext, DisplaySettingsDto settings)
         {
-            IQueryable<Photo> query = _dbContext.Photos.AsNoTracking();
+            IQueryable<Photo> query = dbContext.Photos.AsNoTracking();
 
             switch (settings.SourceType)
             {
@@ -228,9 +241,10 @@ namespace LibraFoto.Modules.Display.Services
             _logger.LogDebug("Rebuilt slideshow queue with {Count} photos, shuffle={Shuffle}", orderedIds.Count, shuffle);
         }
 
-        private async Task<PhotoDto?> GetPhotoDtoByIdAsync(long id, CancellationToken cancellationToken)
+        private async Task<PhotoDto?> GetPhotoDtoByIdAsync(IServiceScope scope, long id, CancellationToken cancellationToken)
         {
-            var photo = await _dbContext.Photos
+            var dbContext = scope.ServiceProvider.GetRequiredService<LibraFotoDbContext>();
+            var photo = await dbContext.Photos
                 .AsNoTracking()
                 .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
 

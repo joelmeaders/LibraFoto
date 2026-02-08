@@ -1,4 +1,4 @@
-﻿using LibraFoto.Data;
+using LibraFoto.Data;
 using LibraFoto.Data.Entities;
 using LibraFoto.Modules.Media.Services;
 using Microsoft.Data.Sqlite;
@@ -68,6 +68,7 @@ namespace LibraFoto.Tests.Modules.Media.Endpoints
         }
 
         [Test]
+        [NotInParallel]
         public async Task ThumbnailService_GeneratesThumbnail()
         {
             // Arrange
@@ -83,6 +84,7 @@ namespace LibraFoto.Tests.Modules.Media.Endpoints
         }
 
         [Test]
+        [NotInParallel]
         public async Task ThumbnailService_DeletesThumbnail()
         {
             // Arrange

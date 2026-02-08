@@ -6,6 +6,8 @@ using LibraFoto.Modules.Auth.Services;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 
@@ -18,8 +20,8 @@ namespace LibraFoto.Tests.Modules.Auth
     {
         private SqliteConnection _connection = null!;
         private LibraFotoDbContext _db = null!;
+        private ServiceProvider _serviceProvider = null!;
         private AuthService _service = null!;
-        private IUserService _userService = null!;
         private IConfiguration _configuration = null!;
 
         [Before(Test)]
@@ -37,8 +39,6 @@ namespace LibraFoto.Tests.Modules.Auth
             _db = new LibraFotoDbContext(options);
             await _db.Database.EnsureCreatedAsync();
 
-            _userService = new UserService(_db, NullLogger<UserService>.Instance);
-
             // Setup configuration for JWT
             var configData = new Dictionary<string, string?>
             {
@@ -52,12 +52,29 @@ namespace LibraFoto.Tests.Modules.Auth
                 .AddInMemoryCollection(configData)
                 .Build();
 
-            _service = new AuthService(_db, _userService, _configuration, NullLogger<AuthService>.Instance);
+            // Setup DI container for testing singleton service
+            var services = new ServiceCollection();
+            services.AddScoped<LibraFotoDbContext>(_ =>
+            {
+                var opts = new DbContextOptionsBuilder<LibraFotoDbContext>()
+                    .UseSqlite(_connection).Options;
+                return new LibraFotoDbContext(opts);
+            });
+            services.AddScoped<IUserService, UserService>();
+            services.AddSingleton<IAuthService, AuthService>();
+            services.AddSingleton<IConfiguration>(_configuration);
+            services.AddSingleton(typeof(ILogger<>), typeof(NullLogger<>));
+
+            _serviceProvider = services.BuildServiceProvider();
+            _service = (AuthService)_serviceProvider.GetRequiredService<IAuthService>();
         }
 
         [After(Test)]
         public async Task Cleanup()
         {
+            // Clear static state to prevent test interference
+            AuthService.ClearStaticState();
+            _serviceProvider.Dispose();
             await _db.DisposeAsync();
             await _connection.DisposeAsync();
         }
@@ -157,14 +174,17 @@ namespace LibraFoto.Tests.Modules.Auth
             };
             _db.Users.Add(user);
             await _db.SaveChangesAsync();
+            var userId = user.Id;
 
             var request = new LoginRequest("test@example.com", "password123");
 
             // Act
             await _service.LoginAsync(request);
 
-            // Assert
-            var updatedUser = await _db.Users.FirstAsync();
+            // Assert - Create fresh scope to query updated data
+            using var scope = _serviceProvider.CreateScope();
+            var freshDb = scope.ServiceProvider.GetRequiredService<LibraFotoDbContext>();
+            var updatedUser = await freshDb.Users.FirstAsync(u => u.Id == userId);
             await Assert.That(updatedUser.LastLogin).IsNotNull();
         }
 
