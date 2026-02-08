@@ -360,45 +360,45 @@ jobs:
               return 1
             fi
           }
-          
+
           failed=0
-          
+
           # Jobs without dependencies must succeed
           if [[ "${{ needs.validate-version.result }}" != "success" ]]; then
             echo "❌ Version validation failed"
             failed=1
           fi
-          
+
           if [[ "${{ needs.build-backend.result }}" != "success" ]]; then
             echo "❌ Backend build failed"
             failed=1
           fi
-          
+
           if [[ "${{ needs.test-shell.result }}" != "success" ]]; then
             echo "❌ Shell tests failed"
             failed=1
           fi
-          
+
           if [[ "${{ needs.build-admin.result }}" != "success" ]]; then
             echo "❌ Admin build failed"
             failed=1
           fi
-          
+
           if [[ "${{ needs.build-display.result }}" != "success" ]]; then
             echo "❌ Display build failed"
             failed=1
           fi
-          
+
           # Test jobs can be skipped if their build dependency failed
           check_job "Backend tests" "${{ needs.test-backend.result }}" "${{ needs.build-backend.result }}" || failed=1
           check_job "Admin tests" "${{ needs.test-admin.result }}" "${{ needs.build-admin.result }}" || failed=1
           check_job "Display tests" "${{ needs.test-display.result }}" "${{ needs.build-display.result }}" || failed=1
-          
+
           if [[ $failed -eq 1 ]]; then
             echo "::error::One or more CI jobs failed"
             exit 1
           fi
-          
+
           echo "✅ All CI checks passed!"
 
       - name: Summary
@@ -416,7 +416,7 @@ jobs:
           echo "| Build Display | ${{ needs.build-display.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Test Display (≥80% coverage) | ${{ needs.test-display.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          
+
           # Add explanation for skipped tests
           if [[ "${{ needs.test-backend.result }}" == "skipped" ]] || \
              [[ "${{ needs.test-admin.result }}" == "skipped" ]] || \
