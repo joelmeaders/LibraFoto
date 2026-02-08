@@ -144,7 +144,7 @@ jobs:
             --report-trx || TEST_EXIT=$?
 
           # Copy coverage files from bin to TestResults
-          cp bin/Release/TestResults/*.cobertura.xml ../../TestResults/ || true
+          find bin/Release -type f -name "*.cobertura.xml" -path "*/TestResults/*" -exec cp {} ../../TestResults/ \; || true
 
           # Run LibraFoto.GooglePhotos.Tests
           cd ../LibraFoto.GooglePhotos.Tests
@@ -154,7 +154,7 @@ jobs:
             --report-trx || GOOGLE_EXIT=$?
 
           # Copy coverage files from bin to TestResults
-          cp bin/Release/TestResults/*.cobertura.xml ../../TestResults/ || true
+          find bin/Release -type f -name "*.cobertura.xml" -path "*/TestResults/*" -exec cp {} ../../TestResults/ \; || true
 
           cd ../..
 
@@ -328,7 +328,7 @@ jobs:
         run: |
           git fetch origin main --depth=1
 
-          COVERAGE_FILE="apps/admin/coverage/librafoto-admin/lcov.info"
+          COVERAGE_FILE="apps/admin/coverage/librafoto-admin/clover.xml"
           if [[ ! -f "$COVERAGE_FILE" ]]; then
             echo "::error::Admin coverage file not found at $COVERAGE_FILE"
             ls -la apps/admin/coverage || true
