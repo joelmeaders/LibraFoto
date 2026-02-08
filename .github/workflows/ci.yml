@@ -183,10 +183,12 @@ jobs:
 
       - name: Setup Python
         uses: actions/setup-python@v5
+        if: github.event_name == 'pull_request'
         with:
           python-version: "3.x"
 
       - name: Install diff-cover
+        if: github.event_name == 'pull_request'
         run: python -m pip install --upgrade diff-cover
 
       - name: Check PR diff coverage (backend)
@@ -318,10 +320,12 @@ jobs:
 
       - name: Setup Python
         uses: actions/setup-python@v5
+        if: github.event_name == 'pull_request'
         with:
           python-version: "3.x"
 
       - name: Install diff-cover
+        if: github.event_name == 'pull_request'
         run: python -m pip install --upgrade diff-cover
 
       - name: Check PR diff coverage (admin)
@@ -409,10 +413,12 @@ jobs:
 
       - name: Setup Python
         uses: actions/setup-python@v5
+        if: github.event_name == 'pull_request'
         with:
           python-version: "3.x"
 
       - name: Install diff-cover
+        if: github.event_name == 'pull_request'
         run: python -m pip install --upgrade diff-cover
 
       - name: Check PR diff coverage (display)
