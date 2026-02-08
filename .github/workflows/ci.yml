@@ -1,0 +1,461 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # =============================================================================
+  # Version Validation
+  # =============================================================================
+  validate-version:
+    name: Validate Version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check version format
+        run: |
+          VERSION=$(cat .version)
+          echo "Version: $VERSION"
+
+          # Determine target branch (for PRs, use base_ref; for pushes, use ref_name)
+          TARGET_BRANCH="${GITHUB_BASE_REF:-$GITHUB_REF_NAME}"
+          SOURCE_BRANCH="${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}"
+          echo "Source branch: $SOURCE_BRANCH"
+          echo "Target branch: $TARGET_BRANCH"
+
+          # Stable version pattern: #.#.# (no prerelease suffix)
+          STABLE_PATTERN="^[0-9]+\.[0-9]+\.[0-9]+$"
+
+          # Prerelease pattern: #.#.#-alpha.#, #.#.#-beta.#, #.#.#-rc.#
+          PRERELEASE_PATTERN="^[0-9]+\.[0-9]+\.[0-9]+-(alpha|beta|rc)\.[0-9]+$"
+
+          if [[ "$TARGET_BRANCH" == "master" ]]; then
+            # PRs to master or pushes to master MUST use stable versions
+            if [[ ! "$VERSION" =~ $STABLE_PATTERN ]]; then
+              echo "::error::Invalid version format for master: $VERSION"
+              echo "::error::PRs to master require stable versions (#.#.#)"
+              echo "::error::Prerelease versions are not allowed"
+              exit 1
+            fi
+            echo "✅ Stable version '$VERSION' is valid for master"
+          else
+            # PRs to non-master or pushes to non-master branches MUST use prerelease versions
+            if [[ "$VERSION" =~ $STABLE_PATTERN ]]; then
+              echo "::error::Stable version '$VERSION' not allowed for target branch '$TARGET_BRANCH'"
+              echo "::error::Non-master branches must use prerelease versions like:"
+              echo "::error::  - 1.0.0-alpha.1"
+              echo "::error::  - 1.0.0-beta.2"
+              echo "::error::  - 1.0.0-rc.1"
+              echo ""
+              echo "To fix: Update .version file to use a prerelease suffix"
+              exit 1
+            fi
+            
+            if [[ ! "$VERSION" =~ $PRERELEASE_PATTERN ]]; then
+              echo "::error::Invalid prerelease version format: $VERSION"
+              echo "::error::Expected format: #.#.#-(alpha|beta|rc).#"
+              exit 1
+            fi
+            
+            echo "✅ Prerelease version '$VERSION' is valid for non-master branch '$TARGET_BRANCH'"
+          fi
+
+  # =============================================================================
+  # Backend Build & Test
+  # =============================================================================
+  build-backend:
+    name: Build Backend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore dependencies
+        run: dotnet restore apps/api/LibraFoto.slnx
+
+      - name: Check formatting
+        run: dotnet format apps/api/LibraFoto.slnx --verify-no-changes --verbosity diagnostic
+
+      - name: Build solution
+        run: dotnet build apps/api/LibraFoto.slnx --no-restore --configuration Release
+
+  test-backend:
+    name: Test Backend
+    runs-on: ubuntu-latest
+    needs: build-backend
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Run backend tests with coverage
+        run: |
+          # TUnit uses 'dotnet run' with --coverage, not 'dotnet test'
+          # See: https://tunit.dev/docs/migration/xunit/#code-coverage
+
+          mkdir -p ./TestResults
+
+          # Run LibraFoto.Tests
+          cd tests/LibraFoto.Tests
+          dotnet run --configuration Release \
+            --coverage \
+            --coverage-output-format cobertura \
+            --report-trx || TEST_EXIT=$?
+
+          # Copy coverage files from bin to TestResults
+          cp bin/Release/TestResults/*.cobertura.xml ../../TestResults/ || true
+
+          # Run LibraFoto.GooglePhotos.Tests
+          cd ../LibraFoto.GooglePhotos.Tests
+          dotnet run --configuration Release \
+            --coverage \
+            --coverage-output-format cobertura \
+            --report-trx || GOOGLE_EXIT=$?
+
+          # Copy coverage files from bin to TestResults
+          cp bin/Release/TestResults/*.cobertura.xml ../../TestResults/ || true
+
+          cd ../..
+
+          # Check exit codes (exit code 7 is TUnit cleanup issue, not a failure)
+          if [ -n "$TEST_EXIT" ] && [ "$TEST_EXIT" != "0" ] && [ "$TEST_EXIT" != "7" ]; then
+            echo "❌ LibraFoto.Tests failed with exit code $TEST_EXIT"
+            exit $TEST_EXIT
+          fi
+
+          if [ -n "$GOOGLE_EXIT" ] && [ "$GOOGLE_EXIT" != "0" ] && [ "$GOOGLE_EXIT" != "7" ]; then
+            echo "❌ LibraFoto.GooglePhotos.Tests failed with exit code $GOOGLE_EXIT"
+            exit $GOOGLE_EXIT
+          fi
+
+          echo "✅ All tests passed"
+
+      - name: Install ReportGenerator
+        run: dotnet tool install --global dotnet-reportgenerator-globaltool
+
+      - name: Generate coverage report
+        run: |
+          reportgenerator \
+            -reports:"./TestResults/*.cobertura.xml" \
+            -targetdir:"./TestResults/CoverageReport" \
+            -reporttypes:"Html;Cobertura;TextSummary"
+
+      - name: Check backend coverage threshold
+        continue-on-error: true
+        run: |
+          # Parse the summary and check each assembly's coverage
+          SUMMARY_FILE="./TestResults/CoverageReport/Summary.txt"
+          if [[ ! -f "$SUMMARY_FILE" ]]; then
+            echo "::warning::Coverage summary not found"
+            exit 1
+          fi
+
+          cat "$SUMMARY_FILE"
+
+          # Extract line coverage percentage
+          LINE_COVERAGE=$(grep -oP 'Line coverage: \K[0-9.]+' "$SUMMARY_FILE" || echo "0")
+          echo "Overall line coverage: ${LINE_COVERAGE}%"
+
+          # Check if coverage meets threshold (80%)
+          if (( $(echo "$LINE_COVERAGE < 80" | bc -l) )); then
+            echo "::warning::Backend coverage ${LINE_COVERAGE}% is below 80% threshold"
+            exit 1
+          fi
+
+          echo "✅ Backend coverage ${LINE_COVERAGE}% meets 80% threshold"
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-test-results
+          path: ./TestResults/*.trx
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-coverage
+          path: ./TestResults/CoverageReport/
+
+  # =============================================================================
+  # Shell Script Tests (shUnit2)
+  # =============================================================================
+  test-shell:
+    name: Test Shell Scripts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install shUnit2
+        run: sudo apt-get update && sudo apt-get install -y shunit2
+
+      - name: Run shell tests
+        run: bash tests/shell/run-tests.sh
+
+  # =============================================================================
+  # Admin Frontend Build & Test
+  # =============================================================================
+  build-admin:
+    name: Build Admin Frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/admin
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: apps/admin/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: admin-dist
+          path: apps/admin/dist/
+
+  test-admin:
+    name: Test Admin Frontend
+    runs-on: ubuntu-latest
+    needs: build-admin
+    defaults:
+      run:
+        working-directory: apps/admin
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: apps/admin/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests with coverage
+        run: npm run test:coverage
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: admin-coverage
+          path: apps/admin/coverage/
+
+  # =============================================================================
+  # Display Frontend Build & Test
+  # =============================================================================
+  build-display:
+    name: Build Display Frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/display
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: apps/display/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: display-dist
+          path: apps/display/dist/
+
+  test-display:
+    name: Test Display Frontend
+    runs-on: ubuntu-latest
+    needs: build-display
+    defaults:
+      run:
+        working-directory: apps/display
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: apps/display/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests with coverage
+        run: npm run test:coverage -- --coverage.thresholds.lines=80 --coverage.thresholds.functions=80 --coverage.thresholds.branches=80 --coverage.thresholds.statements=80
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: display-coverage
+          path: apps/display/coverage/
+
+  # =============================================================================
+  # CI Summary
+  # =============================================================================
+  ci-success:
+    name: CI Success
+    runs-on: ubuntu-latest
+    needs:
+      - validate-version
+      - build-backend
+      - test-backend
+      - test-shell
+      - build-admin
+      - test-admin
+      - build-display
+      - test-display
+    if: always()
+    steps:
+      - name: Check all jobs passed
+        run: |
+          # Helper function to check if a job passed or was skipped due to dependency failure
+          check_job() {
+            local job_name=$1
+            local job_result=$2
+            local dependency_result=$3
+            
+            if [[ "$job_result" == "success" ]]; then
+              return 0
+            elif [[ "$job_result" == "skipped" ]] && [[ "$dependency_result" != "success" ]]; then
+              # Job was skipped because its dependency failed - this is acceptable
+              echo "⏭️  $job_name was skipped due to dependency failure"
+              return 0
+            else
+              echo "❌ $job_name failed with status: $job_result"
+              return 1
+            fi
+          }
+
+          failed=0
+
+          # Jobs without dependencies must succeed
+          if [[ "${{ needs.validate-version.result }}" != "success" ]]; then
+            echo "❌ Version validation failed"
+            failed=1
+          fi
+
+          if [[ "${{ needs.build-backend.result }}" != "success" ]]; then
+            echo "❌ Backend build failed"
+            failed=1
+          fi
+
+          if [[ "${{ needs.test-shell.result }}" != "success" ]]; then
+            echo "❌ Shell tests failed"
+            failed=1
+          fi
+
+          if [[ "${{ needs.build-admin.result }}" != "success" ]]; then
+            echo "❌ Admin build failed"
+            failed=1
+          fi
+
+          if [[ "${{ needs.build-display.result }}" != "success" ]]; then
+            echo "❌ Display build failed"
+            failed=1
+          fi
+
+          # Test jobs can be skipped if their build dependency failed
+          check_job "Backend tests" "${{ needs.test-backend.result }}" "${{ needs.build-backend.result }}" || failed=1
+          check_job "Admin tests" "${{ needs.test-admin.result }}" "${{ needs.build-admin.result }}" || failed=1
+          check_job "Display tests" "${{ needs.test-display.result }}" "${{ needs.build-display.result }}" || failed=1
+
+          if [[ $failed -eq 1 ]]; then
+            echo "::error::One or more CI jobs failed"
+            exit 1
+          fi
+
+          echo "✅ All CI checks passed!"
+
+      - name: Summary
+        run: |
+          echo "## CI Results :white_check_mark:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Version Validation | ${{ needs.validate-version.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Build Backend | ${{ needs.build-backend.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Test Backend (≥80% coverage) | ${{ needs.test-backend.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Test Shell Scripts | ${{ needs.test-shell.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Build Admin | ${{ needs.build-admin.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Test Admin (≥80% coverage) | ${{ needs.test-admin.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Build Display | ${{ needs.build-display.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Test Display (≥80% coverage) | ${{ needs.test-display.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Add explanation for skipped tests
+          if [[ "${{ needs.test-backend.result }}" == "skipped" ]] || \
+             [[ "${{ needs.test-admin.result }}" == "skipped" ]] || \
+             [[ "${{ needs.test-display.result }}" == "skipped" ]]; then
+            echo "> **Note:** Test jobs are skipped when their corresponding build job fails." >> $GITHUB_STEP_SUMMARY
+            echo "> This is expected behavior to save CI resources." >> $GITHUB_STEP_SUMMARY
+          fi

@@ -1,0 +1,698 @@
+
+> librafoto-e2e@1.0.0 test
+> playwright test --project=admin
+
+[2m[WebServer] [22mUsing launch settings from ..\..\src\LibraFoto.Api\Properties\launchSettings.json...
+[2m[WebServer] [22mBuilding...
+[2m[WebServer] [22m[18:06:52 INF] Starting LibraFoto API
+[2m[WebServer] [22m[18:06:52 INF] LIBRAFOTO_DATA_DIR: Setting database path to test-data\librafoto.db
+[2m[WebServer] [22m[18:06:52 INF] LIBRAFOTO_DATA_DIR: Setting storage path to test-data\photos
+[2m[WebServer] [22m[18:06:52 INF] Database: Data Source=test-data\librafoto.db
+[2m[WebServer] [22m[18:06:52 INF] Storage: test-data\photos
+[WebServer] Γû▓ [WARNING] NG8011: Node matches the ".material-icons:not([iconPositionEnd]), mat-icon:not([iconPositionEnd]), [matButtonIcon]:not([iconPositionEnd])" slot of the "MatButton" component, but will not be projected into the specific slot because the surrounding @else has more than one node at its root. To project the node in the right slot, you can:
+[WebServer] 
+[WebServer] 1. Wrap the content of the @else block in an <ng-container/> that matches the ".material-icons:not([iconPositionEnd]), mat-icon:not([iconPositionEnd]), [matButtonIcon]:not([iconPositionEnd])" selector.
+[WebServer] 2. Split the content of the @else block across multiple @else blocks such that each one only has a single projectable node at its root.
+[WebServer] 3. Remove all content from the @else block, except for the node being projected.
+[WebServer] 
+[WebServer] This check can be disabled using the `extendedDiagnostics.checks.controlFlowPreventingContentProjection = "suppress" compiler option.` [plugin angular-compiler]
+[WebServer] 
+[WebServer]     src/app/features/display-settings/display-settings.component.ts:253:12:
+[WebServer]       253 Γöé             <mat-icon>save</mat-icon>
+[WebServer]           Γò╡             ~~~~~~~~~~
+[WebServer] 
+[WebServer] 
+
+≡ƒöº Running global setup...
+
+≡ƒôü Creating test data directory: D:\Just or fun\LibraFoto\LibraFoto\test-data
+Γ£à Test data directory created!
+
+ΓÅ│ Waiting for API to be ready...
+
+Γ£à API is ready!
+
+≡ƒöä Resetting database to clean state...
+[2m[WebServer] [22m[18:06:58 WRN] ΓÜá∩╕Å Database reset requested - clearing all data for E2E tests
+[2m[WebServer] [22m[18:06:58 INF] Γ£à Database reset complete - test admin user 'testadmin@librafoto.local' created
+Γ£à Database reset successful!
+   Test admin email: testadmin@librafoto.local
+
+≡ƒöÉ Verifying test admin login...
+[2m[WebServer] [22m[18:06:58 INF] User logged in successfully: testadmin@librafoto.local
+Γ£à Test admin login verified!
+
+≡ƒæÑ Creating test editor and guest users...
+[2m[WebServer] [22m[18:06:59 INF] Created user: testeditor@librafoto.local with role Editor
+   Γ£à Editor user created
+[2m[WebServer] [22m[18:06:59 INF] Created user: testguest@librafoto.local with role Guest
+   Γ£à Guest user created
+
+≡ƒÜÇ Global setup complete! Ready to run tests.
+
+
+Running 199 tests using 1 worker
+
+[2m[WebServer] [22m[18:07:00 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô    1 [admin] ΓÇ║ tests\admin\albums.spec.ts:12:3 ΓÇ║ Admin Frontend - Album Management ΓÇ║ should display albums page (1.6s)
+[2m[WebServer] [22m[18:07:01 INF] User logged in successfully: testadmin@librafoto.local
+[2m[WebServer] [22m[18:07:02 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ÿ    2 [admin] ΓÇ║ tests\admin\albums.spec.ts:29:3 ΓÇ║ Admin Frontend - Album Management ΓÇ║ should show empty state when no albums exist (1.6s)
+  -    3 [admin] ΓÇ║ tests\admin\albums.spec.ts:45:3 ΓÇ║ Admin Frontend - Album Management ΓÇ║ should open create album dialog
+  -    4 [admin] ΓÇ║ tests\admin\albums.spec.ts:67:3 ΓÇ║ Admin Frontend - Album Management ΓÇ║ should validate album name is required
+  -    5 [admin] ΓÇ║ tests\admin\albums.spec.ts:91:3 ΓÇ║ Admin Frontend - Album Management ΓÇ║ should create a new album
+  -    6 [admin] ΓÇ║ tests\admin\albums.spec.ts:130:3 ΓÇ║ Admin Frontend - Album Management ΓÇ║ should store album ID for later tests
+  -    7 [admin] ΓÇ║ tests\admin\albums.spec.ts:139:3 ΓÇ║ Admin Frontend - Album Management ΓÇ║ should create another album
+  -    8 [admin] ΓÇ║ tests\admin\albums.spec.ts:173:3 ΓÇ║ Admin Frontend - Album Management ΓÇ║ should display album cards with correct information
+  -    9 [admin] ΓÇ║ tests\admin\albums.spec.ts:190:3 ΓÇ║ Admin Frontend - Album Management ΓÇ║ should upload photos for album tests
+  -   10 [admin] ΓÇ║ tests\admin\albums.spec.ts:200:3 ΓÇ║ Admin Frontend - Album Management ΓÇ║ should add photos to album
+  -   11 [admin] ΓÇ║ tests\admin\albums.spec.ts:213:3 ΓÇ║ Admin Frontend - Album Management ΓÇ║ should display updated photo count
+  -   12 [admin] ΓÇ║ tests\admin\albums.spec.ts:231:3 ΓÇ║ Admin Frontend - Album Management ΓÇ║ should open edit album dialog
+  -   13 [admin] ΓÇ║ tests\admin\albums.spec.ts:273:3 ΓÇ║ Admin Frontend - Album Management ΓÇ║ should edit album name and description
+  -   14 [admin] ΓÇ║ tests\admin\albums.spec.ts:294:3 ΓÇ║ Admin Frontend - Album Management ΓÇ║ should set album cover photo
+  -   15 [admin] ΓÇ║ tests\admin\albums.spec.ts:304:3 ΓÇ║ Admin Frontend - Album Management ΓÇ║ should display album cover photo
+  -   16 [admin] ΓÇ║ tests\admin\albums.spec.ts:323:3 ΓÇ║ Admin Frontend - Album Management ΓÇ║ should remove album cover photo
+  -   17 [admin] ΓÇ║ tests\admin\albums.spec.ts:330:3 ΓÇ║ Admin Frontend - Album Management ΓÇ║ should navigate to album photos view
+  -   18 [admin] ΓÇ║ tests\admin\albums.spec.ts:348:3 ΓÇ║ Admin Frontend - Album Management ΓÇ║ should remove photos from album
+  -   19 [admin] ΓÇ║ tests\admin\albums.spec.ts:361:3 ΓÇ║ Admin Frontend - Album Management ΓÇ║ should delete album
+  -   20 [admin] ΓÇ║ tests\admin\albums.spec.ts:384:3 ΓÇ║ Admin Frontend - Album Management ΓÇ║ should clean up - delete remaining album and photos
+  Γ£ô   21 [admin] ΓÇ║ tests\admin\authorization.spec.ts:16:3 ΓÇ║ Admin Frontend - Unauthorized Access ΓÇ║ should redirect to login when not authenticated (750ms)
+  Γ£ô   22 [admin] ΓÇ║ tests\admin\authorization.spec.ts:30:3 ΓÇ║ Admin Frontend - Unauthorized Access ΓÇ║ should redirect to login from photos page (705ms)
+  Γ£ô   23 [admin] ΓÇ║ tests\admin\authorization.spec.ts:39:3 ΓÇ║ Admin Frontend - Unauthorized Access ΓÇ║ should redirect to login from albums page (715ms)
+  Γ£ô   24 [admin] ΓÇ║ tests\admin\authorization.spec.ts:48:3 ΓÇ║ Admin Frontend - Unauthorized Access ΓÇ║ should redirect to login from users page (719ms)
+  Γ£ô   25 [admin] ΓÇ║ tests\admin\authorization.spec.ts:57:3 ΓÇ║ Admin Frontend - Unauthorized Access ΓÇ║ should redirect to login from storage page (722ms)
+  Γ£ô   26 [admin] ΓÇ║ tests\admin\authorization.spec.ts:66:3 ΓÇ║ Admin Frontend - Unauthorized Access ΓÇ║ should redirect to login from display settings page (767ms)
+[2m[WebServer] [22m[18:07:09 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô   27 [admin] ΓÇ║ tests\admin\authorization.spec.ts:82:3 ΓÇ║ Admin Frontend - Admin Role Access ΓÇ║ admin can access dashboard (1.5s)
+[2m[WebServer] [22m[18:07:10 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô   28 [admin] ΓÇ║ tests\admin\authorization.spec.ts:90:3 ΓÇ║ Admin Frontend - Admin Role Access ΓÇ║ admin can access photos page (1.5s)
+[2m[WebServer] [22m[18:07:12 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô   29 [admin] ΓÇ║ tests\admin\authorization.spec.ts:97:3 ΓÇ║ Admin Frontend - Admin Role Access ΓÇ║ admin can access albums page (1.5s)
+[2m[WebServer] [22m[18:07:13 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô   30 [admin] ΓÇ║ tests\admin\authorization.spec.ts:104:3 ΓÇ║ Admin Frontend - Admin Role Access ΓÇ║ admin can access tags page (1.4s)
+[2m[WebServer] [22m[18:07:15 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô   31 [admin] ΓÇ║ tests\admin\authorization.spec.ts:111:3 ΓÇ║ Admin Frontend - Admin Role Access ΓÇ║ admin can access storage page (1.5s)
+[2m[WebServer] [22m[18:07:16 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô   32 [admin] ΓÇ║ tests\admin\authorization.spec.ts:118:3 ΓÇ║ Admin Frontend - Admin Role Access ΓÇ║ admin can access display settings page (1.5s)
+[2m[WebServer] [22m[18:07:18 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô   33 [admin] ΓÇ║ tests\admin\authorization.spec.ts:125:3 ΓÇ║ Admin Frontend - Admin Role Access ΓÇ║ admin can access users page (1.5s)
+[2m[WebServer] [22m[18:07:19 INF] User logged in successfully: testeditor@librafoto.local
+  Γ£ô   34 [admin] ΓÇ║ tests\admin\authorization.spec.ts:140:3 ΓÇ║ Admin Frontend - Editor Role Access ΓÇ║ editor can access dashboard (1.5s)
+[2m[WebServer] [22m[18:07:21 INF] User logged in successfully: testeditor@librafoto.local
+  Γ£ô   35 [admin] ΓÇ║ tests\admin\authorization.spec.ts:147:3 ΓÇ║ Admin Frontend - Editor Role Access ΓÇ║ editor can access photos page (1.5s)
+[2m[WebServer] [22m[18:07:22 INF] User logged in successfully: testeditor@librafoto.local
+  Γ£ô   36 [admin] ΓÇ║ tests\admin\authorization.spec.ts:154:3 ΓÇ║ Admin Frontend - Editor Role Access ΓÇ║ editor can access albums page (1.4s)
+[2m[WebServer] [22m[18:07:24 INF] User logged in successfully: testeditor@librafoto.local
+  Γ£ô   37 [admin] ΓÇ║ tests\admin\authorization.spec.ts:161:3 ΓÇ║ Admin Frontend - Editor Role Access ΓÇ║ editor can access tags page (1.4s)
+[2m[WebServer] [22m[18:07:25 INF] User logged in successfully: testeditor@librafoto.local
+  Γ£ô   38 [admin] ΓÇ║ tests\admin\authorization.spec.ts:168:3 ΓÇ║ Admin Frontend - Editor Role Access ΓÇ║ editor can access storage page (1.5s)
+[2m[WebServer] [22m[18:07:27 INF] User logged in successfully: testeditor@librafoto.local
+  Γ£ô   39 [admin] ΓÇ║ tests\admin\authorization.spec.ts:175:3 ΓÇ║ Admin Frontend - Editor Role Access ΓÇ║ editor can access display settings page (1.5s)
+[2m[WebServer] [22m[18:07:28 INF] User logged in successfully: testeditor@librafoto.local
+  Γ£ô   40 [admin] ΓÇ║ tests\admin\authorization.spec.ts:182:3 ΓÇ║ Admin Frontend - Editor Role Access ΓÇ║ editor cannot access users page (2.9s)
+[2m[WebServer] [22m[18:07:31 INF] User logged in successfully: testguest@librafoto.local
+  Γ£ô   41 [admin] ΓÇ║ tests\admin\authorization.spec.ts:214:3 ΓÇ║ Admin Frontend - Guest Role Access ΓÇ║ guest can access dashboard (1.4s)
+[2m[WebServer] [22m[18:07:32 INF] User logged in successfully: testguest@librafoto.local
+  Γ£ô   42 [admin] ΓÇ║ tests\admin\authorization.spec.ts:221:3 ΓÇ║ Admin Frontend - Guest Role Access ΓÇ║ guest can access photos page (1.5s)
+[2m[WebServer] [22m[18:07:34 INF] User logged in successfully: testguest@librafoto.local
+  Γ£ô   43 [admin] ΓÇ║ tests\admin\authorization.spec.ts:228:3 ΓÇ║ Admin Frontend - Guest Role Access ΓÇ║ guest cannot access users page (2.9s)
+[2m[WebServer] [22m[18:07:37 INF] User logged in successfully: testguest@librafoto.local
+  Γ£ô   44 [admin] ΓÇ║ tests\admin\authorization.spec.ts:246:3 ΓÇ║ Admin Frontend - Guest Role Access ΓÇ║ guest cannot access storage page (3.0s)
+[2m[WebServer] [22m[18:07:40 INF] User logged in successfully: testguest@librafoto.local
+  Γ£ô   45 [admin] ΓÇ║ tests\admin\authorization.spec.ts:264:3 ΓÇ║ Admin Frontend - Guest Role Access ΓÇ║ guest cannot access display settings page (2.9s)
+[2m[WebServer] [22m[18:07:43 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô   46 [admin] ΓÇ║ tests\admin\authorization.spec.ts:284:3 ΓÇ║ Admin Frontend - Navigation Visibility by Role ΓÇ║ admin sees all navigation items (1.4s)
+[2m[WebServer] [22m[18:07:44 INF] User logged in successfully: testeditor@librafoto.local
+  Γ£ô   47 [admin] ΓÇ║ tests\admin\authorization.spec.ts:298:3 ΓÇ║ Admin Frontend - Navigation Visibility by Role ΓÇ║ editor does not see Users in navigation (6.4s)
+[2m[WebServer] [22m[18:07:51 INF] User logged in successfully: testguest@librafoto.local
+  Γ£ô   48 [admin] ΓÇ║ tests\admin\authorization.spec.ts:315:3 ΓÇ║ Admin Frontend - Navigation Visibility by Role ΓÇ║ guest sees limited navigation (6.4s)
+[2m[WebServer] [22m[18:07:57 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô   49 [admin] ΓÇ║ tests\admin\dashboard.spec.ts:13:3 ΓÇ║ Admin Frontend - Dashboard Overview ΓÇ║ should display dashboard after login (857ms)
+[2m[WebServer] [22m[18:07:58 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô   50 [admin] ΓÇ║ tests\admin\dashboard.spec.ts:22:3 ΓÇ║ Admin Frontend - Dashboard Overview ΓÇ║ should display photo count statistic (1.3s)
+[2m[WebServer] [22m[18:07:59 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô   51 [admin] ΓÇ║ tests\admin\dashboard.spec.ts:42:3 ΓÇ║ Admin Frontend - Dashboard Overview ΓÇ║ should display album count statistic (1.4s)
+[2m[WebServer] [22m[18:08:01 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô   52 [admin] ΓÇ║ tests\admin\dashboard.spec.ts:54:3 ΓÇ║ Admin Frontend - Dashboard Overview ΓÇ║ should display tag count statistic (1.4s)
+[2m[WebServer] [22m[18:08:02 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô   53 [admin] ΓÇ║ tests\admin\dashboard.spec.ts:66:3 ΓÇ║ Admin Frontend - Dashboard Overview ΓÇ║ should display storage usage (1.4s)
+[2m[WebServer] [22m[18:08:03 INF] User logged in successfully: testadmin@librafoto.local
+[2m[WebServer] [22m[18:08:03 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô   54 [admin] ΓÇ║ tests\admin\dashboard.spec.ts:80:3 ΓÇ║ Admin Frontend - Dashboard Statistics Accuracy ΓÇ║ should show correct photo count after upload (1.5s)
+[2m[WebServer] [22m[18:08:05 INF] User logged in successfully: testadmin@librafoto.local
+[2m[WebServer] [22m[18:08:05 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô   55 [admin] ΓÇ║ tests\admin\dashboard.spec.ts:103:3 ΓÇ║ Admin Frontend - Dashboard Statistics Accuracy ΓÇ║ should update stats when data changes (2.1s)
+[2m[WebServer] [22m[18:08:07 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô   56 [admin] ΓÇ║ tests\admin\dashboard.spec.ts:132:3 ΓÇ║ Admin Frontend - Dashboard Quick Actions ΓÇ║ should display upload action (1.4s)
+[2m[WebServer] [22m[18:08:08 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô   57 [admin] ΓÇ║ tests\admin\dashboard.spec.ts:151:3 ΓÇ║ Admin Frontend - Dashboard Quick Actions ΓÇ║ should display create album action (1.4s)
+[2m[WebServer] [22m[18:08:10 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô   58 [admin] ΓÇ║ tests\admin\dashboard.spec.ts:167:3 ΓÇ║ Admin Frontend - Dashboard Quick Actions ΓÇ║ should display scan storage action (1.4s)
+[2m[WebServer] [22m[18:08:11 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô   59 [admin] ΓÇ║ tests\admin\dashboard.spec.ts:183:3 ΓÇ║ Admin Frontend - Dashboard Quick Actions ΓÇ║ should navigate to photos when upload clicked (2.4s)
+[2m[WebServer] [22m[18:08:13 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô   60 [admin] ΓÇ║ tests\admin\dashboard.spec.ts:203:3 ΓÇ║ Admin Frontend - Dashboard Quick Actions ΓÇ║ should navigate to albums when create album clicked (2.4s)
+[2m[WebServer] [22m[18:08:16 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô   61 [admin] ΓÇ║ tests\admin\dashboard.spec.ts:223:3 ΓÇ║ Admin Frontend - Getting Started Guide ΓÇ║ should show getting started for new users (1.3s)
+[2m[WebServer] [22m[18:08:17 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô   62 [admin] ΓÇ║ tests\admin\dashboard.spec.ts:240:3 ΓÇ║ Admin Frontend - Getting Started Guide ΓÇ║ should show upload photos step (1.4s)
+[2m[WebServer] [22m[18:08:19 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô   63 [admin] ΓÇ║ tests\admin\dashboard.spec.ts:250:3 ΓÇ║ Admin Frontend - Getting Started Guide ΓÇ║ should show connect storage step (6.4s)
+[2m[WebServer] [22m[18:08:25 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô   64 [admin] ΓÇ║ tests\admin\dashboard.spec.ts:260:3 ΓÇ║ Admin Frontend - Getting Started Guide ΓÇ║ should be able to dismiss getting started (6.9s)
+[2m[WebServer] [22m[18:08:32 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô   65 [admin] ΓÇ║ tests\admin\dashboard.spec.ts:281:3 ΓÇ║ Admin Frontend - Dashboard Navigation ΓÇ║ should navigate to photos from stat card (6.4s)
+[2m[WebServer] [22m[18:08:38 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô   66 [admin] ΓÇ║ tests\admin\dashboard.spec.ts:300:3 ΓÇ║ Admin Frontend - Dashboard Navigation ΓÇ║ should navigate to albums from stat card (6.4s)
+[2m[WebServer] [22m[18:08:45 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô   67 [admin] ΓÇ║ tests\admin\dashboard.spec.ts:315:3 ΓÇ║ Admin Frontend - Dashboard Navigation ΓÇ║ should navigate to storage from stat card (6.4s)
+[2m[WebServer] [22m[18:08:51 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô   68 [admin] ΓÇ║ tests\admin\dashboard.spec.ts:332:3 ΓÇ║ Admin Frontend - Dashboard Recent Activity ΓÇ║ should display recent uploads section (11.3s)
+[2m[WebServer] [22m[18:09:02 INF] User logged in successfully: testadmin@librafoto.local
+[2m[WebServer] [22m[18:09:03 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô   69 [admin] ΓÇ║ tests\admin\dashboard.spec.ts:347:3 ΓÇ║ Admin Frontend - Dashboard Recent Activity ΓÇ║ should show recently uploaded photos (1.5s)
+[2m[WebServer] [22m[18:09:03 INF] User logged in successfully: testadmin@librafoto.local
+[2m[WebServer] [22m[18:09:04 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô   70 [admin] ΓÇ║ tests\admin\dashboard.spec.ts:365:3 ΓÇ║ Admin Frontend - Dashboard Recent Activity ΓÇ║ should click through to photo from recent activity (1.5s)
+[2m[WebServer] [22m[18:09:05 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô   71 [admin] ΓÇ║ tests\admin\dashboard.spec.ts:389:3 ΓÇ║ Admin Frontend - Dashboard Responsiveness ΓÇ║ should be responsive on tablet viewport (1.4s)
+  -   72 [admin] ΓÇ║ tests\admin\dashboard.spec.ts:405:8 ΓÇ║ Admin Frontend - Dashboard Responsiveness ΓÇ║ should be responsive on mobile viewport
+[2m[WebServer] [22m[18:09:07 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô   73 [admin] ΓÇ║ tests\admin\display-settings.spec.ts:46:3 ΓÇ║ Admin Frontend - Display Settings ΓÇ║ should navigate to display settings page (1.5s)
+[2m[WebServer] [22m[18:09:08 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô   74 [admin] ΓÇ║ tests\admin\display-settings.spec.ts:55:3 ΓÇ║ Admin Frontend - Display Settings ΓÇ║ should display current slideshow interval (6.5s)
+[2m[WebServer] [22m[18:09:15 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô   75 [admin] ΓÇ║ tests\admin\display-settings.spec.ts:74:3 ΓÇ║ Admin Frontend - Display Settings ΓÇ║ should display transition type selector (1.5s)
+[2m[WebServer] [22m[18:09:16 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô   76 [admin] ΓÇ║ tests\admin\display-settings.spec.ts:92:3 ΓÇ║ Admin Frontend - Display Settings ΓÇ║ should change slideshow interval (1.5s)
+[2m[WebServer] [22m[18:09:18 INF] User logged in successfully: testadmin@librafoto.local
+[2m[WebServer] [22m[18:09:19 INF] Updated display settings 2
+  Γ£ô   77 [admin] ΓÇ║ tests\admin\display-settings.spec.ts:123:3 ΓÇ║ Admin Frontend - Display Settings ΓÇ║ should change transition type (2.9s)
+[2m[WebServer] [22m[18:09:21 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô   78 [admin] ΓÇ║ tests\admin\display-settings.spec.ts:158:3 ΓÇ║ Admin Frontend - Display Settings ΓÇ║ should display overlay settings (1.5s)
+[2m[WebServer] [22m[18:09:22 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ÿ   79 [admin] ΓÇ║ tests\admin\display-settings.spec.ts:174:3 ΓÇ║ Admin Frontend - Display Settings ΓÇ║ should toggle overlay date display (1.5s)
+  -   80 [admin] ΓÇ║ tests\admin\display-settings.spec.ts:194:3 ΓÇ║ Admin Frontend - Display Settings ΓÇ║ should toggle overlay time display
+  -   81 [admin] ΓÇ║ tests\admin\display-settings.spec.ts:212:3 ΓÇ║ Admin Frontend - Display Settings ΓÇ║ should toggle overlay location display
+  -   82 [admin] ΓÇ║ tests\admin\display-settings.spec.ts:230:3 ΓÇ║ Admin Frontend - Display Settings ΓÇ║ should configure overlay position
+  -   83 [admin] ΓÇ║ tests\admin\display-settings.spec.ts:253:3 ΓÇ║ Admin Frontend - Display Settings ΓÇ║ should select photo source
+  -   84 [admin] ΓÇ║ tests\admin\display-settings.spec.ts:283:3 ΓÇ║ Admin Frontend - Display Settings ΓÇ║ should discard unsaved changes
+  -   85 [admin] ΓÇ║ tests\admin\display-settings.spec.ts:322:3 ΓÇ║ Admin Frontend - Display Settings ΓÇ║ should reset to default settings
+  -   86 [admin] ΓÇ║ tests\admin\display-settings.spec.ts:354:3 ΓÇ║ Admin Frontend - Display Settings ΓÇ║ should show validation errors for invalid interval
+  -   87 [admin] ΓÇ║ tests\admin\display-settings.spec.ts:377:3 ΓÇ║ Admin Frontend - Display Settings ΓÇ║ should persist settings after page reload
+[2m[WebServer] [22m[18:09:25 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô   88 [admin] ΓÇ║ tests\admin\display-settings.spec.ts:412:3 ΓÇ║ Admin Frontend - Display Preview ΓÇ║ should have preview functionality (1.5s)
+[2m[WebServer] [22m[18:09:26 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô   89 [admin] ΓÇ║ tests\admin\display-settings.spec.ts:432:3 ΓÇ║ Admin Frontend - Display Preview ΓÇ║ should open display in new tab when preview clicked (6.5s)
+  Γ£ô   90 [admin] ΓÇ║ tests\admin\login.spec.ts:10:3 ΓÇ║ Admin Frontend - Login ΓÇ║ should display login form (753ms)
+  Γ£ô   91 [admin] ΓÇ║ tests\admin\login.spec.ts:30:3 ΓÇ║ Admin Frontend - Login ΓÇ║ should show tagline (726ms)
+  Γ£ô   92 [admin] ΓÇ║ tests\admin\login.spec.ts:36:3 ΓÇ║ Admin Frontend - Login ΓÇ║ should validate required fields (888ms)
+  Γ£ô   93 [admin] ΓÇ║ tests\admin\login.spec.ts:50:3 ΓÇ║ Admin Frontend - Login ΓÇ║ should toggle password visibility (1.0s)
+  Γ£ÿ   94 [admin] ΓÇ║ tests\admin\login.spec.ts:80:3 ΓÇ║ Admin Frontend - Login ΓÇ║ should show error on invalid credentials (10.8s)
+[2m[WebServer] [22m[18:09:47 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô   95 [admin] ΓÇ║ tests\admin\login.spec.ts:103:3 ΓÇ║ Admin Frontend - Login ΓÇ║ should login successfully and redirect to dashboard (1.1s)
+[2m[WebServer] [22m[18:09:49 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô   96 [admin] ΓÇ║ tests\admin\login.spec.ts:126:3 ΓÇ║ Admin Frontend - Login ΓÇ║ should show loading spinner during login (1.1s)
+[2m[WebServer] [22m[18:09:50 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô   97 [admin] ΓÇ║ tests\admin\login.spec.ts:149:3 ΓÇ║ Admin Frontend - Login ΓÇ║ should persist authentication across page reloads (1.2s)
+[2m[WebServer] [22m[18:09:51 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô   98 [admin] ΓÇ║ tests\admin\navigation.spec.ts:16:3 ΓÇ║ Admin Frontend - Navigation ΓÇ║ should navigate to Photos page (1.0s)
+[2m[WebServer] [22m[18:09:52 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô   99 [admin] ΓÇ║ tests\admin\navigation.spec.ts:29:3 ΓÇ║ Admin Frontend - Navigation ΓÇ║ should navigate to Albums page (992ms)
+[2m[WebServer] [22m[18:09:53 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô  100 [admin] ΓÇ║ tests\admin\navigation.spec.ts:40:3 ΓÇ║ Admin Frontend - Navigation ΓÇ║ should navigate to Tags page (956ms)
+[2m[WebServer] [22m[18:09:54 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô  101 [admin] ΓÇ║ tests\admin\navigation.spec.ts:51:3 ΓÇ║ Admin Frontend - Navigation ΓÇ║ should navigate to Storage page for admin (960ms)
+[2m[WebServer] [22m[18:09:55 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô  102 [admin] ΓÇ║ tests\admin\navigation.spec.ts:62:3 ΓÇ║ Admin Frontend - Navigation ΓÇ║ should navigate to Display Settings page (973ms)
+[2m[WebServer] [22m[18:09:56 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô  103 [admin] ΓÇ║ tests\admin\navigation.spec.ts:73:3 ΓÇ║ Admin Frontend - Navigation ΓÇ║ should navigate to Users page for admin (978ms)
+[2m[WebServer] [22m[18:09:57 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô  104 [admin] ΓÇ║ tests\admin\navigation.spec.ts:92:3 ΓÇ║ Admin Frontend - Dashboard ΓÇ║ should display dashboard page (904ms)
+[2m[WebServer] [22m[18:09:58 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô  105 [admin] ΓÇ║ tests\admin\navigation.spec.ts:103:3 ΓÇ║ Admin Frontend - Dashboard ΓÇ║ should show user is logged in (910ms)
+[2m[WebServer] [22m[18:09:59 INF] User logged in successfully: testadmin@librafoto.local
+  -  106 [admin] ΓÇ║ tests\admin\navigation.spec.ts:115:3 ΓÇ║ Admin Frontend - Logout ΓÇ║ should logout successfully
+[2m[WebServer] [22m[18:09:59 INF] User logged in successfully: testadmin@librafoto.local
+[2m[WebServer] [22m[18:10:00 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ÿ  107 [admin] ΓÇ║ tests\admin\photos.spec.ts:22:3 ΓÇ║ Admin Frontend - Photo Management ΓÇ║ should display photos page with empty state (1.5s)
+  -  108 [admin] ΓÇ║ tests\admin\photos.spec.ts:41:3 ΓÇ║ Admin Frontend - Photo Management ΓÇ║ should upload a single photo via file picker
+  -  109 [admin] ΓÇ║ tests\admin\photos.spec.ts:74:3 ΓÇ║ Admin Frontend - Photo Management ΓÇ║ should upload multiple photos
+  -  110 [admin] ΓÇ║ tests\admin\photos.spec.ts:104:3 ΓÇ║ Admin Frontend - Photo Management ΓÇ║ should display photo count correctly
+  -  111 [admin] ΓÇ║ tests\admin\photos.spec.ts:117:3 ΓÇ║ Admin Frontend - Photo Management ΓÇ║ should open photo detail dialog when clicking a photo
+  -  112 [admin] ΓÇ║ tests\admin\photos.spec.ts:136:3 ΓÇ║ Admin Frontend - Photo Management ΓÇ║ should close photo detail dialog
+  -  113 [admin] ΓÇ║ tests\admin\photos.spec.ts:159:3 ΓÇ║ Admin Frontend - Photo Management ΓÇ║ should select multiple photos with Ctrl+click
+  -  114 [admin] ΓÇ║ tests\admin\photos.spec.ts:187:3 ΓÇ║ Admin Frontend - Photo Management ΓÇ║ should filter photos by search
+[2m[WebServer] [22m[18:10:02 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô  115 [admin] ΓÇ║ tests\admin\photos.spec.ts:226:3 ΓÇ║ Admin Frontend - Photo Bulk Operations ΓÇ║ should create test album and tag for bulk operations (148ms)
+[2m[WebServer] [22m[18:10:03 INF] User logged in successfully: testadmin@librafoto.local
+[2m[WebServer] [22m[18:10:03 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ÿ  116 [admin] ΓÇ║ tests\admin\photos.spec.ts:241:3 ΓÇ║ Admin Frontend - Photo Bulk Operations ΓÇ║ should bulk add photos to album (1.6s)
+  -  117 [admin] ΓÇ║ tests\admin\photos.spec.ts:262:3 ΓÇ║ Admin Frontend - Photo Bulk Operations ΓÇ║ should bulk add tags to photos
+  -  118 [admin] ΓÇ║ tests\admin\photos.spec.ts:277:3 ΓÇ║ Admin Frontend - Photo Bulk Operations ΓÇ║ should filter photos by album
+  -  119 [admin] ΓÇ║ tests\admin\photos.spec.ts:292:3 ΓÇ║ Admin Frontend - Photo Bulk Operations ΓÇ║ should filter photos by tag
+  -  120 [admin] ΓÇ║ tests\admin\photos.spec.ts:307:3 ΓÇ║ Admin Frontend - Photo Bulk Operations ΓÇ║ should bulk remove photos from album
+  -  121 [admin] ΓÇ║ tests\admin\photos.spec.ts:324:3 ΓÇ║ Admin Frontend - Photo Bulk Operations ΓÇ║ should bulk remove tags from photos
+[2m[WebServer] [22m[18:10:04 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô  122 [admin] ΓÇ║ tests\admin\photos.spec.ts:341:3 ΓÇ║ Admin Frontend - Photo Deletion ΓÇ║ should delete a single photo via API (121ms)
+[2m[WebServer] [22m[18:10:04 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô  123 [admin] ΓÇ║ tests\admin\photos.spec.ts:357:3 ΓÇ║ Admin Frontend - Photo Deletion ΓÇ║ should bulk delete remaining photos via API (110ms)
+[2m[WebServer] [22m[18:10:05 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô  124 [admin] ΓÇ║ tests\admin\photos.spec.ts:372:3 ΓÇ║ Admin Frontend - Photo Deletion ΓÇ║ should show empty state after all photos deleted (1.5s)
+  -  125 [admin] ΓÇ║ tests\admin\setup.spec.ts:27:3 ΓÇ║ Admin Frontend - Setup Wizard ΓÇ║ should redirect to setup page when setup required
+  -  126 [admin] ΓÇ║ tests\admin\setup.spec.ts:35:3 ΓÇ║ Admin Frontend - Setup Wizard ΓÇ║ should display welcome message
+  -  127 [admin] ΓÇ║ tests\admin\setup.spec.ts:42:3 ΓÇ║ Admin Frontend - Setup Wizard ΓÇ║ should show stepper with three steps
+  -  128 [admin] ΓÇ║ tests\admin\setup.spec.ts:52:3 ΓÇ║ Admin Frontend - Setup Wizard ΓÇ║ should validate admin form fields
+  -  129 [admin] ΓÇ║ tests\admin\setup.spec.ts:65:3 ΓÇ║ Admin Frontend - Setup Wizard ΓÇ║ should validate password minimum length
+  -  130 [admin] ΓÇ║ tests\admin\setup.spec.ts:76:3 ΓÇ║ Admin Frontend - Setup Wizard ΓÇ║ should validate password match
+  -  131 [admin] ΓÇ║ tests\admin\setup.spec.ts:87:3 ΓÇ║ Admin Frontend - Setup Wizard ΓÇ║ should allow navigation through stepper
+  -  132 [admin] ΓÇ║ tests\admin\setup.spec.ts:137:3 ΓÇ║ Admin Frontend - Complete Setup Flow ΓÇ║ should complete setup successfully with real API
+[2m[WebServer] [22m[18:10:07 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô  133 [admin] ΓÇ║ tests\admin\storage.spec.ts:13:3 ΓÇ║ Admin Frontend - Storage Management ΓÇ║ should navigate to storage page (1.5s)
+[2m[WebServer] [22m[18:10:08 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô  134 [admin] ΓÇ║ tests\admin\storage.spec.ts:22:3 ΓÇ║ Admin Frontend - Storage Management ΓÇ║ should display local storage provider (1.5s)
+[2m[WebServer] [22m[18:10:10 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô  135 [admin] ΓÇ║ tests\admin\storage.spec.ts:35:3 ΓÇ║ Admin Frontend - Storage Management ΓÇ║ should show provider status (1.5s)
+[2m[WebServer] [22m[18:10:11 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô  136 [admin] ΓÇ║ tests\admin\storage.spec.ts:51:3 ΓÇ║ Admin Frontend - Storage Management ΓÇ║ should show scan button for local storage (1.4s)
+[2m[WebServer] [22m[18:10:13 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô  137 [admin] ΓÇ║ tests\admin\storage.spec.ts:66:3 ΓÇ║ Admin Frontend - Storage Management ΓÇ║ should trigger scan when scan button clicked (1.5s)
+[2m[WebServer] [22m[18:10:14 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô  138 [admin] ΓÇ║ tests\admin\storage.spec.ts:99:3 ΓÇ║ Admin Frontend - Storage Management ΓÇ║ should show photo count after scan (1.4s)
+[2m[WebServer] [22m[18:10:15 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô  139 [admin] ΓÇ║ tests\admin\storage.spec.ts:115:3 ΓÇ║ Admin Frontend - Storage Management ΓÇ║ should show storage path configuration (1.4s)
+[2m[WebServer] [22m[18:10:17 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô  140 [admin] ΓÇ║ tests\admin\storage.spec.ts:128:3 ΓÇ║ Admin Frontend - Storage Management ΓÇ║ should have edit/configure option for provider (11.5s)
+[2m[WebServer] [22m[18:10:28 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô  141 [admin] ΓÇ║ tests\admin\storage.spec.ts:149:3 ΓÇ║ Admin Frontend - Storage Management ΓÇ║ should toggle provider enabled state (1.4s)
+[2m[WebServer] [22m[18:10:30 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô  142 [admin] ΓÇ║ tests\admin\storage.spec.ts:173:3 ΓÇ║ Admin Frontend - Storage Provider Configuration ΓÇ║ should open configuration dialog when edit clicked (1.5s)
+[2m[WebServer] [22m[18:10:31 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô  143 [admin] ΓÇ║ tests\admin\storage.spec.ts:195:3 ΓÇ║ Admin Frontend - Storage Provider Configuration ΓÇ║ should show base path in configuration (1.5s)
+[2m[WebServer] [22m[18:10:33 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô  144 [admin] ΓÇ║ tests\admin\storage.spec.ts:215:3 ΓÇ║ Admin Frontend - Storage Provider Configuration ΓÇ║ should save configuration changes (1.5s)
+[2m[WebServer] [22m[18:10:34 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô  145 [admin] ΓÇ║ tests\admin\storage.spec.ts:244:3 ΓÇ║ Admin Frontend - Storage Provider Configuration ΓÇ║ should cancel configuration changes (1.5s)
+[2m[WebServer] [22m[18:10:36 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô  146 [admin] ΓÇ║ tests\admin\storage.spec.ts:274:3 ΓÇ║ Admin Frontend - Cloud Storage Placeholders ΓÇ║ should show add provider button (1.5s)
+[2m[WebServer] [22m[18:10:37 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ÿ  147 [admin] ΓÇ║ tests\admin\storage.spec.ts:292:3 ΓÇ║ Admin Frontend - Cloud Storage Placeholders ΓÇ║ should show Google Photos option (placeholder) (1.5s)
+[2m[WebServer] [22m[18:10:40 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ÿ  148 [admin] ΓÇ║ tests\admin\storage.spec.ts:320:3 ΓÇ║ Admin Frontend - Cloud Storage Placeholders ΓÇ║ should show OneDrive option (placeholder) (1.6s)
+[2m[WebServer] [22m[18:10:42 INF] User logged in successfully: testadmin@librafoto.local
+[2m[WebServer] [22m[18:10:43 INF] Starting sync for provider 2 (Local Storage)
+[2m[WebServer] [22m[18:10:43 INF] Sync completed for provider 2: 0 added, 0 updated, 0 removed, 0 skipped
+  Γ£ô  149 [admin] ΓÇ║ tests\admin\storage.spec.ts:348:3 ΓÇ║ Admin Frontend - Storage Sync Progress ΓÇ║ should show sync progress during operation (6.6s)
+[2m[WebServer] [22m[18:10:48 INF] User logged in successfully: testadmin@librafoto.local
+[2m[WebServer] [22m[18:10:49 INF] Starting sync for provider 2 (Local Storage)
+[2m[WebServer] [22m[18:10:49 INF] Sync completed for provider 2: 0 added, 0 updated, 0 removed, 0 skipped
+  Γ£ô  150 [admin] ΓÇ║ tests\admin\storage.spec.ts:370:3 ΓÇ║ Admin Frontend - Storage Sync Progress ΓÇ║ should show scan results after completion (4.5s)
+[2m[WebServer] [22m[18:10:53 INF] User logged in successfully: testadmin@librafoto.local
+[2m[WebServer] [22m[18:10:54 INF] Starting sync for provider 2 (Local Storage)
+[2m[WebServer] [22m[18:10:54 INF] Sync completed for provider 2: 0 added, 0 updated, 0 removed, 0 skipped
+  Γ£ô  151 [admin] ΓÇ║ tests\admin\storage.spec.ts:392:3 ΓÇ║ Admin Frontend - Storage Sync Progress ΓÇ║ should be able to cancel ongoing sync (3.5s)
+[2m[WebServer] [22m[18:10:57 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô  152 [admin] ΓÇ║ tests\admin\storage.spec.ts:420:3 ΓÇ║ Admin Frontend - Storage Error Handling ΓÇ║ should display error if storage path invalid (1.5s)
+[2m[WebServer] [22m[18:10:58 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô  153 [admin] ΓÇ║ tests\admin\storage.spec.ts:454:3 ΓÇ║ Admin Frontend - Storage Error Handling ΓÇ║ should recover from scan errors gracefully (1.5s)
+[2m[WebServer] [22m[18:11:00 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô  154 [admin] ΓÇ║ tests\admin\tags.spec.ts:12:3 ΓÇ║ Admin Frontend - Tag Management ΓÇ║ should display tags page (1.4s)
+[2m[WebServer] [22m[18:11:00 INF] User logged in successfully: testadmin@librafoto.local
+[2m[WebServer] [22m[18:11:01 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô  155 [admin] ΓÇ║ tests\admin\tags.spec.ts:29:3 ΓÇ║ Admin Frontend - Tag Management ΓÇ║ should show empty state when no tags exist (1.5s)
+[2m[WebServer] [22m[18:11:03 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô  156 [admin] ΓÇ║ tests\admin\tags.spec.ts:45:3 ΓÇ║ Admin Frontend - Tag Management ΓÇ║ should open create tag dialog (1.5s)
+[2m[WebServer] [22m[18:11:04 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ÿ  157 [admin] ΓÇ║ tests\admin\tags.spec.ts:67:3 ΓÇ║ Admin Frontend - Tag Management ΓÇ║ should validate tag name is required (16.5s)
+  -  158 [admin] ΓÇ║ tests\admin\tags.spec.ts:96:3 ΓÇ║ Admin Frontend - Tag Management ΓÇ║ should create a new tag with default color
+  -  159 [admin] ΓÇ║ tests\admin\tags.spec.ts:124:3 ΓÇ║ Admin Frontend - Tag Management ΓÇ║ should store tag ID for later tests
+  -  160 [admin] ΓÇ║ tests\admin\tags.spec.ts:133:3 ΓÇ║ Admin Frontend - Tag Management ΓÇ║ should create tag with custom color
+  -  161 [admin] ΓÇ║ tests\admin\tags.spec.ts:152:3 ΓÇ║ Admin Frontend - Tag Management ΓÇ║ should create more test tags
+  -  162 [admin] ΓÇ║ tests\admin\tags.spec.ts:165:3 ΓÇ║ Admin Frontend - Tag Management ΓÇ║ should display all tags with colors
+  -  163 [admin] ΓÇ║ tests\admin\tags.spec.ts:178:3 ΓÇ║ Admin Frontend - Tag Management ΓÇ║ should upload photos for tag tests
+  -  164 [admin] ΓÇ║ tests\admin\tags.spec.ts:188:3 ΓÇ║ Admin Frontend - Tag Management ΓÇ║ should add tag to photos
+  -  165 [admin] ΓÇ║ tests\admin\tags.spec.ts:201:3 ΓÇ║ Admin Frontend - Tag Management ΓÇ║ should display updated photo count on tag
+  -  166 [admin] ΓÇ║ tests\admin\tags.spec.ts:219:3 ΓÇ║ Admin Frontend - Tag Management ΓÇ║ should add multiple tags to photo
+  -  167 [admin] ΓÇ║ tests\admin\tags.spec.ts:237:3 ΓÇ║ Admin Frontend - Tag Management ΓÇ║ should edit tag name
+  -  168 [admin] ΓÇ║ tests\admin\tags.spec.ts:248:3 ΓÇ║ Admin Frontend - Tag Management ΓÇ║ should edit tag color
+  -  169 [admin] ΓÇ║ tests\admin\tags.spec.ts:259:3 ΓÇ║ Admin Frontend - Tag Management ΓÇ║ should verify tag updates in UI
+  -  170 [admin] ΓÇ║ tests\admin\tags.spec.ts:270:3 ΓÇ║ Admin Frontend - Tag Management ΓÇ║ should filter photos by tag from tags page
+  -  171 [admin] ΓÇ║ tests\admin\tags.spec.ts:286:3 ΓÇ║ Admin Frontend - Tag Management ΓÇ║ should remove tag from photos
+  -  172 [admin] ΓÇ║ tests\admin\tags.spec.ts:299:3 ΓÇ║ Admin Frontend - Tag Management ΓÇ║ should delete tag
+  -  173 [admin] ΓÇ║ tests\admin\tags.spec.ts:312:3 ΓÇ║ Admin Frontend - Tag Management ΓÇ║ should verify tag deletion in UI
+  -  174 [admin] ΓÇ║ tests\admin\tags.spec.ts:325:3 ΓÇ║ Admin Frontend - Tag Management ΓÇ║ should clean up - delete remaining tags and photos
+[2m[WebServer] [22m[18:11:21 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô  175 [admin] ΓÇ║ tests\admin\users.spec.ts:16:3 ΓÇ║ Admin Frontend - User Management ΓÇ║ should display users page for admin (1.5s)
+[2m[WebServer] [22m[18:11:23 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô  176 [admin] ΓÇ║ tests\admin\users.spec.ts:33:3 ΓÇ║ Admin Frontend - User Management ΓÇ║ should show test admin in users list (1.5s)
+[2m[WebServer] [22m[18:11:24 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô  177 [admin] ΓÇ║ tests\admin\users.spec.ts:44:3 ΓÇ║ Admin Frontend - User Management ΓÇ║ should open create user dialog (1.6s)
+[2m[WebServer] [22m[18:11:26 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ÿ  178 [admin] ΓÇ║ tests\admin\users.spec.ts:72:3 ΓÇ║ Admin Frontend - User Management ΓÇ║ should validate required fields when creating user (16.6s)
+  -  179 [admin] ΓÇ║ tests\admin\users.spec.ts:96:3 ΓÇ║ Admin Frontend - User Management ΓÇ║ should create editor user
+  -  180 [admin] ΓÇ║ tests\admin\users.spec.ts:117:3 ΓÇ║ Admin Frontend - User Management ΓÇ║ should create guest user
+  -  181 [admin] ΓÇ║ tests\admin\users.spec.ts:125:3 ΓÇ║ Admin Frontend - User Management ΓÇ║ should display all users with roles
+  -  182 [admin] ΓÇ║ tests\admin\users.spec.ts:137:3 ΓÇ║ Admin Frontend - User Management ΓÇ║ should show user roles correctly
+  -  183 [admin] ΓÇ║ tests\admin\users.spec.ts:154:3 ΓÇ║ Admin Frontend - User Management ΓÇ║ should update user display name
+  -  184 [admin] ΓÇ║ tests\admin\users.spec.ts:163:3 ΓÇ║ Admin Frontend - User Management ΓÇ║ should change user role
+  -  185 [admin] ΓÇ║ tests\admin\users.spec.ts:180:3 ΓÇ║ Admin Frontend - User Management ΓÇ║ should deactivate user
+  -  186 [admin] ΓÇ║ tests\admin\users.spec.ts:195:3 ΓÇ║ Admin Frontend - User Management ΓÇ║ should prevent admin from deleting themselves
+  -  187 [admin] ΓÇ║ tests\admin\users.spec.ts:210:3 ΓÇ║ Admin Frontend - User Management ΓÇ║ should delete guest user
+  -  188 [admin] ΓÇ║ tests\admin\users.spec.ts:222:3 ΓÇ║ Admin Frontend - User Management ΓÇ║ should verify user deletion in UI
+[2m[WebServer] [22m[18:11:42 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô  189 [admin] ΓÇ║ tests\admin\users.spec.ts:241:3 ΓÇ║ Admin Frontend - Guest Links Management ΓÇ║ should create album for guest link target (125ms)
+[2m[WebServer] [22m[18:11:43 INF] User logged in successfully: testadmin@librafoto.local
+  Γ£ô  190 [admin] ΓÇ║ tests\admin\users.spec.ts:249:3 ΓÇ║ Admin Frontend - Guest Links Management ΓÇ║ should navigate to guest links tab (1.7s)
+[2m[WebServer] [22m[18:11:44 INF] User logged in successfully: testadmin@librafoto.local
+[2m[WebServer] [22m[18:11:44 INF] Created guest link: WnvgOJWYAezg by user 4
+  Γ£ô  191 [admin] ΓÇ║ tests\admin\users.spec.ts:270:3 ΓÇ║ Admin Frontend - Guest Links Management ΓÇ║ should create guest link without expiration (133ms)
+[2m[WebServer] [22m[18:11:44 INF] User logged in successfully: testadmin@librafoto.local
+[2m[WebServer] [22m[18:11:44 INF] Created guest link: 88CZDBE-U9TM by user 4
+  Γ£ô  192 [admin] ΓÇ║ tests\admin\users.spec.ts:282:3 ΓÇ║ Admin Frontend - Guest Links Management ΓÇ║ should create guest link with expiration (105ms)
+[2m[WebServer] [22m[18:11:45 INF] User logged in successfully: testadmin@librafoto.local
+[2m[WebServer] [22m[18:11:45 INF] Created guest link: Wzf5TcBq0ad9 by user 4
+  Γ£ô  193 [admin] ΓÇ║ tests\admin\users.spec.ts:296:3 ΓÇ║ Admin Frontend - Guest Links Management ΓÇ║ should create guest link with upload limit (107ms)
+[2m[WebServer] [22m[18:11:45 INF] User logged in successfully: testadmin@librafoto.local
+[2m[WebServer] [22m[18:11:45 INF] Created guest link: qR-L4z64MqeX by user 4
+  Γ£ô  194 [admin] ΓÇ║ tests\admin\users.spec.ts:307:3 ΓÇ║ Admin Frontend - Guest Links Management ΓÇ║ should create guest link with target album (109ms)
+[2m[WebServer] [22m[18:11:45 INF] User logged in successfully: testadmin@librafoto.local
+[2m[WebServer] [22m[18:11:45 ERR] An unhandled exception occurred
+[2m[WebServer] [22mMicrosoft.AspNetCore.Http.BadHttpRequestException: Required parameter "int page" was not provided from query string.
+[2m[WebServer] [22m   at lambda_method152(Closure, Object, HttpContext)
+[2m[WebServer] [22m   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+[2m[WebServer] [22m   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+[2m[WebServer] [22m   at Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddlewareImpl.<Invoke>g__Awaited|10_0(ExceptionHandlerMiddlewareImpl middleware, HttpContext context, Task task)
+  Γ£ÿ  195 [admin] ΓÇ║ tests\admin\users.spec.ts:318:3 ΓÇ║ Admin Frontend - Guest Links Management ΓÇ║ should display all guest links (200ms)
+  -  196 [admin] ΓÇ║ tests\admin\users.spec.ts:344:3 ΓÇ║ Admin Frontend - Guest Links Management ΓÇ║ should validate guest link
+  -  197 [admin] ΓÇ║ tests\admin\users.spec.ts:351:3 ΓÇ║ Admin Frontend - Guest Links Management ΓÇ║ should reject invalid guest link code
+  -  198 [admin] ΓÇ║ tests\admin\users.spec.ts:357:3 ΓÇ║ Admin Frontend - Guest Links Management ΓÇ║ should delete guest link
+  -  199 [admin] ΓÇ║ tests\admin\users.spec.ts:369:3 ΓÇ║ Admin Frontend - Guest Links Management ΓÇ║ should clean up - delete remaining guest links and album
+
+≡ƒº╣ Running global teardown...
+
+≡ƒùæ∩╕Å  Deleting test data directory: D:\Just or fun\LibraFoto\LibraFoto\test-data
+Γ£à Test data directory deleted successfully!
+
+≡ƒÅü Global teardown complete!
+
+
+
+  1) [admin] ΓÇ║ tests\admin\albums.spec.ts:29:3 ΓÇ║ Admin Frontend - Album Management ΓÇ║ should show empty state when no albums exist 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: getByText(/no albums|create.*album|add.*album|empty/i)
+    Expected: visible
+    Error: strict mode violation: getByText(/no albums|create.*album|add.*album|empty/i) resolved to 4 elements:
+        1) <span class="mdc-button__label"> Create Album </span> aka getByRole('button', { name: 'Create Album' }).first()
+        2) <h2 _ngcontent-ng-c4061166029="">No albums yet</h2> aka getByRole('heading', { name: 'No albums yet' })
+        3) <p _ngcontent-ng-c4061166029="">Create albums to organize your photos for the sliΓÇª</p> aka getByText('Create albums to organize')
+        4) <span class="mdc-button__label"> Create Album </span> aka locator('mat-card-content').getByRole('button', { name: 'Create Album' })
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 10000ms[22m
+    [2m  - waiting for getByText(/no albums|create.*album|add.*album|empty/i)[22m
+
+
+      52 |       await expect(
+      53 |         page.getByText(/no albums|create.*album|add.*album|empty/i)
+    > 54 |       ).toBeVisible({ timeout: 10000 });
+         |         ^
+      55 |     }
+      56 |   });
+      57 |
+        at D:\Just or fun\LibraFoto\LibraFoto\frontends\e2e\tests\admin\albums.spec.ts:54:9
+
+    attachment #1: screenshot (image/png) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+    test-results\albums-Admin-Frontend---Al-76316--state-when-no-albums-exist-admin\test-failed-1.png
+    ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+
+    Error Context: test-results\albums-Admin-Frontend---Al-76316--state-when-no-albums-exist-admin\error-context.md
+
+  2) [admin] ΓÇ║ tests\admin\display-settings.spec.ts:174:3 ΓÇ║ Admin Frontend - Display Settings ΓÇ║ should toggle overlay date display 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mnot[2m.[22mtoBe[2m([22m[32mexpected[39m[2m) // Object.is equality[22m
+
+    Expected: not [32mtrue[39m
+
+      209 |       // Verify toggle changed
+      210 |       const newState = await dateToggle.isChecked();
+    > 211 |       expect(newState).not.toBe(initialState);
+          |                            ^
+      212 |     }
+      213 |   });
+      214 |
+        at D:\Just or fun\LibraFoto\LibraFoto\frontends\e2e\tests\admin\display-settings.spec.ts:211:28
+
+    attachment #1: screenshot (image/png) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+    test-results\display-settings-Admin-Fro-8d2a4-toggle-overlay-date-display-admin\test-failed-1.png
+    ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+
+    Error Context: test-results\display-settings-Admin-Fro-8d2a4-toggle-overlay-date-display-admin\error-context.md
+
+  3) [admin] ΓÇ║ tests\admin\login.spec.ts:80:3 ΓÇ║ Admin Frontend - Login ΓÇ║ should show error on invalid credentials 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: getByText(/invalid|unauthorized|incorrect/i)
+    Expected: visible
+    Timeout: 10000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 10000ms[22m
+    [2m  - waiting for getByText(/invalid|unauthorized|incorrect/i)[22m
+
+
+      77 |
+      78 |     // Should show error message from the real API
+    > 79 |     await expect(page.getByText(/invalid|unauthorized|incorrect/i)).toBeVisible(
+         |                                                                     ^
+      80 |       {
+      81 |         timeout: 10000,
+      82 |       }
+        at D:\Just or fun\LibraFoto\LibraFoto\frontends\e2e\tests\admin\login.spec.ts:79:69
+
+    attachment #1: screenshot (image/png) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+    test-results\login-Admin-Frontend---Log-3c760-rror-on-invalid-credentials-admin\test-failed-1.png
+    ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+
+    Error Context: test-results\login-Admin-Frontend---Log-3c760-rror-on-invalid-credentials-admin\error-context.md
+
+  4) [admin] ΓÇ║ tests\admin\photos.spec.ts:22:3 ΓÇ║ Admin Frontend - Photo Management ΓÇ║ should display photos page with empty state 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: getByRole('button', { name: /upload/i })
+    Expected: visible
+    Error: strict mode violation: getByRole('button', { name: /upload/i }) resolved to 2 elements:
+        1) <button color="primary" mat-raised-button="" _ngcontent-ng-c1444263675="" mat-ripple-loader-uninitialized="" mat-ripple-loader-class-name="mat-mdc-button-ripple" class="mdc-button mat-mdc-button-base mdc-button--raised mat-mdc-raised-button mat-primary">ΓÇª</button> aka getByRole('button', { name: 'Upload Photos' }).first()
+        2) <button color="primary" mat-raised-button="" _ngcontent-ng-c1444263675="" mat-ripple-loader-uninitialized="" mat-ripple-loader-class-name="mat-mdc-button-ripple" class="mdc-button mat-mdc-button-base mdc-button--raised mat-mdc-raised-button mat-primary">ΓÇª</button> aka getByRole('button', { name: 'Upload Photos' }).nth(1)
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 10000ms[22m
+    [2m  - waiting for getByRole('button', { name: /upload/i })[22m
+
+
+      43 |
+      44 |     // Should have upload button
+    > 45 |     await expect(page.getByRole("button", { name: /upload/i })).toBeVisible();
+         |                                                                 ^
+      46 |   });
+      47 |
+      48 |   test("should upload a single photo via file picker", async ({ page }) => {
+        at D:\Just or fun\LibraFoto\LibraFoto\frontends\e2e\tests\admin\photos.spec.ts:45:65
+
+    attachment #1: screenshot (image/png) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+    test-results\photos-Admin-Frontend---Ph-a2492-hotos-page-with-empty-state-admin\test-failed-1.png
+    ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+
+    Error Context: test-results\photos-Admin-Frontend---Ph-a2492-hotos-page-with-empty-state-admin\error-context.md
+
+  5) [admin] ΓÇ║ tests\admin\photos.spec.ts:241:3 ΓÇ║ Admin Frontend - Photo Bulk Operations ΓÇ║ should bulk add photos to album 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mnot[2m.[22mtoBeNull[2m()[22m
+
+    Received: [31mnull[39m
+
+      266 |     // Add photos to album via API (UI bulk operations may vary)
+      267 |     const result = await api.addPhotosToAlbum(testAlbumId, photoIds);
+    > 268 |     expect(result).not.toBeNull();
+          |                        ^
+      269 |
+      270 |     // Verify via API
+      271 |     const album = await api.getAlbum(testAlbumId);
+        at D:\Just or fun\LibraFoto\LibraFoto\frontends\e2e\tests\admin\photos.spec.ts:268:24
+
+    attachment #1: screenshot (image/png) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+    test-results\photos-Admin-Frontend---Ph-81ce7-ld-bulk-add-photos-to-album-admin\test-failed-1.png
+    ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+
+    Error Context: test-results\photos-Admin-Frontend---Ph-81ce7-ld-bulk-add-photos-to-album-admin\error-context.md
+
+  6) [admin] ΓÇ║ tests\admin\storage.spec.ts:292:3 ΓÇ║ Admin Frontend - Cloud Storage Placeholders ΓÇ║ should show Google Photos option (placeholder) 
+
+    Error: locator.isVisible: Error: strict mode violation: getByText(/google photos/i) resolved to 2 elements:
+        1) <mat-card-title class="mat-mdc-card-title" _ngcontent-ng-c3052895685="">Google Photos</mat-card-title> aka getByText('Google Photos', { exact: true })
+        2) <p _ngcontent-ng-c3052895685="">Sync photos from your Google Photos library.</p> aka getByText('Sync photos from your Google')
+
+    Call log:
+    [2m    - checking visibility of getByText(/google photos/i)[22m
+
+
+      321 |     const googlePhotos = page.getByText(/google photos/i);
+      322 |
+    > 323 |     if (await googlePhotos.isVisible()) {
+          |                            ^
+      324 |       // Should show as coming soon or not connected
+      325 |       const comingSoon = page.getByText(/coming soon|not available|connect/i);
+      326 |       expect(
+        at D:\Just or fun\LibraFoto\LibraFoto\frontends\e2e\tests\admin\storage.spec.ts:323:28
+
+    attachment #1: screenshot (image/png) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+    test-results\storage-Admin-Frontend---C-332f8--Photos-option-placeholder--admin\test-failed-1.png
+    ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+
+    Error Context: test-results\storage-Admin-Frontend---C-332f8--Photos-option-placeholder--admin\error-context.md
+
+  7) [admin] ΓÇ║ tests\admin\storage.spec.ts:320:3 ΓÇ║ Admin Frontend - Cloud Storage Placeholders ΓÇ║ should show OneDrive option (placeholder) 
+
+    Error: locator.isVisible: Error: strict mode violation: getByText(/onedrive/i) resolved to 2 elements:
+        1) <mat-card-title class="mat-mdc-card-title" _ngcontent-ng-c3052895685="">OneDrive</mat-card-title> aka getByText('OneDrive', { exact: true })
+        2) <p _ngcontent-ng-c3052895685="">Sync photos from Microsoft OneDrive.</p> aka getByText('Sync photos from Microsoft')
+
+    Call log:
+    [2m    - checking visibility of getByText(/onedrive/i)[22m
+
+
+      352 |     const oneDrive = page.getByText(/onedrive/i);
+      353 |
+    > 354 |     if (await oneDrive.isVisible()) {
+          |                        ^
+      355 |       const comingSoon = page.getByText(/coming soon|not available|connect/i);
+      356 |       expect(
+      357 |         (await comingSoon.isVisible()) || (await oneDrive.isVisible())
+        at D:\Just or fun\LibraFoto\LibraFoto\frontends\e2e\tests\admin\storage.spec.ts:354:24
+
+    attachment #1: screenshot (image/png) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+    test-results\storage-Admin-Frontend---C-b4a85-neDrive-option-placeholder--admin\test-failed-1.png
+    ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+
+    Error Context: test-results\storage-Admin-Frontend---C-b4a85-neDrive-option-placeholder--admin\error-context.md
+
+  8) [admin] ΓÇ║ tests\admin\tags.spec.ts:67:3 ΓÇ║ Admin Frontend - Tag Management ΓÇ║ should validate tag name is required 
+
+    TimeoutError: locator.click: Timeout 15000ms exceeded.
+    Call log:
+    [2m  - waiting for getByRole('dialog').getByRole('button', { name: /create|save/i })[22m
+    [2m    - locator resolved to <button color="primary" disabled="true" mat-raised-button="" _ngcontent-ng-c1898606879="" mat-ripple-loader-disabled="" mat-ripple-loader-uninitialized="" mat-ripple-loader-class-name="mat-mdc-button-ripple" class="mdc-button mat-mdc-button-base mdc-button--raised mat-mdc-raised-button mat-primary mat-mdc-button-disabled">ΓÇª</button>[22m
+    [2m  - attempting click action[22m
+    [2m    2 ├ù waiting for element to be visible, enabled and stable[22m
+    [2m      - element is not stable[22m
+    [2m    - retrying click action[22m
+    [2m    - waiting 20ms[22m
+    [2m    - waiting for element to be visible, enabled and stable[22m
+    [2m    - element is not stable[22m
+    [2m  2 ├ù retrying click action[22m
+    [2m      - waiting 100ms[22m
+    [2m      - waiting for element to be visible, enabled and stable[22m
+    [2m      - element is not enabled[22m
+    [2m  27 ├ù retrying click action[22m
+    [2m       - waiting 500ms[22m
+    [2m       - waiting for element to be visible, enabled and stable[22m
+    [2m       - element is not enabled[22m
+    [2m  - retrying click action[22m
+    [2m    - waiting 500ms[22m
+
+
+      83 |     // Try to submit without name
+      84 |     const dialog = page.getByRole("dialog");
+    > 85 |     await dialog.getByRole("button", { name: /create|save/i }).click();
+         |                                                                ^
+      86 |
+      87 |     // Should show validation error or button should be disabled
+      88 |     await expect(page.getByText(/required|name is required/i))
+        at D:\Just or fun\LibraFoto\LibraFoto\frontends\e2e\tests\admin\tags.spec.ts:85:64
+
+    attachment #1: screenshot (image/png) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+    test-results\tags-Admin-Frontend---Tag--2e0b2-lidate-tag-name-is-required-admin\test-failed-1.png
+    ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+
+    Error Context: test-results\tags-Admin-Frontend---Tag--2e0b2-lidate-tag-name-is-required-admin\error-context.md
+
+  9) [admin] ΓÇ║ tests\admin\users.spec.ts:72:3 ΓÇ║ Admin Frontend - User Management ΓÇ║ should validate required fields when creating user 
+
+    TimeoutError: locator.click: Timeout 15000ms exceeded.
+    Call log:
+    [2m  - waiting for getByRole('dialog').getByRole('button', { name: /create|save/i })[22m
+    [2m    - locator resolved to <button color="primary" disabled="true" mat-raised-button="" _ngcontent-ng-c222999317="" mat-ripple-loader-disabled="" mat-ripple-loader-uninitialized="" mat-ripple-loader-class-name="mat-mdc-button-ripple" class="mdc-button mat-mdc-button-base mdc-button--raised mat-mdc-raised-button mat-primary mat-mdc-button-disabled">ΓÇª</button>[22m
+    [2m  - attempting click action[22m
+    [2m    2 ├ù waiting for element to be visible, enabled and stable[22m
+    [2m      - element is not stable[22m
+    [2m    - retrying click action[22m
+    [2m    - waiting 20ms[22m
+    [2m    - waiting for element to be visible, enabled and stable[22m
+    [2m    - element is not stable[22m
+    [2m  2 ├ù retrying click action[22m
+    [2m      - waiting 100ms[22m
+    [2m      - waiting for element to be visible, enabled and stable[22m
+    [2m      - element is not enabled[22m
+    [2m  27 ├ù retrying click action[22m
+    [2m       - waiting 500ms[22m
+    [2m       - waiting for element to be visible, enabled and stable[22m
+    [2m       - element is not enabled[22m
+    [2m  - retrying click action[22m
+    [2m    - waiting 500ms[22m
+
+
+      90 |     // Try to submit without filling fields
+      91 |     const dialog = page.getByRole("dialog");
+    > 92 |     await dialog.getByRole("button", { name: /create|save/i }).click();
+         |                                                                ^
+      93 |
+      94 |     // Should show validation errors
+      95 |     await expect(page.getByText(/required/i).first()).toBeVisible({
+        at D:\Just or fun\LibraFoto\LibraFoto\frontends\e2e\tests\admin\users.spec.ts:92:64
+
+    attachment #1: screenshot (image/png) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+    test-results\users-Admin-Frontend---Use-a4bb2-d-fields-when-creating-user-admin\test-failed-1.png
+    ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+
+    Error Context: test-results\users-Admin-Frontend---Use-a4bb2-d-fields-when-creating-user-admin\error-context.md
+
+  10) [admin] ΓÇ║ tests\admin\users.spec.ts:318:3 ΓÇ║ Admin Frontend - Guest Links Management ΓÇ║ should display all guest links 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBe[2m([22m[32mexpected[39m[2m) // Object.is equality[22m
+
+    Expected: [32m4[39m
+    Received: [31m0[39m
+
+      334 |     await api.login(TEST_ADMIN.email, TEST_ADMIN.password);
+      335 |     const guestLinks = await api.getGuestLinks();
+    > 336 |     expect(guestLinks.length).toBe(4);
+          |                               ^
+      337 |
+      338 |     await loginViaUi(page, TEST_ADMIN.email, TEST_ADMIN.password);
+      339 |     await page.goto("/users");
+        at D:\Just or fun\LibraFoto\LibraFoto\frontends\e2e\tests\admin\users.spec.ts:336:31
+
+    attachment #1: screenshot (image/png) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+    test-results\users-Admin-Frontend---Gue-094e1-uld-display-all-guest-links-admin\test-failed-1.png
+    ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+
+  10 failed
+    [admin] ΓÇ║ tests\admin\albums.spec.ts:29:3 ΓÇ║ Admin Frontend - Album Management ΓÇ║ should show empty state when no albums exist 
+    [admin] ΓÇ║ tests\admin\display-settings.spec.ts:174:3 ΓÇ║ Admin Frontend - Display Settings ΓÇ║ should toggle overlay date display 
+    [admin] ΓÇ║ tests\admin\login.spec.ts:80:3 ΓÇ║ Admin Frontend - Login ΓÇ║ should show error on invalid credentials 
+    [admin] ΓÇ║ tests\admin\photos.spec.ts:22:3 ΓÇ║ Admin Frontend - Photo Management ΓÇ║ should display photos page with empty state 
+    [admin] ΓÇ║ tests\admin\photos.spec.ts:241:3 ΓÇ║ Admin Frontend - Photo Bulk Operations ΓÇ║ should bulk add photos to album 
+    [admin] ΓÇ║ tests\admin\storage.spec.ts:292:3 ΓÇ║ Admin Frontend - Cloud Storage Placeholders ΓÇ║ should show Google Photos option (placeholder) 
+    [admin] ΓÇ║ tests\admin\storage.spec.ts:320:3 ΓÇ║ Admin Frontend - Cloud Storage Placeholders ΓÇ║ should show OneDrive option (placeholder) 
+    [admin] ΓÇ║ tests\admin\tags.spec.ts:67:3 ΓÇ║ Admin Frontend - Tag Management ΓÇ║ should validate tag name is required 
+    [admin] ΓÇ║ tests\admin\users.spec.ts:72:3 ΓÇ║ Admin Frontend - User Management ΓÇ║ should validate required fields when creating user 
+    [admin] ΓÇ║ tests\admin\users.spec.ts:318:3 ΓÇ║ Admin Frontend - Guest Links Management ΓÇ║ should display all guest links 
+  10 skipped
+  69 did not run
+  110 passed (5.0m)
+
+[36m  Serving HTML report at http://localhost:9323. Press Ctrl+C to quit.[39m

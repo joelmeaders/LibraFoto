@@ -1,0 +1,34 @@
+# syntax=docker/dockerfile:1.4
+
+# Display UI container - serves the fullscreen slideshow with nginx proxying to API
+FROM --platform=$BUILDPLATFORM node:22-alpine AS build
+ARG VERSION=dev
+
+WORKDIR /app
+COPY apps/display/package*.json ./
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci
+COPY apps/display/ ./
+# Build with base path for reverse proxy
+RUN npm run build -- --base=/display/
+
+# Production image with Nginx
+FROM nginx:alpine
+ARG VERSION=dev
+
+# Add version labels
+LABEL version="${VERSION}" \
+      name="LibraFoto Display UI" \
+      description="LibraFoto fullscreen photo slideshow"
+
+ENV LIBRAFOTO_VERSION=${VERSION}
+
+# Copy built display frontend
+COPY --from=build /app/dist /usr/share/nginx/html
+
+# Copy nginx configuration
+COPY docker/nginx-display.conf /etc/nginx/nginx.conf
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]

@@ -1,0 +1,6 @@
+
+[1m[46m RUN [49m[22m [36mv4.0.16 [39m[90mD:/Just or fun/LibraFoto/LibraFoto/apps/display[39m
+
+ [32mΓ£ô[39m src/config.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 42[2mms[22m[39m
+ [32mΓ£ô[39m src/qr-code.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32mΓ£ô[39m src/keyboard.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 5[2mms[22m[39m

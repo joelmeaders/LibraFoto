@@ -1,0 +1,91 @@
+name: Validate PR Title
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  validate-title:
+    name: Validate Conventional Commit Format
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check PR Title Format
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prTitle = context.payload.pull_request.title;
+
+            // Conventional Commits pattern
+            // Format: type(scope): description
+            // Scope is optional, but if present must be in parentheses
+            const conventionalCommitPattern = /^(feat|fix|docs|style|refactor|perf|test|chore|build|ci)(\([a-z0-9-]+\))?: .+/;
+
+            if (!conventionalCommitPattern.test(prTitle)) {
+              const errorMessage = `
+            ❌ **PR Title Validation Failed**
+
+            Your PR title doesn't follow the [Conventional Commits](https://conventionalcommits.org) format.
+
+            **Required format:**
+            \`\`\`
+            <type>(<scope>): <description>
+            \`\`\`
+
+            **Valid types:**
+            - \`feat\`: New feature
+            - \`fix\`: Bug fix
+            - \`docs\`: Documentation changes
+            - \`style\`: Code style (formatting, no logic change)
+            - \`refactor\`: Code refactoring
+            - \`perf\`: Performance improvement
+            - \`test\`: Adding or updating tests
+            - \`chore\`: Maintenance tasks
+            - \`build\`: Build system changes
+            - \`ci\`: CI/CD configuration changes
+
+            **Scopes (optional but recommended):**
+            \`admin\`, \`auth\`, \`display\`, \`media\`, \`storage\`, \`api\`, \`docker\`, \`ci\`, \`scripts\`, \`docs\`, \`test\`, \`deps\`
+
+            **Examples:**
+            - ✅ \`feat(media): add HEIC thumbnail support\`
+            - ✅ \`fix(auth): correct JWT expiration validation\`
+            - ✅ \`docs: update installation guide\`
+            - ✅ \`chore(deps): update Angular to v21.1\`
+            - ❌ \`Added new feature\` (missing type)
+            - ❌ \`feat Add feature\` (missing colon)
+            - ❌ \`feat(Media): add feature\` (scope must be lowercase)
+
+            **Your PR title:**
+            \`${prTitle}\`
+
+            **For breaking changes**, add an exclamation mark before the colon:
+            \`feat(api)!: remove deprecated endpoints\`
+
+            Or include \`BREAKING CHANGE:\` in the PR description footer.
+
+            See [docs/conventions/conventional-commits.md](../blob/main/docs/conventions/conventional-commits.md) for detailed guidelines.
+              `.trim();
+              
+              // Post comment
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: errorMessage
+              });
+              
+              core.setFailed('PR title does not follow Conventional Commits format');
+            } else {
+              core.info('✅ PR title follows Conventional Commits format');
+              
+              // Check for breaking change indicator
+              const hasBreakingIndicator = prTitle.includes('!:');
+              if (hasBreakingIndicator) {
+                core.warning('⚠️ Breaking change detected! Ensure BREAKING CHANGE is documented in PR description.');
+              }
+            }

@@ -1,0 +1,113 @@
+name: librafoto
+
+services:
+  api:
+    container_name: librafoto-api
+    image: librafoto-api:${VERSION:-latest}
+    # Internal only - accessed via proxy at /api
+    expose:
+      - "8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      # Use LIBRAFOTO_DATA_DIR to set both database and storage paths
+      - LIBRAFOTO_DATA_DIR=/data
+      # Host IP for QR codes (detected by install.sh)
+      - LIBRAFOTO_HOST_IP=${LIBRAFOTO_HOST_IP:-}
+      # JWT key - CHANGE THIS IN PRODUCTION!
+      - Jwt__Key=${JWT_KEY:-change-this-secret-key-in-production-minimum-32-characters}
+    volumes:
+      # Single volume mount for all LibraFoto data
+      - librafoto-data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2G
+        reservations:
+          cpus: "1.0"
+          memory: 1G
+
+  display-ui:
+    container_name: librafoto-display-ui
+    image: librafoto-display-ui:${VERSION:-latest}
+    # Internal only - accessed via proxy
+    expose:
+      - "80"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep nginx || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128M
+        reservations:
+          cpus: "0.1"
+          memory: 64M
+
+  admin-ui:
+    container_name: librafoto-admin-ui
+    image: librafoto-admin-ui:${VERSION:-latest}
+    # Internal only - accessed via proxy
+    expose:
+      - "80"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep nginx || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128M
+        reservations:
+          cpus: "0.1"
+          memory: 64M
+
+  proxy:
+    container_name: librafoto-proxy
+    image: librafoto-proxy:${VERSION:-latest}
+    ports:
+      - "80:80"
+    depends_on:
+      - display-ui
+      - admin-ui
+      - api
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep nginx || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128M
+        reservations:
+          cpus: "0.1"
+          memory: 64M
+
+volumes:
+  librafoto-data:

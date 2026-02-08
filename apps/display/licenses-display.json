@@ -1,0 +1,1104 @@
+{
+  "@acemir/cssom@0.9.30": {
+    "licenses": "MIT",
+    "repository": "https://github.com/acemir/CSSOM",
+    "publisher": "Nikita Vasilyev",
+    "email": "me@elv1s.ru",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@acemir\\cssom",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@acemir\\cssom\\LICENSE.txt"
+  },
+  "@asamuzakjp/css-color@4.1.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/asamuzaK/cssColor",
+    "publisher": "asamuzaK",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@asamuzakjp\\css-color",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@asamuzakjp\\css-color\\LICENSE"
+  },
+  "@asamuzakjp/dom-selector@6.7.6": {
+    "licenses": "MIT",
+    "repository": "https://github.com/asamuzaK/domSelector",
+    "publisher": "asamuzaK",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@asamuzakjp\\dom-selector",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@asamuzakjp\\dom-selector\\LICENSE"
+  },
+  "@asamuzakjp/nwsapi@2.3.9": {
+    "licenses": "MIT",
+    "repository": "https://github.com/dperini/nwsapi",
+    "publisher": "Diego Perini",
+    "email": "diego.perini@gmail.com",
+    "url": "http://www.iport.it/",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@asamuzakjp\\nwsapi",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@asamuzakjp\\nwsapi\\LICENSE"
+  },
+  "@babel/helper-string-parser@7.27.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/babel/babel",
+    "publisher": "The Babel Team",
+    "url": "https://babel.dev/team",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@babel\\helper-string-parser",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@babel\\helper-string-parser\\LICENSE"
+  },
+  "@babel/helper-validator-identifier@7.28.5": {
+    "licenses": "MIT",
+    "repository": "https://github.com/babel/babel",
+    "publisher": "The Babel Team",
+    "url": "https://babel.dev/team",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@babel\\helper-validator-identifier",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@babel\\helper-validator-identifier\\LICENSE"
+  },
+  "@babel/parser@7.28.5": {
+    "licenses": "MIT",
+    "repository": "https://github.com/babel/babel",
+    "publisher": "The Babel Team",
+    "url": "https://babel.dev/team",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@babel\\parser",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@babel\\parser\\LICENSE"
+  },
+  "@babel/types@7.28.5": {
+    "licenses": "MIT",
+    "repository": "https://github.com/babel/babel",
+    "publisher": "The Babel Team",
+    "url": "https://babel.dev/team",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@babel\\types",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@babel\\types\\LICENSE"
+  },
+  "@bcoe/v8-coverage@1.0.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/bcoe/v8-coverage",
+    "publisher": "Charles Samborski",
+    "email": "demurgos@demurgos.net",
+    "url": "https://demurgos.net",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@bcoe\\v8-coverage",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@bcoe\\v8-coverage\\LICENSE.md"
+  },
+  "@csstools/color-helpers@5.1.0": {
+    "licenses": "MIT-0",
+    "repository": "https://github.com/csstools/postcss-plugins",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@csstools\\color-helpers",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@csstools\\color-helpers\\LICENSE.md"
+  },
+  "@csstools/css-calc@2.1.4": {
+    "licenses": "MIT",
+    "repository": "https://github.com/csstools/postcss-plugins",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@csstools\\css-calc",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@csstools\\css-calc\\LICENSE.md"
+  },
+  "@csstools/css-color-parser@3.1.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/csstools/postcss-plugins",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@csstools\\css-color-parser",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@csstools\\css-color-parser\\LICENSE.md"
+  },
+  "@csstools/css-parser-algorithms@3.0.5": {
+    "licenses": "MIT",
+    "repository": "https://github.com/csstools/postcss-plugins",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@csstools\\css-parser-algorithms",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@csstools\\css-parser-algorithms\\LICENSE.md"
+  },
+  "@csstools/css-syntax-patches-for-csstree@1.0.22": {
+    "licenses": "MIT-0",
+    "repository": "https://github.com/csstools/postcss-plugins",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@csstools\\css-syntax-patches-for-csstree",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@csstools\\css-syntax-patches-for-csstree\\LICENSE.md"
+  },
+  "@csstools/css-tokenizer@3.0.4": {
+    "licenses": "MIT",
+    "repository": "https://github.com/csstools/postcss-plugins",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@csstools\\css-tokenizer",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@csstools\\css-tokenizer\\LICENSE.md"
+  },
+  "@esbuild/win32-x64@0.25.12": {
+    "licenses": "MIT",
+    "repository": "https://github.com/evanw/esbuild",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@esbuild\\win32-x64",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@esbuild\\win32-x64\\README.md"
+  },
+  "@exodus/bytes@1.8.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/ExodusOSS/bytes",
+    "publisher": "Exodus Movement, Inc.",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@exodus\\bytes",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@exodus\\bytes\\LICENSE"
+  },
+  "@jridgewell/gen-mapping@0.3.13": {
+    "licenses": "MIT",
+    "repository": "https://github.com/jridgewell/sourcemaps",
+    "publisher": "Justin Ridgewell",
+    "email": "justin@ridgewell.name",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@jridgewell\\gen-mapping",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@jridgewell\\gen-mapping\\LICENSE"
+  },
+  "@jridgewell/resolve-uri@3.1.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/jridgewell/resolve-uri",
+    "publisher": "Justin Ridgewell",
+    "email": "justin@ridgewell.name",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@jridgewell\\resolve-uri",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@jridgewell\\resolve-uri\\LICENSE"
+  },
+  "@jridgewell/source-map@0.3.11": {
+    "licenses": "MIT",
+    "repository": "https://github.com/jridgewell/sourcemaps",
+    "publisher": "Justin Ridgewell",
+    "email": "justin@ridgewell.name",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@jridgewell\\source-map",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@jridgewell\\source-map\\LICENSE"
+  },
+  "@jridgewell/sourcemap-codec@1.5.5": {
+    "licenses": "MIT",
+    "repository": "https://github.com/jridgewell/sourcemaps",
+    "publisher": "Justin Ridgewell",
+    "email": "justin@ridgewell.name",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@jridgewell\\sourcemap-codec",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@jridgewell\\sourcemap-codec\\LICENSE"
+  },
+  "@jridgewell/trace-mapping@0.3.31": {
+    "licenses": "MIT",
+    "repository": "https://github.com/jridgewell/sourcemaps",
+    "publisher": "Justin Ridgewell",
+    "email": "justin@ridgewell.name",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@jridgewell\\trace-mapping",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@jridgewell\\trace-mapping\\LICENSE"
+  },
+  "@rollup/rollup-win32-x64-gnu@4.54.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/rollup/rollup",
+    "publisher": "Lukas Taegert-Atkinson",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@rollup\\rollup-win32-x64-gnu",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@rollup\\rollup-win32-x64-gnu\\README.md"
+  },
+  "@rollup/rollup-win32-x64-msvc@4.54.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/rollup/rollup",
+    "publisher": "Lukas Taegert-Atkinson",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@rollup\\rollup-win32-x64-msvc",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@rollup\\rollup-win32-x64-msvc\\README.md"
+  },
+  "@standard-schema/spec@1.1.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/standard-schema/standard-schema",
+    "publisher": "Colin McDonnell",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@standard-schema\\spec",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@standard-schema\\spec\\LICENSE"
+  },
+  "@types/chai@5.2.3": {
+    "licenses": "MIT",
+    "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@types\\chai",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@types\\chai\\LICENSE"
+  },
+  "@types/deep-eql@4.0.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@types\\deep-eql",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@types\\deep-eql\\LICENSE"
+  },
+  "@types/estree@1.0.8": {
+    "licenses": "MIT",
+    "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@types\\estree",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@types\\estree\\LICENSE"
+  },
+  "@types/node@25.0.3": {
+    "licenses": "MIT",
+    "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@types\\node",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@types\\node\\LICENSE"
+  },
+  "@types/qrcode@1.5.6": {
+    "licenses": "MIT",
+    "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@types\\qrcode",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@types\\qrcode\\LICENSE"
+  },
+  "@vitest/coverage-v8@4.0.16": {
+    "licenses": "MIT",
+    "repository": "https://github.com/vitest-dev/vitest",
+    "publisher": "Anthony Fu",
+    "email": "anthonyfu117@hotmail.com",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@vitest\\coverage-v8",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@vitest\\coverage-v8\\LICENSE"
+  },
+  "@vitest/expect@4.0.16": {
+    "licenses": "MIT",
+    "repository": "https://github.com/vitest-dev/vitest",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@vitest\\expect",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@vitest\\expect\\LICENSE"
+  },
+  "@vitest/mocker@4.0.16": {
+    "licenses": "MIT",
+    "repository": "https://github.com/vitest-dev/vitest",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@vitest\\mocker",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@vitest\\mocker\\LICENSE"
+  },
+  "@vitest/pretty-format@4.0.16": {
+    "licenses": "MIT",
+    "repository": "https://github.com/vitest-dev/vitest",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@vitest\\pretty-format",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@vitest\\pretty-format\\LICENSE"
+  },
+  "@vitest/runner@4.0.16": {
+    "licenses": "MIT",
+    "repository": "https://github.com/vitest-dev/vitest",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@vitest\\runner",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@vitest\\runner\\LICENSE"
+  },
+  "@vitest/snapshot@4.0.16": {
+    "licenses": "MIT",
+    "repository": "https://github.com/vitest-dev/vitest",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@vitest\\snapshot",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@vitest\\snapshot\\LICENSE"
+  },
+  "@vitest/spy@4.0.16": {
+    "licenses": "MIT",
+    "repository": "https://github.com/vitest-dev/vitest",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@vitest\\spy",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@vitest\\spy\\LICENSE"
+  },
+  "@vitest/utils@4.0.16": {
+    "licenses": "MIT",
+    "repository": "https://github.com/vitest-dev/vitest",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@vitest\\utils",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\@vitest\\utils\\LICENSE"
+  },
+  "acorn@8.15.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/acornjs/acorn",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\acorn",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\acorn\\LICENSE"
+  },
+  "agent-base@7.1.4": {
+    "licenses": "MIT",
+    "repository": "https://github.com/TooTallNate/proxy-agents",
+    "publisher": "Nathan Rajlich",
+    "email": "nathan@tootallnate.net",
+    "url": "http://n8.io/",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\agent-base",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\agent-base\\LICENSE"
+  },
+  "ansi-regex@5.0.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/chalk/ansi-regex",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\ansi-regex",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\ansi-regex\\license"
+  },
+  "ansi-styles@4.3.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/chalk/ansi-styles",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\ansi-styles",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\ansi-styles\\license"
+  },
+  "assertion-error@2.0.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/chaijs/assertion-error",
+    "publisher": "Jake Luer",
+    "email": "jake@qualiancy.com",
+    "url": "http://qualiancy.com",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\assertion-error",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\assertion-error\\LICENSE"
+  },
+  "ast-v8-to-istanbul@0.3.10": {
+    "licenses": "MIT",
+    "repository": "https://github.com/AriPerkkio/ast-v8-to-istanbul",
+    "publisher": "Ari Perkkiö",
+    "email": "ari.perkkio@gmail.com",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\ast-v8-to-istanbul",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\ast-v8-to-istanbul\\README.md"
+  },
+  "bidi-js@1.0.3": {
+    "licenses": "MIT",
+    "repository": "https://github.com/lojjic/bidi-js",
+    "publisher": "Jason Johnston",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\bidi-js",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\bidi-js\\LICENSE.txt"
+  },
+  "buffer-from@1.1.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/LinusU/buffer-from",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\buffer-from",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\buffer-from\\LICENSE"
+  },
+  "camelcase@5.3.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/sindresorhus/camelcase",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\camelcase",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\camelcase\\license"
+  },
+  "chai@6.2.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/chaijs/chai",
+    "publisher": "Jake Luer",
+    "email": "jake@alogicalparadox.com",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\chai",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\chai\\LICENSE"
+  },
+  "cliui@6.0.0": {
+    "licenses": "ISC",
+    "repository": "https://github.com/yargs/cliui",
+    "publisher": "Ben Coe",
+    "email": "ben@npmjs.com",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\cliui",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\cliui\\LICENSE.txt"
+  },
+  "color-convert@2.0.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/Qix-/color-convert",
+    "publisher": "Heather Arthur",
+    "email": "fayearthur@gmail.com",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\color-convert",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\color-convert\\LICENSE"
+  },
+  "color-name@1.1.4": {
+    "licenses": "MIT",
+    "repository": "https://github.com/colorjs/color-name",
+    "publisher": "DY",
+    "email": "dfcreative@gmail.com",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\color-name",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\color-name\\LICENSE"
+  },
+  "commander@2.20.3": {
+    "licenses": "MIT",
+    "repository": "https://github.com/tj/commander.js",
+    "publisher": "TJ Holowaychuk",
+    "email": "tj@vision-media.ca",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\commander",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\commander\\LICENSE"
+  },
+  "css-tree@3.1.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/csstree/csstree",
+    "publisher": "Roman Dvornov",
+    "email": "rdvornov@gmail.com",
+    "url": "https://github.com/lahmatiy",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\css-tree",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\css-tree\\LICENSE"
+  },
+  "cssstyle@5.3.6": {
+    "licenses": "MIT",
+    "repository": "https://github.com/jsdom/cssstyle",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\cssstyle",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\cssstyle\\LICENSE"
+  },
+  "data-urls@6.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/jsdom/data-urls",
+    "publisher": "Domenic Denicola",
+    "email": "d@domenic.me",
+    "url": "https://domenic.me/",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\data-urls",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\data-urls\\LICENSE.txt"
+  },
+  "debug@4.4.3": {
+    "licenses": "MIT",
+    "repository": "https://github.com/debug-js/debug",
+    "publisher": "Josh Junon",
+    "url": "https://github.com/qix-",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\debug",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\debug\\LICENSE"
+  },
+  "decamelize@1.2.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/sindresorhus/decamelize",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\decamelize",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\decamelize\\license"
+  },
+  "decimal.js@10.6.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/MikeMcl/decimal.js",
+    "publisher": "Michael Mclaughlin",
+    "email": "M8ch88l@gmail.com",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\decimal.js",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\decimal.js\\LICENCE.md"
+  },
+  "dijkstrajs@1.0.3": {
+    "licenses": "MIT",
+    "repository": "https://github.com/tcort/dijkstrajs",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\dijkstrajs",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\dijkstrajs\\LICENSE.md"
+  },
+  "emoji-regex@8.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/mathiasbynens/emoji-regex",
+    "publisher": "Mathias Bynens",
+    "url": "https://mathiasbynens.be/",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\emoji-regex",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\emoji-regex\\LICENSE-MIT.txt"
+  },
+  "entities@6.0.1": {
+    "licenses": "BSD-2-Clause",
+    "repository": "https://github.com/fb55/entities",
+    "publisher": "Felix Boehm",
+    "email": "me@feedic.com",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\entities",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\entities\\LICENSE"
+  },
+  "es-module-lexer@1.7.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/guybedford/es-module-lexer",
+    "publisher": "Guy Bedford",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\es-module-lexer",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\es-module-lexer\\LICENSE"
+  },
+  "esbuild@0.25.12": {
+    "licenses": "MIT",
+    "repository": "https://github.com/evanw/esbuild",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\esbuild",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\esbuild\\LICENSE.md"
+  },
+  "estree-walker@3.0.3": {
+    "licenses": "MIT",
+    "repository": "https://github.com/Rich-Harris/estree-walker",
+    "publisher": "Rich Harris",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\estree-walker",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\estree-walker\\LICENSE"
+  },
+  "expect-type@1.3.0": {
+    "licenses": "Apache-2.0",
+    "repository": "https://github.com/mmkal/expect-type",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\expect-type",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\expect-type\\LICENSE"
+  },
+  "fdir@6.5.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/thecodrr/fdir",
+    "publisher": "thecodrr",
+    "email": "thecodrr@protonmail.com",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\fdir",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\fdir\\LICENSE"
+  },
+  "find-up@4.1.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/sindresorhus/find-up",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\find-up",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\find-up\\license"
+  },
+  "get-caller-file@2.0.5": {
+    "licenses": "ISC",
+    "repository": "https://github.com/stefanpenner/get-caller-file",
+    "publisher": "Stefan Penner",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\get-caller-file",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\get-caller-file\\LICENSE.md"
+  },
+  "has-flag@4.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/sindresorhus/has-flag",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\has-flag",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\has-flag\\license"
+  },
+  "html-encoding-sniffer@6.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/jsdom/html-encoding-sniffer",
+    "publisher": "Domenic Denicola",
+    "email": "d@domenic.me",
+    "url": "https://domenic.me/",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\html-encoding-sniffer",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\html-encoding-sniffer\\LICENSE.txt"
+  },
+  "html-escaper@2.0.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/WebReflection/html-escaper",
+    "publisher": "Andrea Giammarchi",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\html-escaper",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\html-escaper\\LICENSE.txt"
+  },
+  "http-proxy-agent@7.0.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/TooTallNate/proxy-agents",
+    "publisher": "Nathan Rajlich",
+    "email": "nathan@tootallnate.net",
+    "url": "http://n8.io/",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\http-proxy-agent",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\http-proxy-agent\\LICENSE"
+  },
+  "https-proxy-agent@7.0.6": {
+    "licenses": "MIT",
+    "repository": "https://github.com/TooTallNate/proxy-agents",
+    "publisher": "Nathan Rajlich",
+    "email": "nathan@tootallnate.net",
+    "url": "http://n8.io/",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\https-proxy-agent",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\https-proxy-agent\\LICENSE"
+  },
+  "is-fullwidth-code-point@3.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/sindresorhus/is-fullwidth-code-point",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\is-fullwidth-code-point",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\is-fullwidth-code-point\\license"
+  },
+  "is-potential-custom-element-name@1.0.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/mathiasbynens/is-potential-custom-element-name",
+    "publisher": "Mathias Bynens",
+    "url": "https://mathiasbynens.be/",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\is-potential-custom-element-name",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\is-potential-custom-element-name\\LICENSE-MIT.txt"
+  },
+  "istanbul-lib-coverage@3.2.2": {
+    "licenses": "BSD-3-Clause",
+    "repository": "https://github.com/istanbuljs/istanbuljs",
+    "publisher": "Krishnan Anantheswaran",
+    "email": "kananthmail-github@yahoo.com",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\istanbul-lib-coverage",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\istanbul-lib-coverage\\LICENSE"
+  },
+  "istanbul-lib-report@3.0.1": {
+    "licenses": "BSD-3-Clause",
+    "repository": "https://github.com/istanbuljs/istanbuljs",
+    "publisher": "Krishnan Anantheswaran",
+    "email": "kananthmail-github@yahoo.com",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\istanbul-lib-report",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\istanbul-lib-report\\LICENSE"
+  },
+  "istanbul-lib-source-maps@5.0.6": {
+    "licenses": "BSD-3-Clause",
+    "repository": "https://github.com/istanbuljs/istanbuljs",
+    "publisher": "Krishnan Anantheswaran",
+    "email": "kananthmail-github@yahoo.com",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\istanbul-lib-source-maps",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\istanbul-lib-source-maps\\LICENSE"
+  },
+  "istanbul-reports@3.2.0": {
+    "licenses": "BSD-3-Clause",
+    "repository": "https://github.com/istanbuljs/istanbuljs",
+    "publisher": "Krishnan Anantheswaran",
+    "email": "kananthmail-github@yahoo.com",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\istanbul-reports",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\istanbul-reports\\LICENSE"
+  },
+  "js-tokens@9.0.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/lydell/js-tokens",
+    "publisher": "Simon Lydell",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\js-tokens",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\js-tokens\\LICENSE"
+  },
+  "jsdom@27.4.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/jsdom/jsdom",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\jsdom",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\jsdom\\LICENSE.txt"
+  },
+  "librafoto-display@1.0.0": {
+    "licenses": "UNLICENSED",
+    "private": true,
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display"
+  },
+  "locate-path@5.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/sindresorhus/locate-path",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\locate-path",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\locate-path\\license"
+  },
+  "lru-cache@11.2.4": {
+    "licenses": "BlueOak-1.0.0",
+    "repository": "https://github.com/isaacs/node-lru-cache",
+    "publisher": "Isaac Z. Schlueter",
+    "email": "i@izs.me",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\lru-cache",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\lru-cache\\LICENSE.md"
+  },
+  "magic-string@0.30.21": {
+    "licenses": "MIT",
+    "repository": "https://github.com/Rich-Harris/magic-string",
+    "publisher": "Rich Harris",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\magic-string",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\magic-string\\LICENSE"
+  },
+  "magicast@0.5.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/unjs/magicast",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\magicast",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\magicast\\LICENSE"
+  },
+  "make-dir@4.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/sindresorhus/make-dir",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "https://sindresorhus.com",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\make-dir",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\make-dir\\license"
+  },
+  "mdn-data@2.12.2": {
+    "licenses": "CC0-1.0",
+    "repository": "https://github.com/mdn/data",
+    "publisher": "Mozilla Developer Network",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\mdn-data",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\mdn-data\\LICENSE"
+  },
+  "ms@2.1.3": {
+    "licenses": "MIT",
+    "repository": "https://github.com/vercel/ms",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\ms",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\ms\\license.md"
+  },
+  "nanoid@3.3.11": {
+    "licenses": "MIT",
+    "repository": "https://github.com/ai/nanoid",
+    "publisher": "Andrey Sitnik",
+    "email": "andrey@sitnik.ru",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\nanoid",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\nanoid\\LICENSE"
+  },
+  "obug@2.1.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/sxzz/obug",
+    "publisher": "Kevin Deng",
+    "email": "sxzz@sxzz.moe",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\obug",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\obug\\LICENSE"
+  },
+  "p-limit@2.3.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/sindresorhus/p-limit",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\p-limit",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\p-limit\\license"
+  },
+  "p-locate@4.1.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/sindresorhus/p-locate",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\p-locate",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\p-locate\\license"
+  },
+  "p-try@2.2.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/sindresorhus/p-try",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\p-try",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\p-try\\license"
+  },
+  "parse5@8.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/inikulin/parse5",
+    "publisher": "Ivan Nikulin",
+    "email": "ifaaan@gmail.com",
+    "url": "https://github.com/inikulin",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\parse5",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\parse5\\LICENSE"
+  },
+  "path-exists@4.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/sindresorhus/path-exists",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\path-exists",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\path-exists\\license"
+  },
+  "pathe@2.0.3": {
+    "licenses": "MIT",
+    "repository": "https://github.com/unjs/pathe",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\pathe",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\pathe\\LICENSE"
+  },
+  "picocolors@1.1.1": {
+    "licenses": "ISC",
+    "repository": "https://github.com/alexeyraspopov/picocolors",
+    "publisher": "Alexey Raspopov",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\picocolors",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\picocolors\\LICENSE"
+  },
+  "picomatch@4.0.3": {
+    "licenses": "MIT",
+    "repository": "https://github.com/micromatch/picomatch",
+    "publisher": "Jon Schlinkert",
+    "url": "https://github.com/jonschlinkert",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\picomatch",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\picomatch\\LICENSE"
+  },
+  "pngjs@5.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/lukeapage/pngjs",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\pngjs",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\pngjs\\LICENSE"
+  },
+  "postcss@8.5.6": {
+    "licenses": "MIT",
+    "repository": "https://github.com/postcss/postcss",
+    "publisher": "Andrey Sitnik",
+    "email": "andrey@sitnik.ru",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\postcss",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\postcss\\LICENSE"
+  },
+  "punycode@2.3.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/mathiasbynens/punycode.js",
+    "publisher": "Mathias Bynens",
+    "url": "https://mathiasbynens.be/",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\punycode",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\punycode\\LICENSE-MIT.txt"
+  },
+  "qrcode@1.5.4": {
+    "licenses": "MIT",
+    "repository": "https://github.com/soldair/node-qrcode",
+    "publisher": "Ryan Day",
+    "email": "soldair@gmail.com",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\qrcode",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\qrcode\\license"
+  },
+  "require-directory@2.1.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/troygoode/node-require-directory",
+    "publisher": "Troy Goode",
+    "email": "troygoode@gmail.com",
+    "url": "http://github.com/troygoode/",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\require-directory",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\require-directory\\LICENSE"
+  },
+  "require-from-string@2.0.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/floatdrop/require-from-string",
+    "publisher": "Vsevolod Strukchinsky",
+    "email": "floatdrop@gmail.com",
+    "url": "github.com/floatdrop",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\require-from-string",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\require-from-string\\license"
+  },
+  "require-main-filename@2.0.0": {
+    "licenses": "ISC",
+    "repository": "https://github.com/yargs/require-main-filename",
+    "publisher": "Ben Coe",
+    "email": "ben@npmjs.com",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\require-main-filename",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\require-main-filename\\LICENSE.txt"
+  },
+  "rollup@4.54.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/rollup/rollup",
+    "publisher": "Rich Harris",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\rollup",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\rollup\\LICENSE.md"
+  },
+  "saxes@6.0.0": {
+    "licenses": "ISC",
+    "repository": "https://github.com/lddubeau/saxes",
+    "publisher": "Louis-Dominique Dubeau",
+    "email": "ldd@lddubeau.com",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\saxes",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\saxes\\README.md"
+  },
+  "semver@7.7.3": {
+    "licenses": "ISC",
+    "repository": "https://github.com/npm/node-semver",
+    "publisher": "GitHub Inc.",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\semver",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\semver\\LICENSE"
+  },
+  "set-blocking@2.0.0": {
+    "licenses": "ISC",
+    "repository": "https://github.com/yargs/set-blocking",
+    "publisher": "Ben Coe",
+    "email": "ben@npmjs.com",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\set-blocking",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\set-blocking\\LICENSE.txt"
+  },
+  "siginfo@2.0.0": {
+    "licenses": "ISC",
+    "repository": "https://github.com/emilbayes/siginfo",
+    "publisher": "Emil Bay",
+    "email": "github@tixz.dk",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\siginfo",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\siginfo\\LICENSE"
+  },
+  "source-map-js@1.2.1": {
+    "licenses": "BSD-3-Clause",
+    "repository": "https://github.com/7rulnik/source-map-js",
+    "publisher": "Valentin 7rulnik Semirulnik",
+    "email": "v7rulnik@gmail.com",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\source-map-js",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\source-map-js\\LICENSE"
+  },
+  "source-map-support@0.5.21": {
+    "licenses": "MIT",
+    "repository": "https://github.com/evanw/node-source-map-support",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\source-map-support",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\source-map-support\\LICENSE.md"
+  },
+  "source-map@0.6.1": {
+    "licenses": "BSD-3-Clause",
+    "repository": "https://github.com/mozilla/source-map",
+    "publisher": "Nick Fitzgerald",
+    "email": "nfitzgerald@mozilla.com",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\source-map",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\source-map\\LICENSE"
+  },
+  "stackback@0.0.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/shtylman/node-stackback",
+    "publisher": "Roman Shtylman",
+    "email": "shtylman@gmail.com",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\stackback",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\stackback\\README.md"
+  },
+  "std-env@3.10.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/unjs/std-env",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\std-env",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\std-env\\LICENCE"
+  },
+  "string-width@4.2.3": {
+    "licenses": "MIT",
+    "repository": "https://github.com/sindresorhus/string-width",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\string-width",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\string-width\\license"
+  },
+  "strip-ansi@6.0.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/chalk/strip-ansi",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\strip-ansi",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\strip-ansi\\license"
+  },
+  "supports-color@7.2.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/chalk/supports-color",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\supports-color",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\supports-color\\license"
+  },
+  "symbol-tree@3.2.4": {
+    "licenses": "MIT",
+    "repository": "https://github.com/jsdom/js-symbol-tree",
+    "publisher": "Joris van der Wel",
+    "email": "joris@jorisvanderwel.com",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\symbol-tree",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\symbol-tree\\LICENSE"
+  },
+  "terser@5.44.1": {
+    "licenses": "BSD-2-Clause",
+    "repository": "https://github.com/terser/terser",
+    "publisher": "Mihai Bazon",
+    "email": "mihai.bazon@gmail.com",
+    "url": "http://lisperator.net/",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\terser",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\terser\\LICENSE"
+  },
+  "tinybench@2.9.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/tinylibs/tinybench",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\tinybench",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\tinybench\\LICENSE"
+  },
+  "tinyexec@1.0.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/tinylibs/tinyexec",
+    "publisher": "James Garbutt",
+    "url": "https://github.com/43081j",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\tinyexec",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\tinyexec\\LICENSE"
+  },
+  "tinyglobby@0.2.15": {
+    "licenses": "MIT",
+    "repository": "https://github.com/SuperchupuDev/tinyglobby",
+    "publisher": "Superchupu",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\tinyglobby",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\tinyglobby\\LICENSE"
+  },
+  "tinyrainbow@3.0.3": {
+    "licenses": "MIT",
+    "repository": "https://github.com/tinylibs/tinyrainbow",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\tinyrainbow",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\tinyrainbow\\LICENCE"
+  },
+  "tldts-core@7.0.19": {
+    "licenses": "MIT",
+    "repository": "https://github.com/remusao/tldts",
+    "publisher": "Rémi Berson",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\tldts-core",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\tldts-core\\LICENSE"
+  },
+  "tldts@7.0.19": {
+    "licenses": "MIT",
+    "repository": "https://github.com/remusao/tldts",
+    "publisher": "Rémi Berson",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\tldts",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\tldts\\LICENSE"
+  },
+  "tough-cookie@6.0.0": {
+    "licenses": "BSD-3-Clause",
+    "repository": "https://github.com/salesforce/tough-cookie",
+    "publisher": "Jeremy Stashewsky",
+    "email": "jstash@gmail.com",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\tough-cookie",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\tough-cookie\\LICENSE"
+  },
+  "tr46@6.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/jsdom/tr46",
+    "publisher": "Sebastian Mayr",
+    "email": "npm@smayr.name",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\tr46",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\tr46\\LICENSE.md"
+  },
+  "typescript@5.9.3": {
+    "licenses": "Apache-2.0",
+    "repository": "https://github.com/microsoft/TypeScript",
+    "publisher": "Microsoft Corp.",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\typescript",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\typescript\\LICENSE.txt"
+  },
+  "undici-types@7.16.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/nodejs/undici",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\undici-types",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\undici-types\\LICENSE"
+  },
+  "vite@6.4.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/vitejs/vite",
+    "publisher": "Evan You",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\vite",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\vite\\LICENSE.md"
+  },
+  "vitest@4.0.16": {
+    "licenses": "MIT",
+    "repository": "https://github.com/vitest-dev/vitest",
+    "publisher": "Anthony Fu",
+    "email": "anthonyfu117@hotmail.com",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\vitest",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\vitest\\LICENSE.md"
+  },
+  "w3c-xmlserializer@5.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/jsdom/w3c-xmlserializer",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\w3c-xmlserializer",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\w3c-xmlserializer\\LICENSE.md"
+  },
+  "webidl-conversions@8.0.1": {
+    "licenses": "BSD-2-Clause",
+    "repository": "https://github.com/jsdom/webidl-conversions",
+    "publisher": "Domenic Denicola",
+    "email": "d@domenic.me",
+    "url": "https://domenic.me/",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\webidl-conversions",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\webidl-conversions\\LICENSE.md"
+  },
+  "whatwg-mimetype@4.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/jsdom/whatwg-mimetype",
+    "publisher": "Domenic Denicola",
+    "email": "d@domenic.me",
+    "url": "https://domenic.me/",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\whatwg-mimetype",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\whatwg-mimetype\\LICENSE.txt"
+  },
+  "whatwg-url@15.1.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/jsdom/whatwg-url",
+    "publisher": "Sebastian Mayr",
+    "email": "github@smayr.name",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\whatwg-url",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\whatwg-url\\LICENSE.txt"
+  },
+  "which-module@2.0.1": {
+    "licenses": "ISC",
+    "repository": "https://github.com/nexdrew/which-module",
+    "publisher": "nexdrew",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\which-module",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\which-module\\LICENSE"
+  },
+  "why-is-node-running@2.3.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/mafintosh/why-is-node-running",
+    "publisher": "Mathias Buus",
+    "url": "@mafintosh",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\why-is-node-running",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\why-is-node-running\\LICENSE"
+  },
+  "wrap-ansi@6.2.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/chalk/wrap-ansi",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\wrap-ansi",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\wrap-ansi\\license"
+  },
+  "ws@8.18.3": {
+    "licenses": "MIT",
+    "repository": "https://github.com/websockets/ws",
+    "publisher": "Einar Otto Stangvik",
+    "email": "einaros@gmail.com",
+    "url": "http://2x.io",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\ws",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\ws\\LICENSE"
+  },
+  "xml-name-validator@5.0.0": {
+    "licenses": "Apache-2.0",
+    "repository": "https://github.com/jsdom/xml-name-validator",
+    "publisher": "Domenic Denicola",
+    "email": "d@domenic.me",
+    "url": "https://domenic.me/",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\xml-name-validator",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\xml-name-validator\\LICENSE.txt"
+  },
+  "xmlchars@2.2.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/lddubeau/xmlchars",
+    "publisher": "Louis-Dominique Dubeau",
+    "email": "ldd@lddubeau.com",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\xmlchars",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\xmlchars\\LICENSE"
+  },
+  "y18n@4.0.3": {
+    "licenses": "ISC",
+    "repository": "https://github.com/yargs/y18n",
+    "publisher": "Ben Coe",
+    "email": "ben@npmjs.com",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\y18n",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\y18n\\LICENSE"
+  },
+  "yargs-parser@18.1.3": {
+    "licenses": "ISC",
+    "repository": "https://github.com/yargs/yargs-parser",
+    "publisher": "Ben Coe",
+    "email": "ben@npmjs.com",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\yargs-parser",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\yargs-parser\\LICENSE.txt"
+  },
+  "yargs@15.4.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/yargs/yargs",
+    "path": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\yargs",
+    "licenseFile": "D:\\Just or fun\\LibraFoto\\LibraFoto\\apps\\display\\node_modules\\yargs\\LICENSE"
+  }
+}

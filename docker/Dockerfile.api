@@ -1,0 +1,72 @@
+# syntax=docker/dockerfile:1.4
+
+# Build stage
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:10.0-preview AS build
+ARG BUILD_CONFIGURATION=Release
+ARG TARGETARCH
+ARG VERSION=dev
+WORKDIR /src
+
+# Map Docker TARGETARCH to .NET RID architecture
+# Docker uses: amd64, arm64
+# .NET uses: x64, arm64
+RUN case ${TARGETARCH} in \
+      "amd64")  echo "x64" > /tmp/dotnet_arch  ;; \
+      "arm64")  echo "arm64" > /tmp/dotnet_arch  ;; \
+      *)        echo "Unsupported architecture: ${TARGETARCH}"; exit 1 ;; \
+    esac
+
+# Copy project files
+COPY ["apps/api/LibraFoto.Api/LibraFoto.Api.csproj", "apps/api/LibraFoto.Api/"]
+COPY ["apps/api/LibraFoto.ServiceDefaults/LibraFoto.ServiceDefaults.csproj", "apps/api/LibraFoto.ServiceDefaults/"]
+COPY ["apps/api/LibraFoto.Modules.Display/LibraFoto.Modules.Display.csproj", "apps/api/LibraFoto.Modules.Display/"]
+COPY ["apps/api/LibraFoto.Modules.Admin/LibraFoto.Modules.Admin.csproj", "apps/api/LibraFoto.Modules.Admin/"]
+COPY ["apps/api/LibraFoto.Modules.Storage/LibraFoto.Modules.Storage.csproj", "apps/api/LibraFoto.Modules.Storage/"]
+COPY ["apps/api/LibraFoto.Modules.Media/LibraFoto.Modules.Media.csproj", "apps/api/LibraFoto.Modules.Media/"]
+COPY ["apps/api/LibraFoto.Modules.Auth/LibraFoto.Modules.Auth.csproj", "apps/api/LibraFoto.Modules.Auth/"]
+COPY ["apps/api/LibraFoto.Data/LibraFoto.Data.csproj", "apps/api/LibraFoto.Data/"]
+COPY ["apps/api/LibraFoto.Shared/LibraFoto.Shared.csproj", "apps/api/LibraFoto.Shared/"]
+
+# Restore with force to avoid cache corruption issues
+RUN dotnet restore "apps/api/LibraFoto.Api/LibraFoto.Api.csproj" \
+    -a $(cat /tmp/dotnet_arch) \
+    --force \
+    --no-cache
+
+# Copy source
+COPY . .
+
+WORKDIR "/src/apps/api/LibraFoto.Api"
+RUN dotnet build "LibraFoto.Api.csproj" -c $BUILD_CONFIGURATION -o /app/build
+
+# Publish stage
+FROM build AS publish
+ARG BUILD_CONFIGURATION=Release
+RUN dotnet publish "LibraFoto.Api.csproj" \
+    -c $BUILD_CONFIGURATION \
+    -o /app/publish \
+    --self-contained \
+    -a $(cat /tmp/dotnet_arch) \
+    /p:PublishSingleFile=false
+
+# Runtime stage - using standard runtime-deps for compatibility
+FROM mcr.microsoft.com/dotnet/runtime-deps:10.0-preview AS final
+ARG VERSION=dev
+WORKDIR /app
+EXPOSE 8080
+
+# Add version labels
+LABEL version="${VERSION}" \
+      name="LibraFoto API" \
+      description="LibraFoto photo management API"
+
+ENV LIBRAFOTO_VERSION=${VERSION}
+
+# Install curl for health checks
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
+# Create data directory with proper permissions
+RUN mkdir -p /data && chmod 777 /data
+
+COPY --from=publish /app/publish .
+ENTRYPOINT ["./LibraFoto.Api"]

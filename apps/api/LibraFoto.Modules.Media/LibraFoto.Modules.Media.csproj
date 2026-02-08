@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.*" />
+    <PackageReference Include="MetadataExtractor" Version="2.*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\LibraFoto.Data\LibraFoto.Data.csproj" />
+    <ProjectReference Include="..\LibraFoto.Shared\LibraFoto.Shared.csproj" />
+    <ProjectReference Include="..\LibraFoto.Modules.Storage\LibraFoto.Modules.Storage.csproj" />
+  </ItemGroup>
+
+</Project>
