@@ -8,7 +8,7 @@ on:
     branches:
       - main
     tags:
-      - 'v*.*.*'
+      - "v*.*.*"
 
 permissions:
   contents: write
@@ -212,7 +212,7 @@ jobs:
         run: |
           VERSION="${{ needs.validate.outputs.version }}"
           TAG_NAME="v${VERSION}"
-          
+
           # Check if tag already exists
           if git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
             echo "Tag $TAG_NAME already exists, skipping creation"
@@ -284,6 +284,7 @@ jobs:
             PREV_TAG=$(git tag -l --sort=-v:refname | grep -v -E '-(alpha|beta|rc)\.' | grep -v "^v${VERSION}$" | head -n 1 || echo "")
           fi
 
+          # Initialize changelog with header
           cat > CHANGELOG.md << 'HEADER'
           ## What's Changed
 
@@ -292,12 +293,99 @@ jobs:
           if [[ -n "$PREV_TAG" ]]; then
             echo "Changes since $PREV_TAG:" >> CHANGELOG.md
             echo "" >> CHANGELOG.md
-            # For stable releases from main, compare against the previous tag
+            
+            # Get all commits since previous tag
             if [[ "$IS_PRERELEASE" == "false" ]]; then
-              git log --pretty=format:"- %s (%h)" ${PREV_TAG}..HEAD >> CHANGELOG.md
+              COMMITS=$(git log --pretty=format:"%s|||%h" ${PREV_TAG}..HEAD)
             else
-              # For prereleases (tagged), use the tag in comparison
-              git log --pretty=format:"- %s (%h)" ${PREV_TAG}..HEAD >> CHANGELOG.md
+              COMMITS=$(git log --pretty=format:"%s|||%h" ${PREV_TAG}..HEAD)
+            fi
+            
+            # Parse commits and categorize by conventional commit type
+            declare -A categories
+            
+            # Process each commit
+            while IFS='|||' read -r subject hash; do
+              # Extract type and description from conventional commit format
+              if [[ "$subject" =~ ^([a-z]+)(\([a-z0-9-]+\))?!?:[[:space:]](.+)$ ]]; then
+                type="${BASH_REMATCH[1]}"
+                scope="${BASH_REMATCH[2]}"
+                desc="${BASH_REMATCH[3]}"
+                
+                # Check for breaking change indicator
+                if [[ "$subject" =~ ! ]] || [[ "$subject" =~ BREAKING[[:space:]]CHANGE ]]; then
+                  category="breaking"
+                  item="- ${desc} ${scope} (\`${hash}\`)"
+                else
+                  # Map type to category
+                  case "$type" in
+                    feat)
+                      category="features"
+                      item="- ${desc} ${scope} (\`${hash}\`)"
+                      ;;
+                    fix)
+                      category="fixes"
+                      item="- ${desc} ${scope} (\`${hash}\`)"
+                      ;;
+                    perf)
+                      category="performance"
+                      item="- ${desc} ${scope} (\`${hash}\`)"
+                      ;;
+                    docs)
+                      category="documentation"
+                      item="- ${desc} ${scope} (\`${hash}\`)"
+                      ;;
+                    *)
+                      category="other"
+                      item="- ${subject} (\`${hash}\`)"
+                      ;;
+                  esac
+                fi
+              else
+                # Non-conventional commit
+                category="other"
+                item="- ${subject} (\`${hash}\`)"
+              fi
+              
+              # Append to category
+              categories[$category]+="${item}"$'\n'
+            done <<< "$COMMITS"
+            
+            # Output categories in order
+            if [[ -n "${categories[breaking]}" ]]; then
+              echo "### ⚠️ Breaking Changes" >> CHANGELOG.md
+              echo "" >> CHANGELOG.md
+              echo "${categories[breaking]}" >> CHANGELOG.md
+            fi
+            
+            if [[ -n "${categories[features]}" ]]; then
+              echo "### ✨ Features" >> CHANGELOG.md
+              echo "" >> CHANGELOG.md
+              echo "${categories[features]}" >> CHANGELOG.md
+            fi
+            
+            if [[ -n "${categories[fixes]}" ]]; then
+              echo "### 🐛 Bug Fixes" >> CHANGELOG.md
+              echo "" >> CHANGELOG.md
+              echo "${categories[fixes]}" >> CHANGELOG.md
+            fi
+            
+            if [[ -n "${categories[performance]}" ]]; then
+              echo "### ⚡ Performance" >> CHANGELOG.md
+              echo "" >> CHANGELOG.md
+              echo "${categories[performance]}" >> CHANGELOG.md
+            fi
+            
+            if [[ -n "${categories[documentation]}" ]]; then
+              echo "### 📚 Documentation" >> CHANGELOG.md
+              echo "" >> CHANGELOG.md
+              echo "${categories[documentation]}" >> CHANGELOG.md
+            fi
+            
+            if [[ -n "${categories[other]}" ]]; then
+              echo "### 🔧 Other Changes" >> CHANGELOG.md
+              echo "" >> CHANGELOG.md
+              echo "${categories[other]}" >> CHANGELOG.md
             fi
           else
             echo "Initial release" >> CHANGELOG.md
@@ -309,14 +397,24 @@ jobs:
 
           ### Quick Install (Raspberry Pi)
 
-          1. Download the zip for your platform:
-             - **arm64** (Raspberry Pi 3/4/5): \`librafoto-v${VERSION}-arm64.zip\`
-             - **amd64** (x86_64 servers): \`librafoto-v${VERSION}-amd64.zip\`
+          1. Download the release package:
+          \`\`\`bash
+          # For Raspberry Pi (arm64)
+          wget https://github.com/${{ github.repository }}/releases/download/v${VERSION}/librafoto-v${VERSION}-arm64.zip
 
-          2. Extract and install:
+          # For x86_64 servers (amd64)
+          wget https://github.com/${{ github.repository }}/releases/download/v${VERSION}/librafoto-v${VERSION}-amd64.zip
+          \`\`\`
+
+          2. Extract and prepare:
           \`\`\`bash
           unzip librafoto-v${VERSION}-arm64.zip -d librafoto
           cd librafoto
+          chmod +x install.sh update.sh uninstall.sh
+          \`\`\`
+
+          3. Install:
+          \`\`\`bash
           sudo ./install.sh
           \`\`\`
 

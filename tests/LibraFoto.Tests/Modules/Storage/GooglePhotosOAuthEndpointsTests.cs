@@ -12,60 +12,61 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using TUnit.Core;
 
-namespace LibraFoto.Tests.Modules.Storage;
-
-public class GooglePhotosOAuthEndpointsTests
+namespace LibraFoto.Tests.Modules.Storage
 {
-    [Test]
-    public async Task GetAuthorizationUrl_IncludesPickerScope()
+    public class GooglePhotosOAuthEndpointsTests
     {
-        var options = new DbContextOptionsBuilder<LibraFotoDbContext>()
-            .UseInMemoryDatabase($"TestDb_{Guid.NewGuid()}")
-            .Options;
-
-        await using var dbContext = new LibraFotoDbContext(options);
-        await dbContext.Database.EnsureCreatedAsync();
-
-        var provider = new StorageProvider
+        [Test]
+        public async Task GetAuthorizationUrl_IncludesPickerScope()
         {
-            Id = 1,
-            Type = StorageProviderType.GooglePhotos,
-            Name = "Test Google Photos",
-            IsEnabled = false,
-            Configuration = null
-        };
+            var options = new DbContextOptionsBuilder<LibraFotoDbContext>()
+                .UseInMemoryDatabase($"TestDb_{Guid.NewGuid()}")
+                .Options;
 
-        dbContext.StorageProviders.Add(provider);
-        await dbContext.SaveChangesAsync();
+            await using var dbContext = new LibraFotoDbContext(options);
+            await dbContext.Database.EnsureCreatedAsync();
 
-        var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>
+            var provider = new StorageProvider
             {
-                ["GooglePhotos:ClientId"] = "test-client-id",
-                ["GooglePhotos:ClientSecret"] = "test-client-secret",
-                ["GooglePhotos:RedirectUri"] = "http://localhost:4200/oauth/callback"
-            })
-            .Build();
+                Id = 1,
+                Type = StorageProviderType.GooglePhotos,
+                Name = "Test Google Photos",
+                IsEnabled = false,
+                Configuration = null
+            };
 
-        var method = typeof(GooglePhotosOAuthEndpoints)
-            .GetMethod("GetAuthorizationUrl", BindingFlags.NonPublic | BindingFlags.Static);
+            dbContext.StorageProviders.Add(provider);
+            await dbContext.SaveChangesAsync();
 
-        await Assert.That(method).IsNotNull();
+            var configuration = new ConfigurationBuilder()
+                .AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["GooglePhotos:ClientId"] = "test-client-id",
+                    ["GooglePhotos:ClientSecret"] = "test-client-secret",
+                    ["GooglePhotos:RedirectUri"] = "http://localhost:4200/oauth/callback"
+                })
+                .Build();
 
-        var task = (Task<Results<Ok<GooglePhotosAuthUrlResponse>, NotFound<ApiError>>>)method!
-            .Invoke(null, new object[] { provider.Id, dbContext, configuration, CancellationToken.None })!;
+            var method = typeof(GooglePhotosOAuthEndpoints)
+                .GetMethod("GetAuthorizationUrl", BindingFlags.NonPublic | BindingFlags.Static);
 
-        var result = await task;
-        var ok = result.Result as Ok<GooglePhotosAuthUrlResponse>;
+            await Assert.That(method).IsNotNull();
 
-        await Assert.That(ok).IsNotNull();
-        await Assert.That(ok!.Value).IsNotNull();
+            var task = (Task<Results<Ok<GooglePhotosAuthUrlResponse>, NotFound<ApiError>>>)method!
+                .Invoke(null, new object[] { provider.Id, dbContext, configuration, CancellationToken.None })!;
 
-        var authUrl = ok.Value!.AuthorizationUrl;
-        var query = QueryHelpers.ParseQuery(new Uri(authUrl).Query);
-        var scopeValue = query["scope"].ToString();
-        var scopes = scopeValue.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            var result = await task;
+            var ok = result.Result as Ok<GooglePhotosAuthUrlResponse>;
 
-        await Assert.That(scopes).Contains("https://www.googleapis.com/auth/photospicker.mediaitems.readonly");
+            await Assert.That(ok).IsNotNull();
+            await Assert.That(ok!.Value).IsNotNull();
+
+            var authUrl = ok.Value!.AuthorizationUrl;
+            var query = QueryHelpers.ParseQuery(new Uri(authUrl).Query);
+            var scopeValue = query["scope"].ToString();
+            var scopes = scopeValue.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+            await Assert.That(scopes).Contains("https://www.googleapis.com/auth/photospicker.mediaitems.readonly");
+        }
     }
 }

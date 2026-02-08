@@ -4,6 +4,7 @@ Thank you for your interest in contributing to LibraFoto! This guide covers the 
 
 ## Table of Contents
 
+- [Contributor License Agreement (CLA)](#contributor-license-agreement-cla)
 - [Development Setup](#development-setup)
 - [Version Management](#version-management)
 - [Branch Strategy](#branch-strategy)
@@ -11,6 +12,34 @@ Thank you for your interest in contributing to LibraFoto! This guide covers the 
 - [Coding Standards](#coding-standards)
 - [Pull Request Process](#pull-request-process)
 - [Release Process](#release-process)
+
+---
+
+## Contributor License Agreement (CLA)
+
+**By submitting a contribution to LibraFoto, you automatically agree to the [Contributor License Agreement](CLA.md).**
+
+### Why a CLA?
+
+The CLA grants LibraFoto the rights to:
+- Use your contributions in the open-source project
+- Offer dual-licensing options (open-source and commercial)
+- Protect you and the project legally
+
+**You retain full rights to use your contributions for any other purpose.**
+
+### What This Means
+
+No formal signing process is required. Simply by opening a pull request, you agree that:
+- Your contributions are licensed to LibraFoto under these terms
+- LibraFoto can use your contributions in both open-source and commercial versions
+- You have the right to make these contributions
+
+Read the full agreement: [CLA.md](CLA.md)
+
+### Questions?
+
+Open an issue if you have questions about the CLA.
 
 ---
 
@@ -156,7 +185,7 @@ cd apps/display && npm run test:coverage
 
 ### Backend (.NET)
 
-- **Formatting**: Enforced via `dotnet format` (EditorConfig)
+- **Formatting**: Enforced via `dotnet format` in CI
 - **DTOs**: Use records (see `LibraFoto.Shared/DTOs/`)
 - **Async**: Include `CancellationToken` in async methods
 - **Endpoints**: Use `TypedResults` for OpenAPI documentation
@@ -166,7 +195,7 @@ cd apps/display && npm run test:coverage
 
 - **Admin**: Angular 21 with standalone components, signals, Material
 - **Display**: Vanilla TypeScript with class-based architecture
-- **Testing**: Vitest with jsdom environment
+- **Testing**: Admin uses Angular test runner (Vitest + jsdom), Display uses Vitest
 
 ### Module Structure
 
@@ -182,6 +211,72 @@ LibraFoto.Modules.{Name}/
 
 ---
 
+## Commit Message Convention
+
+LibraFoto follows [Conventional Commits](https://conventionalcommits.org) for clear, structured commit messages that enable automated changelog generation and semantic versioning.
+
+### Format
+
+```
+<type>(<scope>): <description>
+
+[optional body]
+
+[optional footer]
+```
+
+**Examples:**
+```
+feat(media): add HEIC thumbnail support
+fix(auth): correct JWT expiration validation
+docs: update installation guide
+chore(deps): update Angular to v21.1
+```
+
+### Commit Types
+
+| Type | Version Impact | Usage |
+| --- | --- | --- |
+| `feat` | Minor (0.X.0) | New feature or functionality |
+| `fix` | Patch (0.0.X) | Bug fix |
+| `docs` | None | Documentation changes only |
+| `style` | None | Code style/formatting (no logic change) |
+| `refactor` | None | Code restructuring (no behavior change) |
+| `perf` | Patch | Performance improvement |
+| `test` | None | Test additions/updates |
+| `chore` | None | Maintenance (dependencies, cleanup) |
+| `build` | None | Build system or dependency changes |
+| `ci` | None | CI/CD configuration changes |
+
+### Scopes (Optional but Recommended)
+
+Identify the affected module or area:
+
+**Modules:** `admin`, `auth`, `display`, `media`, `storage`  
+**Components:** `api`, `data`, `admin-ui`, `display-ui`  
+**Infrastructure:** `docker`, `ci`, `scripts`, `docs`, `test`, `deps`
+
+### Breaking Changes
+
+For breaking API changes, add `!` before the colon or include `BREAKING CHANGE:` in the footer:
+
+```
+feat(api)!: remove deprecated /api/v1/photos endpoint
+
+BREAKING CHANGE: The /api/v1/photos endpoint has been removed.
+Use /api/admin/photos instead. See migration guide in docs/migration/
+```
+
+### PR Title Requirement
+
+Since LibraFoto uses **squash merging**, your **PR title becomes the commit message** in the main branch. Individual development commits can be informal, but **PR titles must follow Conventional Commits format**.
+
+**Automated Validation:** The `validate-pr.yml` GitHub Action checks PR titles and will fail if they don't match the conventional format.
+
+**Detailed Guide:** See [docs/conventions/conventional-commits.md](docs/conventions/conventional-commits.md) for comprehensive examples and best practices.
+
+---
+
 ## Pull Request Process
 
 ### Before Submitting
@@ -194,12 +289,13 @@ LibraFoto.Modules.{Name}/
 
 ### PR Checklist
 
+- [ ] **PR title follows Conventional Commits format** (e.g., `feat(media): add feature`)
 - [ ] Version set to prerelease (e.g., `1.3.0-alpha.1`)
 - [ ] Code formatted (`dotnet format`)
 - [ ] All tests passing
 - [ ] Coverage meets 80% threshold
-- [ ] Descriptive PR title and description
 - [ ] Documentation updated (if applicable)
+- [ ] CHANGELOG.md updated under `[Unreleased]` section
 
 ### Review Process
 
@@ -272,7 +368,7 @@ git push origin v1.3.0-alpha.1
 ## Getting Help
 
 - **Technical Guide**: [.github/copilot-instructions.md](.github/copilot-instructions.md)
-- **Architecture**: [docs/development/aspire-and-docker.md](docs/development/aspire-and-docker.md)
+- **API Documentation**: [docs/api/README.md](docs/api/README.md)
 - **Issues**: [GitHub Issues](https://github.com/librafoto/librafoto/issues)
 
 ---

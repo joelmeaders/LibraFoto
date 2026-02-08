@@ -1,5 +1,7 @@
 # LibraFoto
 
+[![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white)](https://conventionalcommits.org)
+
 A self-hosted digital picture frame application for Raspberry Pi and similar devices. Transform any display into a beautiful slideshow showcasing your memories from local storage or cloud services (Google Photos/Drive, OneDrive).
 
 ## Key Features
@@ -15,9 +17,33 @@ A self-hosted digital picture frame application for Raspberry Pi and similar dev
 
 ## Installation
 
+LibraFoto offers two installation methods:
+
+- **Release Zip** (recommended): Pre-built Docker images, no compilation needed, faster deployment
+- **Clone & Build**: Build from source if you want the latest development code or need to customize
+
 ### Raspberry Pi (Recommended)
 
-One-command installation with optional kiosk mode:
+**Option 1: Release Zip (Recommended)**
+
+Download pre-built release for fastest deployment:
+
+```bash
+# Download the latest release from:
+# https://github.com/librafoto/librafoto/releases
+# Choose: librafoto-vX.X.X-arm64.zip (Raspberry Pi 4/5)
+
+unzip librafoto-v*-arm64.zip
+cd librafoto
+chmod +x install.sh
+sudo bash install.sh
+```
+
+Includes pre-built Docker images — no compilation or build tools required.
+
+**Option 2: Clone & Build**
+
+For latest development code or customization:
 
 ```bash
 git clone https://github.com/librafoto/librafoto
@@ -25,6 +51,10 @@ cd librafoto
 chmod +x install.sh
 sudo bash install.sh
 ```
+
+Requires Docker and build tools. Images will be compiled locally.
+
+---
 
 The installer will ask if you want to enable **kiosk mode** (fullscreen slideshow on boot). You can also configure kiosk mode later:
 
@@ -37,6 +67,21 @@ sudo bash scripts/kiosk-setup.sh --uninstall  # Disable kiosk mode
 > **Note**: Always use `bash` or `./script.sh` to run scripts. Using `sh` will fail on Debian-based systems due to bash-specific syntax.
 
 ### Docker (Any Platform)
+
+**Option 1: Release Zip (No Build Required)**
+
+```bash
+# Download release from: https://github.com/librafoto/librafoto/releases
+# Choose architecture:
+#   - librafoto-vX.X.X-amd64.zip (Intel/AMD processors)
+#   - librafoto-vX.X.X-arm64.zip (ARM processors)
+
+unzip librafoto-v*-{amd64|arm64}.zip
+cd librafoto/docker
+docker compose -f docker-compose.release.yml up -d
+```
+
+**Option 2: Clone & Build From Source**
 
 ```bash
 git clone https://github.com/librafoto/librafoto
@@ -65,18 +110,18 @@ The update script automatically backs up your data, pulls changes, rebuilds cont
 Remove LibraFoto while preserving your photos and database:
 
 ```bash
+chmod +x uninstall.sh
 sudo bash uninstall.sh          # Interactive uninstall
-sudo bash uninstall.sh --dry-run  # Preview what will be removed
-sudo bash uninstall.sh --help   # View all options
+sudo bash uninstall.sh --help   # View help
 ```
 
-Options:
+The uninstall script is fully interactive and will guide you through the process, asking whether to:
 
-- `--force` - Skip confirmation prompts
-- `--purge` - Remove everything including photos, database, and backups
-- `--keep-docker` - Only remove containers, preserve Docker images
+- Remove Docker images (free up ~500MB disk space)
+- Remove Docker volumes (deletes database, not photo files)
+- Remove data directories (permanently deletes photos and backups)
 
-By default, your data directory is preserved. To completely remove LibraFoto after uninstalling:
+By default, all data is preserved. To completely remove LibraFoto after uninstalling:
 
 ```bash
 rm -rf ~/LibraFoto  # Adjust path as needed
@@ -123,6 +168,7 @@ cd apps/display && npm test  # Display frontend tests
 ### Documentation
 
 - [Contributing Guide](CONTRIBUTING.md) - Workflow, standards, and release process
+- [Conventional Commits Guide](docs/conventions/conventional-commits.md) - Commit message format and guidelines
 - [Aspire & Docker Guide](docs/development/aspire-and-docker.md) - Development workflows
 - [Copilot Instructions](.github/copilot-instructions.md) - Complete technical guide for contributors
 

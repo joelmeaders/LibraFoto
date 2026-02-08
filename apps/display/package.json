@@ -1,8 +1,9 @@
 {
   "name": "librafoto-display",
   "private": true,
-  "version": "1.0.0",
+  "version": "0.0.0-dev",
   "description": "LibraFoto Display Frontend - Fullscreen slideshow interface",
+  "license": "GPL-3.0-or-later",
   "type": "module",
   "scripts": {
     "dev": "vite",

@@ -12,8 +12,6 @@
 # Usage:
 #   sudo ./uninstall.sh           # Interactive uninstall
 #   sudo ./uninstall.sh --help    # Show help
-#   sudo ./uninstall.sh --force   # Uninstall without confirmation
-#   sudo ./uninstall.sh --purge   # Remove everything including data
 #
 # Version: 1.0.0
 # Repository: https://github.com/librafoto/librafoto

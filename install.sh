@@ -9,9 +9,8 @@
 # - Container deployment
 #
 # Usage:
-#   sudo ./install.sh           # Full installation
+#   sudo ./install.sh           # Interactive installation
 #   sudo ./install.sh --help    # Show help
-#   sudo ./install.sh --uninstall  # Remove LibraFoto
 #
 # Requirements:
 #   - Raspberry Pi 4 or later

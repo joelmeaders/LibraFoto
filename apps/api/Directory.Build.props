@@ -1,0 +1,13 @@
+<Project>
+  <PropertyGroup>
+    <TargetFrameworks>net10.0</TargetFrameworks>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    
+    <!-- Read version from .version file at repository root -->
+    <VersionFileContent>$([System.IO.File]::ReadAllText('$(MSBuildThisFileDirectory)../../.version').Trim())</VersionFileContent>
+    <Version>$(VersionFileContent)</Version>
+    
+    <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
+  </PropertyGroup>
+</Project>

@@ -1,8 +1,9 @@
 {
   "name": "librafoto-admin",
-  "version": "1.0.0",
+  "version": "0.0.0-dev",
   "private": true,
   "description": "LibraFoto Admin Frontend - Web-based administration interface",
+  "license": "GPL-3.0-or-later",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",

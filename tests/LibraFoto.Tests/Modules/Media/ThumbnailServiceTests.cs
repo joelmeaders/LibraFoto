@@ -4,224 +4,225 @@ using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.PixelFormats;
 using TUnit.Core;
 
-namespace LibraFoto.Tests.Modules.Media;
-
-public class ThumbnailServiceTests
+namespace LibraFoto.Tests.Modules.Media
 {
-    private ThumbnailService _thumbnailService = null!;
-    private string _tempDir = null!;
-    private string _testImagePath = null!;
-
-    [Before(Test)]
-    public async Task Setup()
+    public class ThumbnailServiceTests
     {
-        // Create temp directory for thumbnails
-        _tempDir = Path.Combine(Path.GetTempPath(), $"LibraFotoThumbnailTest_{Guid.NewGuid()}");
-        Directory.CreateDirectory(_tempDir);
+        private ThumbnailService _thumbnailService = null!;
+        private string _tempDir = null!;
+        private string _testImagePath = null!;
 
-        _thumbnailService = new ThumbnailService(_tempDir);
-
-        // Create a simple test image
-        _testImagePath = Path.Combine(_tempDir, "test_source.jpg");
-        await CreateTestImageAsync(_testImagePath);
-    }
-
-    [After(Test)]
-    public async Task Cleanup()
-    {
-        if (Directory.Exists(_tempDir))
+        [Before(Test)]
+        public async Task Setup()
         {
-            Directory.Delete(_tempDir, true);
+            // Create temp directory for thumbnails
+            _tempDir = Path.Combine(Path.GetTempPath(), $"LibraFotoThumbnailTest_{Guid.NewGuid()}");
+            Directory.CreateDirectory(_tempDir);
+
+            _thumbnailService = new ThumbnailService(_tempDir);
+
+            // Create a simple test image
+            _testImagePath = Path.Combine(_tempDir, "test_source.jpg");
+            await CreateTestImageAsync(_testImagePath);
         }
 
-        await Task.CompletedTask;
-    }
+        [After(Test)]
+        public async Task Cleanup()
+        {
+            if (Directory.Exists(_tempDir))
+            {
+                Directory.Delete(_tempDir, true);
+            }
 
-    [Test]
-    public async Task GenerateThumbnailAsync_FromPath_CreatesThumbnail()
-    {
-        // Arrange
-        var photoId = 1L;
-        var dateTaken = new DateTime(2024, 6, 15);
+            await Task.CompletedTask;
+        }
 
-        // Act
-        var result = await _thumbnailService.GenerateThumbnailAsync(_testImagePath, photoId, dateTaken);
+        [Test]
+        public async Task GenerateThumbnailAsync_FromPath_CreatesThumbnail()
+        {
+            // Arrange
+            var photoId = 1L;
+            var dateTaken = new DateTime(2024, 6, 15);
 
-        // Assert
-        await Assert.That(result).IsNotNull();
-        await Assert.That(result.Width).IsGreaterThan(0);
-        await Assert.That(result.Height).IsGreaterThan(0);
-        await Assert.That(result.FileSize).IsGreaterThan(0);
-        await Assert.That(_thumbnailService.ThumbnailExists(photoId)).IsTrue();
-    }
+            // Act
+            var result = await _thumbnailService.GenerateThumbnailAsync(_testImagePath, photoId, dateTaken);
 
-    [Test]
-    public async Task GenerateThumbnailAsync_FromStream_CreatesThumbnail()
-    {
-        // Arrange
-        var photoId = 2L;
-        var dateTaken = new DateTime(2024, 7, 20);
-        await using var stream = File.OpenRead(_testImagePath);
+            // Assert
+            await Assert.That(result).IsNotNull();
+            await Assert.That(result.Width).IsGreaterThan(0);
+            await Assert.That(result.Height).IsGreaterThan(0);
+            await Assert.That(result.FileSize).IsGreaterThan(0);
+            await Assert.That(_thumbnailService.ThumbnailExists(photoId)).IsTrue();
+        }
 
-        // Act
-        var result = await _thumbnailService.GenerateThumbnailAsync(stream, photoId, dateTaken);
+        [Test]
+        public async Task GenerateThumbnailAsync_FromStream_CreatesThumbnail()
+        {
+            // Arrange
+            var photoId = 2L;
+            var dateTaken = new DateTime(2024, 7, 20);
+            await using var stream = File.OpenRead(_testImagePath);
 
-        // Assert
-        await Assert.That(result).IsNotNull();
-        await Assert.That(result.Width).IsGreaterThan(0);
-        await Assert.That(_thumbnailService.ThumbnailExists(photoId)).IsTrue();
-    }
+            // Act
+            var result = await _thumbnailService.GenerateThumbnailAsync(stream, photoId, dateTaken);
 
-    [Test]
-    public async Task ThumbnailExists_ReturnsFalse_WhenNotGenerated()
-    {
-        // Arrange
-        var photoId = 999L;
+            // Assert
+            await Assert.That(result).IsNotNull();
+            await Assert.That(result.Width).IsGreaterThan(0);
+            await Assert.That(_thumbnailService.ThumbnailExists(photoId)).IsTrue();
+        }
 
-        // Act
-        var exists = _thumbnailService.ThumbnailExists(photoId);
+        [Test]
+        public async Task ThumbnailExists_ReturnsFalse_WhenNotGenerated()
+        {
+            // Arrange
+            var photoId = 999L;
 
-        // Assert
-        await Assert.That(exists).IsFalse();
-    }
+            // Act
+            var exists = _thumbnailService.ThumbnailExists(photoId);
 
-    [Test]
-    public async Task OpenThumbnailStream_ReturnsStream_WhenThumbnailExists()
-    {
-        // Arrange
-        var photoId = 3L;
-        var dateTaken = new DateTime(2024, 8, 10);
-        await _thumbnailService.GenerateThumbnailAsync(_testImagePath, photoId, dateTaken);
+            // Assert
+            await Assert.That(exists).IsFalse();
+        }
 
-        // Act
-        using var stream = _thumbnailService.OpenThumbnailStream(photoId);
+        [Test]
+        public async Task OpenThumbnailStream_ReturnsStream_WhenThumbnailExists()
+        {
+            // Arrange
+            var photoId = 3L;
+            var dateTaken = new DateTime(2024, 8, 10);
+            await _thumbnailService.GenerateThumbnailAsync(_testImagePath, photoId, dateTaken);
 
-        // Assert
-        await Assert.That(stream).IsNotNull();
-        await Assert.That(stream!.Length).IsGreaterThan(0);
-    }
+            // Act
+            using var stream = _thumbnailService.OpenThumbnailStream(photoId);
 
-    [Test]
-    public async Task OpenThumbnailStream_ReturnsNull_WhenThumbnailDoesNotExist()
-    {
-        // Arrange
-        var photoId = 888L;
+            // Assert
+            await Assert.That(stream).IsNotNull();
+            await Assert.That(stream!.Length).IsGreaterThan(0);
+        }
 
-        // Act
-        var stream = _thumbnailService.OpenThumbnailStream(photoId);
+        [Test]
+        public async Task OpenThumbnailStream_ReturnsNull_WhenThumbnailDoesNotExist()
+        {
+            // Arrange
+            var photoId = 888L;
 
-        // Assert
-        await Assert.That(stream).IsNull();
-    }
+            // Act
+            var stream = _thumbnailService.OpenThumbnailStream(photoId);
 
-    [Test]
-    public async Task DeleteThumbnails_RemovesThumbnail()
-    {
-        // Arrange
-        var photoId = 4L;
-        var dateTaken = new DateTime(2024, 9, 5);
-        await _thumbnailService.GenerateThumbnailAsync(_testImagePath, photoId, dateTaken);
-        await Assert.That(_thumbnailService.ThumbnailExists(photoId)).IsTrue();
+            // Assert
+            await Assert.That(stream).IsNull();
+        }
 
-        // Act
-        var deleted = _thumbnailService.DeleteThumbnails(photoId);
+        [Test]
+        public async Task DeleteThumbnails_RemovesThumbnail()
+        {
+            // Arrange
+            var photoId = 4L;
+            var dateTaken = new DateTime(2024, 9, 5);
+            await _thumbnailService.GenerateThumbnailAsync(_testImagePath, photoId, dateTaken);
+            await Assert.That(_thumbnailService.ThumbnailExists(photoId)).IsTrue();
 
-        // Assert
-        await Assert.That(deleted).IsTrue();
-        await Assert.That(_thumbnailService.ThumbnailExists(photoId)).IsFalse();
-    }
+            // Act
+            var deleted = _thumbnailService.DeleteThumbnails(photoId);
 
-    [Test]
-    public async Task DeleteThumbnails_ReturnsFalse_WhenThumbnailDoesNotExist()
-    {
-        // Arrange
-        var photoId = 777L;
+            // Assert
+            await Assert.That(deleted).IsTrue();
+            await Assert.That(_thumbnailService.ThumbnailExists(photoId)).IsFalse();
+        }
 
-        // Act
-        var deleted = _thumbnailService.DeleteThumbnails(photoId);
+        [Test]
+        public async Task DeleteThumbnails_ReturnsFalse_WhenThumbnailDoesNotExist()
+        {
+            // Arrange
+            var photoId = 777L;
 
-        // Assert
-        await Assert.That(deleted).IsFalse();
-    }
+            // Act
+            var deleted = _thumbnailService.DeleteThumbnails(photoId);
 
-    [Test]
-    public async Task GenerateThumbnailAsync_OrganizesByYearMonth()
-    {
-        // Arrange
-        var photoId = 5L;
-        var dateTaken = new DateTime(2024, 12, 25);
+            // Assert
+            await Assert.That(deleted).IsFalse();
+        }
 
-        // Act
-        var result = await _thumbnailService.GenerateThumbnailAsync(_testImagePath, photoId, dateTaken);
+        [Test]
+        public async Task GenerateThumbnailAsync_OrganizesByYearMonth()
+        {
+            // Arrange
+            var photoId = 5L;
+            var dateTaken = new DateTime(2024, 12, 25);
 
-        // Assert
-        await Assert.That(result.AbsolutePath).IsNotNull();
-        await Assert.That(result.AbsolutePath!.Contains("2024")).IsTrue();
-        await Assert.That(result.AbsolutePath!.Contains("12")).IsTrue();
-    }
+            // Act
+            var result = await _thumbnailService.GenerateThumbnailAsync(_testImagePath, photoId, dateTaken);
 
-    [Test]
-    public async Task GenerateThumbnailAsync_CanRegenerateThumbnail()
-    {
-        // Arrange
-        var photoId = 6L;
-        var dateTaken = new DateTime(2024, 5, 1);
-        
-        // Generate initial thumbnail
-        var result1 = await _thumbnailService.GenerateThumbnailAsync(_testImagePath, photoId, dateTaken);
-        await Assert.That(_thumbnailService.ThumbnailExists(photoId)).IsTrue();
+            // Assert
+            await Assert.That(result.AbsolutePath).IsNotNull();
+            await Assert.That(result.AbsolutePath!.Contains("2024")).IsTrue();
+            await Assert.That(result.AbsolutePath!.Contains("12")).IsTrue();
+        }
 
-        // Delete it
-        _thumbnailService.DeleteThumbnails(photoId);
-        await Assert.That(_thumbnailService.ThumbnailExists(photoId)).IsFalse();
+        [Test]
+        public async Task GenerateThumbnailAsync_CanRegenerateThumbnail()
+        {
+            // Arrange
+            var photoId = 6L;
+            var dateTaken = new DateTime(2024, 5, 1);
 
-        // Act - regenerate
-        var result2 = await _thumbnailService.GenerateThumbnailAsync(_testImagePath, photoId, dateTaken);
+            // Generate initial thumbnail
+            var result1 = await _thumbnailService.GenerateThumbnailAsync(_testImagePath, photoId, dateTaken);
+            await Assert.That(_thumbnailService.ThumbnailExists(photoId)).IsTrue();
 
-        // Assert
-        await Assert.That(_thumbnailService.ThumbnailExists(photoId)).IsTrue();
-        await Assert.That(result2.Width).IsGreaterThan(0);
-    }
+            // Delete it
+            _thumbnailService.DeleteThumbnails(photoId);
+            await Assert.That(_thumbnailService.ThumbnailExists(photoId)).IsFalse();
 
-    [Test]
-    public async Task GetThumbnailPath_ReturnsPath_WhenThumbnailExists()
-    {
-        // Arrange
-        var photoId = 7L;
-        var dateTaken = new DateTime(2024, 3, 15);
-        await _thumbnailService.GenerateThumbnailAsync(_testImagePath, photoId, dateTaken);
+            // Act - regenerate
+            var result2 = await _thumbnailService.GenerateThumbnailAsync(_testImagePath, photoId, dateTaken);
 
-        // Act
-        var path = _thumbnailService.GetThumbnailPath(photoId);
+            // Assert
+            await Assert.That(_thumbnailService.ThumbnailExists(photoId)).IsTrue();
+            await Assert.That(result2.Width).IsGreaterThan(0);
+        }
 
-        // Assert
-        await Assert.That(path).IsNotNull();
-        await Assert.That(path).Contains($"{photoId}.jpg");
-    }
+        [Test]
+        public async Task GetThumbnailPath_ReturnsPath_WhenThumbnailExists()
+        {
+            // Arrange
+            var photoId = 7L;
+            var dateTaken = new DateTime(2024, 3, 15);
+            await _thumbnailService.GenerateThumbnailAsync(_testImagePath, photoId, dateTaken);
 
-    [Test]
-    public async Task GetThumbnailAbsolutePath_ReturnsAbsolutePath_WhenThumbnailExists()
-    {
-        // Arrange
-        var photoId = 8L;
-        var dateTaken = new DateTime(2024, 4, 20);
-        await _thumbnailService.GenerateThumbnailAsync(_testImagePath, photoId, dateTaken);
+            // Act
+            var path = _thumbnailService.GetThumbnailPath(photoId);
 
-        // Act
-        var absolutePath = _thumbnailService.GetThumbnailAbsolutePath(photoId);
+            // Assert
+            await Assert.That(path).IsNotNull();
+            await Assert.That(path).Contains($"{photoId}.jpg");
+        }
 
-        // Assert
-        await Assert.That(absolutePath).IsNotNull();
-        await Assert.That(Path.IsPathRooted(absolutePath!)).IsTrue();
-        await Assert.That(File.Exists(absolutePath!)).IsTrue();
-    }
+        [Test]
+        public async Task GetThumbnailAbsolutePath_ReturnsAbsolutePath_WhenThumbnailExists()
+        {
+            // Arrange
+            var photoId = 8L;
+            var dateTaken = new DateTime(2024, 4, 20);
+            await _thumbnailService.GenerateThumbnailAsync(_testImagePath, photoId, dateTaken);
 
-    /// <summary>
-    /// Creates a minimal valid JPEG image for testing.
-    /// </summary>
-    private static async Task CreateTestImageAsync(string path)
-    {
-        using var image = new Image<Rgba32>(100, 100, Color.Blue);
-        await image.SaveAsync(path, new JpegEncoder());
+            // Act
+            var absolutePath = _thumbnailService.GetThumbnailAbsolutePath(photoId);
+
+            // Assert
+            await Assert.That(absolutePath).IsNotNull();
+            await Assert.That(Path.IsPathRooted(absolutePath!)).IsTrue();
+            await Assert.That(File.Exists(absolutePath!)).IsTrue();
+        }
+
+        /// <summary>
+        /// Creates a minimal valid JPEG image for testing.
+        /// </summary>
+        private static async Task CreateTestImageAsync(string path)
+        {
+            using var image = new Image<Rgba32>(100, 100, Color.Blue);
+            await image.SaveAsync(path, new JpegEncoder());
+        }
     }
 }

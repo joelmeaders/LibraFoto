@@ -1,22 +1,23 @@
-namespace LibraFoto.Data.Enums;
-
-/// <summary>
-/// Types of transitions between slides in the display.
-/// </summary>
-public enum TransitionType
+namespace LibraFoto.Data.Enums
 {
     /// <summary>
-    /// Fade transition (crossfade between images).
+    /// Types of transitions between slides in the display.
     /// </summary>
-    Fade = 0,
+    public enum TransitionType
+    {
+        /// <summary>
+        /// Fade transition (crossfade between images).
+        /// </summary>
+        Fade = 0,
 
-    /// <summary>
-    /// Slide transition (slides in from side).
-    /// </summary>
-    Slide = 1,
+        /// <summary>
+        /// Slide transition (slides in from side).
+        /// </summary>
+        Slide = 1,
 
-    /// <summary>
-    /// Ken Burns effect (slow pan and zoom while displaying).
-    /// </summary>
-    KenBurns = 2
+        /// <summary>
+        /// Ken Burns effect (slow pan and zoom while displaying).
+        /// </summary>
+        KenBurns = 2
+    }
 }

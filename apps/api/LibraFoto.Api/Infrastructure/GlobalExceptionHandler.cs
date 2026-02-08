@@ -1,39 +1,40 @@
 using LibraFoto.Shared.DTOs;
 using Microsoft.AspNetCore.Diagnostics;
 
-namespace LibraFoto.Api.Infrastructure;
-
-public class GlobalExceptionHandler : IExceptionHandler
+namespace LibraFoto.Api.Infrastructure
 {
-    private readonly ILogger<GlobalExceptionHandler> _logger;
-
-    public GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger)
+    public class GlobalExceptionHandler : IExceptionHandler
     {
-        _logger = logger;
-    }
+        private readonly ILogger<GlobalExceptionHandler> _logger;
 
-    public async ValueTask<bool> TryHandleAsync(
-        HttpContext httpContext,
-        Exception exception,
-        CancellationToken cancellationToken)
-    {
-        if (exception is OperationCanceledException)
+        public GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger)
         {
-            _logger.LogInformation("Request was canceled");
-            httpContext.Response.StatusCode = 499; // Client Closed Request
-            return true;
+            _logger = logger;
         }
 
-        _logger.LogError(exception, "An unhandled exception occurred");
+        public async ValueTask<bool> TryHandleAsync(
+            HttpContext httpContext,
+            Exception exception,
+            CancellationToken cancellationToken)
+        {
+            if (exception is OperationCanceledException)
+            {
+                _logger.LogInformation("Request was canceled");
+                httpContext.Response.StatusCode = 499; // Client Closed Request
+                return true;
+            }
 
-        httpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
+            _logger.LogError(exception, "An unhandled exception occurred");
 
-        var error = new ApiError("InternalServerError", "An unexpected error occurred.");
+            httpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
 
-        await httpContext.Response.WriteAsJsonAsync(
-            error,
-            cancellationToken: cancellationToken);
+            var error = new ApiError("InternalServerError", "An unexpected error occurred.");
 
-        return true;
+            await httpContext.Response.WriteAsJsonAsync(
+                error,
+                cancellationToken: cancellationToken);
+
+            return true;
+        }
     }
 }

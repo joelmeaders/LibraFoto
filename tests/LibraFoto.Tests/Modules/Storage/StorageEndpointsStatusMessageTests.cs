@@ -12,59 +12,60 @@ using Microsoft.EntityFrameworkCore;
 using NSubstitute;
 using TUnit.Core;
 
-namespace LibraFoto.Tests.Modules.Storage;
-
-public class StorageEndpointsStatusMessageTests
+namespace LibraFoto.Tests.Modules.Storage
 {
-    [Test]
-    public async Task GetProvider_ReturnsScopeWarning_WhenGrantedScopesMissing()
+    public class StorageEndpointsStatusMessageTests
     {
-        var options = new DbContextOptionsBuilder<LibraFotoDbContext>()
-            .UseInMemoryDatabase($"TestDb_{Guid.NewGuid()}")
-            .Options;
-
-        await using var dbContext = new LibraFotoDbContext(options);
-        await dbContext.Database.EnsureCreatedAsync();
-
-        var config = new GooglePhotosConfiguration
+        [Test]
+        public async Task GetProvider_ReturnsScopeWarning_WhenGrantedScopesMissing()
         {
-            ClientId = "client-id",
-            ClientSecret = "client-secret",
-            GrantedScopes = ["https://www.googleapis.com/auth/photoslibrary.readonly"]
-        };
+            var options = new DbContextOptionsBuilder<LibraFotoDbContext>()
+                .UseInMemoryDatabase($"TestDb_{Guid.NewGuid()}")
+                .Options;
 
-        var entity = new StorageProvider
-        {
-            Id = 7,
-            Type = StorageProviderType.GooglePhotos,
-            Name = "Google Photos",
-            IsEnabled = true,
-            Configuration = JsonSerializer.Serialize(config)
-        };
+            await using var dbContext = new LibraFotoDbContext(options);
+            await dbContext.Database.EnsureCreatedAsync();
 
-        dbContext.StorageProviders.Add(entity);
-        await dbContext.SaveChangesAsync();
+            var config = new GooglePhotosConfiguration
+            {
+                ClientId = "client-id",
+                ClientSecret = "client-secret",
+                GrantedScopes = ["https://www.googleapis.com/auth/photoslibrary.readonly"]
+            };
 
-        var provider = Substitute.For<IStorageProvider>();
-        provider.TestConnectionAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(false));
+            var entity = new StorageProvider
+            {
+                Id = 7,
+                Type = StorageProviderType.GooglePhotos,
+                Name = "Google Photos",
+                IsEnabled = true,
+                Configuration = JsonSerializer.Serialize(config)
+            };
 
-        var factory = Substitute.For<IStorageProviderFactory>();
-        factory.GetProviderAsync(entity.Id, Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<IStorageProvider?>(provider));
+            dbContext.StorageProviders.Add(entity);
+            await dbContext.SaveChangesAsync();
 
-        var method = typeof(StorageEndpoints)
-            .GetMethod("GetProvider", BindingFlags.NonPublic | BindingFlags.Static);
+            var provider = Substitute.For<IStorageProvider>();
+            provider.TestConnectionAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(false));
 
-        await Assert.That(method).IsNotNull();
+            var factory = Substitute.For<IStorageProviderFactory>();
+            factory.GetProviderAsync(entity.Id, Arg.Any<CancellationToken>())
+                .Returns(Task.FromResult<IStorageProvider?>(provider));
 
-        var task = (Task<Results<Ok<StorageProviderDto>, NotFound<ApiError>>>)method!
-            .Invoke(null, new object[] { entity.Id, dbContext, factory, CancellationToken.None })!;
+            var method = typeof(StorageEndpoints)
+                .GetMethod("GetProvider", BindingFlags.NonPublic | BindingFlags.Static);
 
-        var result = await task;
-        var ok = result.Result as Ok<StorageProviderDto>;
+            await Assert.That(method).IsNotNull();
 
-        await Assert.That(ok).IsNotNull();
-        await Assert.That(ok!.Value!.StatusMessage).IsNotNull();
-        await Assert.That(ok.Value!.StatusMessage!).Contains("photospicker.mediaitems.readonly");
+            var task = (Task<Results<Ok<StorageProviderDto>, NotFound<ApiError>>>)method!
+                .Invoke(null, new object[] { entity.Id, dbContext, factory, CancellationToken.None })!;
+
+            var result = await task;
+            var ok = result.Result as Ok<StorageProviderDto>;
+
+            await Assert.That(ok).IsNotNull();
+            await Assert.That(ok!.Value!.StatusMessage).IsNotNull();
+            await Assert.That(ok.Value!.StatusMessage!).Contains("photospicker.mediaitems.readonly");
+        }
     }
 }

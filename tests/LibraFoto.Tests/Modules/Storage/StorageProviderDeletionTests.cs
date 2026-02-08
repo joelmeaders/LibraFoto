@@ -8,159 +8,160 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 
-namespace LibraFoto.Tests.Modules.Storage;
-
-/// <summary>
-/// Tests for storage provider deletion functionality with OAuth disconnect.
-/// </summary>
-public class StorageProviderDeletionTests
+namespace LibraFoto.Tests.Modules.Storage
 {
-    private static async Task<(GooglePhotosProvider provider, LibraFotoDbContext dbContext)> CreateProviderAsync()
+    /// <summary>
+    /// Tests for storage provider deletion functionality with OAuth disconnect.
+    /// </summary>
+    public class StorageProviderDeletionTests
     {
-        var logger = NullLogger<GooglePhotosProvider>.Instance;
-        var httpClientFactory = Substitute.For<IHttpClientFactory>();
-        httpClientFactory.CreateClient(Arg.Any<string>()).Returns(new HttpClient());
-
-        var options = new DbContextOptionsBuilder<LibraFotoDbContext>()
-            .UseInMemoryDatabase($"TestDb_{Guid.NewGuid()}")
-            .Options;
-        var dbContext = new LibraFotoDbContext(options);
-        await dbContext.Database.EnsureCreatedAsync();
-
-        var provider = new GooglePhotosProvider(logger, httpClientFactory, dbContext);
-        return (provider, dbContext);
-    }
-
-    [Test]
-    public async Task DisconnectAsync_ClearsOAuthTokensAndDisablesProvider()
-    {
-        // Arrange
-        var (provider, dbContext) = await CreateProviderAsync();
-        await using var _ = dbContext;
-
-        var storageProvider = new StorageProvider
+        private static async Task<(GooglePhotosProvider provider, LibraFotoDbContext dbContext)> CreateProviderAsync()
         {
-            Id = 1,
-            Type = StorageProviderType.GooglePhotos,
-            Name = "TestProvider",
-            IsEnabled = true,
-            Configuration = JsonSerializer.Serialize(new GooglePhotosConfiguration
+            var logger = NullLogger<GooglePhotosProvider>.Instance;
+            var httpClientFactory = Substitute.For<IHttpClientFactory>();
+            httpClientFactory.CreateClient(Arg.Any<string>()).Returns(new HttpClient());
+
+            var options = new DbContextOptionsBuilder<LibraFotoDbContext>()
+                .UseInMemoryDatabase($"TestDb_{Guid.NewGuid()}")
+                .Options;
+            var dbContext = new LibraFotoDbContext(options);
+            await dbContext.Database.EnsureCreatedAsync();
+
+            var provider = new GooglePhotosProvider(logger, httpClientFactory, dbContext);
+            return (provider, dbContext);
+        }
+
+        [Test]
+        public async Task DisconnectAsync_ClearsOAuthTokensAndDisablesProvider()
+        {
+            // Arrange
+            var (provider, dbContext) = await CreateProviderAsync();
+            await using var _ = dbContext;
+
+            var storageProvider = new StorageProvider
             {
-                ClientId = "test-client-id",
-                ClientSecret = "test-secret",
-                RefreshToken = "test-refresh-token",
-                AccessToken = "test-access-token",
-                AccessTokenExpiry = DateTime.UtcNow.AddHours(1)
-            })
-        };
+                Id = 1,
+                Type = StorageProviderType.GooglePhotos,
+                Name = "TestProvider",
+                IsEnabled = true,
+                Configuration = JsonSerializer.Serialize(new GooglePhotosConfiguration
+                {
+                    ClientId = "test-client-id",
+                    ClientSecret = "test-secret",
+                    RefreshToken = "test-refresh-token",
+                    AccessToken = "test-access-token",
+                    AccessTokenExpiry = DateTime.UtcNow.AddHours(1)
+                })
+            };
 
-        // Act
-        var result = await provider.DisconnectAsync(storageProvider, CancellationToken.None);
+            // Act
+            var result = await provider.DisconnectAsync(storageProvider, CancellationToken.None);
 
-        // Assert
-        await Assert.That(result).IsTrue();
-        await Assert.That(storageProvider.IsEnabled).IsFalse();
+            // Assert
+            await Assert.That(result).IsTrue();
+            await Assert.That(storageProvider.IsEnabled).IsFalse();
 
-        // Verify tokens are cleared
-        var config = JsonSerializer.Deserialize<GooglePhotosConfiguration>(storageProvider.Configuration!);
-        await Assert.That(config).IsNotNull();
-        await Assert.That(config!.RefreshToken).IsNull();
-        await Assert.That(config.AccessToken).IsNull();
-        await Assert.That(config.AccessTokenExpiry).IsNull();
-        await Assert.That(config.GrantedScopes).IsNull();
-    }
+            // Verify tokens are cleared
+            var config = JsonSerializer.Deserialize<GooglePhotosConfiguration>(storageProvider.Configuration!);
+            await Assert.That(config).IsNotNull();
+            await Assert.That(config!.RefreshToken).IsNull();
+            await Assert.That(config.AccessToken).IsNull();
+            await Assert.That(config.AccessTokenExpiry).IsNull();
+            await Assert.That(config.GrantedScopes).IsNull();
+        }
 
-    [Test]
-    public async Task DisconnectAsync_WithInvalidConfiguration_ReturnsFalse()
-    {
-        // Arrange
-        var (provider, dbContext) = await CreateProviderAsync();
-        await using var _ = dbContext;
-
-        var storageProvider = new StorageProvider
+        [Test]
+        public async Task DisconnectAsync_WithInvalidConfiguration_ReturnsFalse()
         {
-            Id = 1,
-            Type = StorageProviderType.GooglePhotos,
-            Name = "TestProvider",
-            IsEnabled = true,
-            Configuration = "invalid-json"
-        };
+            // Arrange
+            var (provider, dbContext) = await CreateProviderAsync();
+            await using var _ = dbContext;
 
-        // Act
-        var result = await provider.DisconnectAsync(storageProvider, CancellationToken.None);
+            var storageProvider = new StorageProvider
+            {
+                Id = 1,
+                Type = StorageProviderType.GooglePhotos,
+                Name = "TestProvider",
+                IsEnabled = true,
+                Configuration = "invalid-json"
+            };
 
-        // Assert
-        await Assert.That(result).IsFalse();
-        await Assert.That(storageProvider.IsEnabled).IsFalse(); // Still disables even on error
-    }
+            // Act
+            var result = await provider.DisconnectAsync(storageProvider, CancellationToken.None);
 
-    [Test]
-    public async Task DisconnectAsync_WithEmptyConfiguration_ReturnsTrue()
-    {
-        // Arrange
-        var (provider, dbContext) = await CreateProviderAsync();
-        await using var _ = dbContext;
+            // Assert
+            await Assert.That(result).IsFalse();
+            await Assert.That(storageProvider.IsEnabled).IsFalse(); // Still disables even on error
+        }
 
-        var storageProvider = new StorageProvider
+        [Test]
+        public async Task DisconnectAsync_WithEmptyConfiguration_ReturnsTrue()
         {
-            Id = 1,
-            Type = StorageProviderType.GooglePhotos,
-            Name = "TestProvider",
-            IsEnabled = true,
-            Configuration = null
-        };
+            // Arrange
+            var (provider, dbContext) = await CreateProviderAsync();
+            await using var _ = dbContext;
 
-        // Act
-        var result = await provider.DisconnectAsync(storageProvider, CancellationToken.None);
+            var storageProvider = new StorageProvider
+            {
+                Id = 1,
+                Type = StorageProviderType.GooglePhotos,
+                Name = "TestProvider",
+                IsEnabled = true,
+                Configuration = null
+            };
 
-        // Assert
-        await Assert.That(result).IsTrue();
-        await Assert.That(storageProvider.IsEnabled).IsFalse();
-    }
+            // Act
+            var result = await provider.DisconnectAsync(storageProvider, CancellationToken.None);
 
-    [Test]
-    public async Task DisconnectAsync_PreservesNonTokenConfigurationFields()
-    {
-        // Arrange
-        var (provider, dbContext) = await CreateProviderAsync();
-        await using var _ = dbContext;
+            // Assert
+            await Assert.That(result).IsTrue();
+            await Assert.That(storageProvider.IsEnabled).IsFalse();
+        }
 
-        var originalClientId = "my-client-id";
-        var originalConfiguration = new GooglePhotosConfiguration
+        [Test]
+        public async Task DisconnectAsync_PreservesNonTokenConfigurationFields()
         {
-            ClientId = originalClientId,
-            ClientSecret = "my-secret",
-            RefreshToken = "refresh-token-to-clear",
-            AccessToken = "access-token-to-clear",
-            AccessTokenExpiry = DateTime.UtcNow.AddHours(1),
-            GrantedScopes = ["scope1", "scope2"]
-        };
+            // Arrange
+            var (provider, dbContext) = await CreateProviderAsync();
+            await using var _ = dbContext;
 
-        var storageProvider = new StorageProvider
-        {
-            Id = 1,
-            Type = StorageProviderType.GooglePhotos,
-            Name = "TestProvider",
-            IsEnabled = true,
-            Configuration = JsonSerializer.Serialize(originalConfiguration)
-        };
+            var originalClientId = "my-client-id";
+            var originalConfiguration = new GooglePhotosConfiguration
+            {
+                ClientId = originalClientId,
+                ClientSecret = "my-secret",
+                RefreshToken = "refresh-token-to-clear",
+                AccessToken = "access-token-to-clear",
+                AccessTokenExpiry = DateTime.UtcNow.AddHours(1),
+                GrantedScopes = ["scope1", "scope2"]
+            };
 
-        // Act
-        var result = await provider.DisconnectAsync(storageProvider, CancellationToken.None);
+            var storageProvider = new StorageProvider
+            {
+                Id = 1,
+                Type = StorageProviderType.GooglePhotos,
+                Name = "TestProvider",
+                IsEnabled = true,
+                Configuration = JsonSerializer.Serialize(originalConfiguration)
+            };
 
-        // Assert
-        await Assert.That(result).IsTrue();
+            // Act
+            var result = await provider.DisconnectAsync(storageProvider, CancellationToken.None);
 
-        var config = JsonSerializer.Deserialize<GooglePhotosConfiguration>(storageProvider.Configuration!);
-        await Assert.That(config).IsNotNull();
+            // Assert
+            await Assert.That(result).IsTrue();
 
-        // Tokens should be cleared
-        await Assert.That(config!.RefreshToken).IsNull();
-        await Assert.That(config.AccessToken).IsNull();
-        await Assert.That(config.AccessTokenExpiry).IsNull();
-        await Assert.That(config.GrantedScopes).IsNull();
+            var config = JsonSerializer.Deserialize<GooglePhotosConfiguration>(storageProvider.Configuration!);
+            await Assert.That(config).IsNotNull();
 
-        // Other fields should be preserved
-        await Assert.That(config.ClientId).IsEqualTo(originalClientId);
+            // Tokens should be cleared
+            await Assert.That(config!.RefreshToken).IsNull();
+            await Assert.That(config.AccessToken).IsNull();
+            await Assert.That(config.AccessTokenExpiry).IsNull();
+            await Assert.That(config.GrantedScopes).IsNull();
+
+            // Other fields should be preserved
+            await Assert.That(config.ClientId).IsEqualTo(originalClientId);
+        }
     }
 }
