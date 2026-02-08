@@ -29,13 +29,15 @@
 
 **Format**:
 
-- Stable: `1.2.0` (main branch only)
-- Prerelease: `1.2.0-alpha.1`, `1.2.0-beta.2`, `1.2.0-rc.1` (feature branches only)
+- Stable: `1.2.0` (for PRs to master or pushes to master)
+- Prerelease: `1.2.0-alpha.1`, `1.2.0-beta.2`, `1.2.0-rc.1` (for PRs to non-master branches)
 
-**CI Enforcement**:
+**CI Enforcement** (based on PR target branch):
 
-- Main branch: Fails if `.version` has prerelease suffix
-- Feature branches: Fails if `.version` is stable
+- PRs to master: Fail if `.version` has prerelease suffix (must be stable)
+- PRs to other branches: Fail if `.version` is stable (must be prerelease)
+- Pushes to master: Fail if `.version` has prerelease suffix
+- Pushes to other branches: Fail if `.version` is stable
 - Check locally: `cat .version`
 
 **Starting a feature**:
@@ -46,7 +48,7 @@ echo "1.3.0-alpha.1" > .version
 git add .version && git commit -m "Start 1.3.0 development"
 ```
 
-**Before merging to main**: Update `.version` to stable (e.g., `1.3.0`) and commit.
+**Before creating PR to master**: Update `.version` to stable (e.g., `1.3.0`) and commit.
 
 ## Architecture Overview
 
@@ -316,7 +318,7 @@ Key files: [api.service.ts](apps/admin/src/app/core/services/api.service.ts), [a
 
 ### Display Frontend (Vanilla TypeScript)
 
-Minimal footprint (~5KB bundle) for Raspberry Pi. Uses class-based architecture:
+Minimal footprint for Raspberry Pi. Uses class-based architecture:
 
 ```typescript
 // Component classes with clear lifecycle

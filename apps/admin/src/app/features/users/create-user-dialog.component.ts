@@ -6,8 +6,6 @@ import {
   FormBuilder,
   FormGroup,
   Validators,
-  AbstractControl,
-  ValidationErrors,
 } from "@angular/forms";
 import {
   MatDialogModule,
@@ -23,7 +21,6 @@ import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
 import { AuthService } from "../../core/services/auth.service";
 import { UserDto } from "../../core/models";
 import { UserRole } from "../../core/models/enums.model";
-import { debounceTime, distinctUntilChanged, switchMap, of } from "rxjs";
 
 interface DialogData {
   user?: UserDto;
@@ -56,11 +53,14 @@ interface DialogData {
             placeholder="Enter email"
             type="email"
           />
-          @if (form.get('email')?.hasError('required') &&
-          form.get('email')?.touched) {
-          <mat-error>Email is required</mat-error>
-          } @if (form.get('email')?.hasError('email')) {
-          <mat-error>Please enter a valid email</mat-error>
+          @if (
+            form.get("email")?.hasError("required") &&
+            form.get("email")?.touched
+          ) {
+            <mat-error>Email is required</mat-error>
+          }
+          @if (form.get("email")?.hasError("email")) {
+            <mat-error>Please enter a valid email</mat-error>
           }
         </mat-form-field>
 
@@ -86,11 +86,14 @@ interface DialogData {
               hidePassword() ? "visibility_off" : "visibility"
             }}</mat-icon>
           </button>
-          @if (form.get('password')?.hasError('required') &&
-          form.get('password')?.touched) {
-          <mat-error>Password is required</mat-error>
-          } @if (form.get('password')?.hasError('minlength')) {
-          <mat-error>Password must be at least 8 characters</mat-error>
+          @if (
+            form.get("password")?.hasError("required") &&
+            form.get("password")?.touched
+          ) {
+            <mat-error>Password is required</mat-error>
+          }
+          @if (form.get("password")?.hasError("minlength")) {
+            <mat-error>Password must be at least 8 characters</mat-error>
           }
         </mat-form-field>
 
@@ -105,9 +108,10 @@ interface DialogData {
             >
             <mat-option [value]="UserRole.Guest">Guest - View only</mat-option>
           </mat-select>
-          @if (form.get('role')?.hasError('required') &&
-          form.get('role')?.touched) {
-          <mat-error>Role is required</mat-error>
+          @if (
+            form.get("role")?.hasError("required") && form.get("role")?.touched
+          ) {
+            <mat-error>Role is required</mat-error>
           }
         </mat-form-field>
       </form>
@@ -123,9 +127,9 @@ interface DialogData {
         [disabled]="form.invalid || isSaving()"
       >
         @if (isSaving()) {
-        <mat-spinner diameter="20"></mat-spinner>
+          <mat-spinner diameter="20"></mat-spinner>
         } @else {
-        {{ isEditMode ? "Save" : "Create" }}
+          {{ isEditMode ? "Save" : "Create" }}
         }
       </button>
     </mat-dialog-actions>

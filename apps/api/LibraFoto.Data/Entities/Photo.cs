@@ -69,8 +69,7 @@ namespace LibraFoto.Data.Entities
         public double? Duration { get; set; }
 
         /// <summary>
-        /// Date the photo/video was taken (from EXIF or file metadata).
-        /// Stored as ISO 8601 string for SQLite compatibility.
+        /// Date and time the photo/video was taken (from EXIF or file metadata), if available.
         /// </summary>
         public DateTime? DateTaken { get; set; }
 

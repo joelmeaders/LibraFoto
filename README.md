@@ -137,7 +137,7 @@ aspire run  # Starts API + frontends + Aspire dashboard
 
 ### Architecture
 
-**Modular monolith** in .NET 10 - single deployable unit with clear module boundaries. SQLite database for zero-config portability. Vanilla TypeScript display frontend (~5KB bundle), Angular 21 admin frontend, both served via Nginx.
+**Modular monolith** in .NET 10 - single deployable unit with clear module boundaries. SQLite database for zero-config portability. Vanilla TypeScript display frontend, Angular 21 admin frontend, both served via Nginx.
 
 ### Testing
 

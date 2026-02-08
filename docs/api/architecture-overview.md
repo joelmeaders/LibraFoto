@@ -8,7 +8,7 @@ LibraFoto is a **modular monolith** built on .NET 10 with ASP.NET Core Minimal A
 graph TD
     subgraph Clients
         AdminSPA["Admin Frontend<br/>(Angular 21 + Material)"]
-        DisplaySPA["Display Frontend<br/>(Vanilla TS, ~5KB)"]
+        DisplaySPA["Display Frontend<br/>(Vanilla TS)"]
     end
 
     subgraph Infrastructure

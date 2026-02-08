@@ -31,9 +31,11 @@ jobs:
           VERSION=$(cat .version)
           echo "Version: $VERSION"
 
-          # Check if this is the master branch
-          BRANCH="${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}"
-          echo "Branch: $BRANCH"
+          # Determine target branch (for PRs, use base_ref; for pushes, use ref_name)
+          TARGET_BRANCH="${GITHUB_BASE_REF:-$GITHUB_REF_NAME}"
+          SOURCE_BRANCH="${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}"
+          echo "Source branch: $SOURCE_BRANCH"
+          echo "Target branch: $TARGET_BRANCH"
 
           # Stable version pattern: #.#.# (no prerelease suffix)
           STABLE_PATTERN="^[0-9]+\.[0-9]+\.[0-9]+$"
@@ -41,20 +43,20 @@ jobs:
           # Prerelease pattern: #.#.#-alpha.#, #.#.#-beta.#, #.#.#-rc.#
           PRERELEASE_PATTERN="^[0-9]+\.[0-9]+\.[0-9]+-(alpha|beta|rc)\.[0-9]+$"
 
-          if [[ "$BRANCH" == "master" ]]; then
-            # Master branch MUST use stable versions only
+          if [[ "$TARGET_BRANCH" == "master" ]]; then
+            # PRs to master or pushes to master MUST use stable versions
             if [[ ! "$VERSION" =~ $STABLE_PATTERN ]]; then
-              echo "::error::Invalid version format for master branch: $VERSION"
-              echo "::error::Master branch requires stable versions (#.#.#)"
-              echo "::error::Prerelease versions are not allowed on master"
+              echo "::error::Invalid version format for master: $VERSION"
+              echo "::error::PRs to master require stable versions (#.#.#)"
+              echo "::error::Prerelease versions are not allowed"
               exit 1
             fi
-            echo "✅ Stable version '$VERSION' is valid for master branch"
+            echo "✅ Stable version '$VERSION' is valid for master"
           else
-            # Feature branches MUST use prerelease versions
+            # PRs to non-master or pushes to non-master branches MUST use prerelease versions
             if [[ "$VERSION" =~ $STABLE_PATTERN ]]; then
-              echo "::error::Stable version '$VERSION' not allowed on branch '$BRANCH'"
-              echo "::error::Feature branches must use prerelease versions like:"
+              echo "::error::Stable version '$VERSION' not allowed for target branch '$TARGET_BRANCH'"
+              echo "::error::Non-master branches must use prerelease versions like:"
               echo "::error::  - 1.0.0-alpha.1"
               echo "::error::  - 1.0.0-beta.2"
               echo "::error::  - 1.0.0-rc.1"
@@ -69,7 +71,7 @@ jobs:
               exit 1
             fi
             
-            echo "✅ Prerelease version '$VERSION' is valid for feature branch '$BRANCH'"
+            echo "✅ Prerelease version '$VERSION' is valid for non-master branch '$TARGET_BRANCH'"
           fi
 
   # =============================================================================
@@ -96,13 +98,13 @@ jobs:
             ${{ runner.os }}-nuget-
 
       - name: Restore dependencies
-        run: dotnet restore --solution apps/api/LibraFoto.slnx
+        run: dotnet restore apps/api/LibraFoto.slnx
 
       - name: Check formatting
-        run: dotnet format --solution apps/api/LibraFoto.slnx --verify-no-changes --verbosity diagnostic
+        run: dotnet format apps/api/LibraFoto.slnx --verify-no-changes --verbosity diagnostic
 
       - name: Build solution
-        run: dotnet build --solution apps/api/LibraFoto.slnx --no-restore --configuration Release
+        run: dotnet build apps/api/LibraFoto.slnx --no-restore --configuration Release
 
   test-backend:
     name: Test Backend
@@ -341,17 +343,62 @@ jobs:
     steps:
       - name: Check all jobs passed
         run: |
-          if [[ "${{ needs.validate-version.result }}" != "success" ]] || \
-             [[ "${{ needs.build-backend.result }}" != "success" ]] || \
-             [[ "${{ needs.test-backend.result }}" != "success" ]] || \
-             [[ "${{ needs.test-shell.result }}" != "success" ]] || \
-             [[ "${{ needs.build-admin.result }}" != "success" ]] || \
-             [[ "${{ needs.test-admin.result }}" != "success" ]] || \
-             [[ "${{ needs.build-display.result }}" != "success" ]] || \
-             [[ "${{ needs.test-display.result }}" != "success" ]]; then
+          # Helper function to check if a job passed or was skipped due to dependency failure
+          check_job() {
+            local job_name=$1
+            local job_result=$2
+            local dependency_result=$3
+            
+            if [[ "$job_result" == "success" ]]; then
+              return 0
+            elif [[ "$job_result" == "skipped" ]] && [[ "$dependency_result" != "success" ]]; then
+              # Job was skipped because its dependency failed - this is acceptable
+              echo "⏭️  $job_name was skipped due to dependency failure"
+              return 0
+            else
+              echo "❌ $job_name failed with status: $job_result"
+              return 1
+            fi
+          }
+          
+          failed=0
+          
+          # Jobs without dependencies must succeed
+          if [[ "${{ needs.validate-version.result }}" != "success" ]]; then
+            echo "❌ Version validation failed"
+            failed=1
+          fi
+          
+          if [[ "${{ needs.build-backend.result }}" != "success" ]]; then
+            echo "❌ Backend build failed"
+            failed=1
+          fi
+          
+          if [[ "${{ needs.test-shell.result }}" != "success" ]]; then
+            echo "❌ Shell tests failed"
+            failed=1
+          fi
+          
+          if [[ "${{ needs.build-admin.result }}" != "success" ]]; then
+            echo "❌ Admin build failed"
+            failed=1
+          fi
+          
+          if [[ "${{ needs.build-display.result }}" != "success" ]]; then
+            echo "❌ Display build failed"
+            failed=1
+          fi
+          
+          # Test jobs can be skipped if their build dependency failed
+          check_job "Backend tests" "${{ needs.test-backend.result }}" "${{ needs.build-backend.result }}" || failed=1
+          check_job "Admin tests" "${{ needs.test-admin.result }}" "${{ needs.build-admin.result }}" || failed=1
+          check_job "Display tests" "${{ needs.test-display.result }}" "${{ needs.build-display.result }}" || failed=1
+          
+          if [[ $failed -eq 1 ]]; then
             echo "::error::One or more CI jobs failed"
             exit 1
           fi
+          
           echo "✅ All CI checks passed!"
 
       - name: Summary
@@ -368,3 +415,12 @@ jobs:
           echo "| Test Admin (≥80% coverage) | ${{ needs.test-admin.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Build Display | ${{ needs.build-display.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Test Display (≥80% coverage) | ${{ needs.test-display.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Add explanation for skipped tests
+          if [[ "${{ needs.test-backend.result }}" == "skipped" ]] || \
+             [[ "${{ needs.test-admin.result }}" == "skipped" ]] || \
+             [[ "${{ needs.test-display.result }}" == "skipped" ]]; then
+            echo "> **Note:** Test jobs are skipped when their corresponding build job fails." >> $GITHUB_STEP_SUMMARY
+            echo "> This is expected behavior to save CI resources." >> $GITHUB_STEP_SUMMARY
+          fi

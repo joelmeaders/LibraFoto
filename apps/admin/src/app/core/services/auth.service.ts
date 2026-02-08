@@ -1,6 +1,6 @@
 import { computed, inject, Injectable, signal } from "@angular/core";
 import { Router } from "@angular/router";
-import { Observable, tap, BehaviorSubject, of, catchError, map } from "rxjs";
+import { Observable, tap, of, catchError } from "rxjs";
 import { ApiService } from "./api.service";
 import {
   LoginRequest,
@@ -35,7 +35,7 @@ export class AuthService {
 
   // Reactive state using signals
   private readonly _currentUser = signal<UserDto | null>(
-    this.loadUserFromStorage()
+    this.loadUserFromStorage(),
   );
   private readonly _isAuthenticated = signal<boolean>(this.hasValidToken());
   private readonly _isLoading = signal<boolean>(false);
@@ -72,7 +72,7 @@ export class AuthService {
       catchError((error) => {
         this._isLoading.set(false);
         throw error;
-      })
+      }),
     );
   }
 
@@ -89,7 +89,7 @@ export class AuthService {
       catchError((error) => {
         this._isLoading.set(false);
         throw error;
-      })
+      }),
     );
   }
 
@@ -110,7 +110,7 @@ export class AuthService {
       catchError((error) => {
         this.logout();
         throw error;
-      })
+      }),
     );
   }
 
@@ -235,7 +235,7 @@ export class AuthService {
    */
   getGuestLinks(
     page = 1,
-    pageSize = 20
+    pageSize = 20,
   ): Observable<PagedResult<GuestLinkDto>> {
     return this.api.get<PagedResult<GuestLinkDto>>("/api/admin/guest-links", {
       page,
@@ -276,7 +276,7 @@ export class AuthService {
    */
   validateGuestLink(linkCode: string): Observable<GuestLinkValidationResponse> {
     return this.api.get<GuestLinkValidationResponse>(
-      `/api/guest/${linkCode}/validate`
+      `/api/guest/${linkCode}/validate`,
     );
   }
 }

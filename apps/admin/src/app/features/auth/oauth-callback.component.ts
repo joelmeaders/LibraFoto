@@ -4,7 +4,7 @@ import { ActivatedRoute } from "@angular/router";
 import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
 import { MatIconModule } from "@angular/material/icon";
 import { HttpClient } from "@angular/common/http";
-import { take } from "rxjs/internal/operators/take";
+import { take } from "rxjs/operators";
 
 /**
  * OAuth callback page that handles the redirect from Google OAuth.
@@ -116,53 +116,51 @@ export class OAuthCallbackComponent implements OnInit {
 
   private handleCallback(): void {
     // Get query parameters from URL
-    this.route.queryParams
-      .subscribe((params) => {
-        const code = params["code"];
-        const state = params["state"]; // Provider ID
-        const error = params["error"];
+    this.route.queryParams.pipe(take(1)).subscribe((params) => {
+      const code = params["code"];
+      const state = params["state"]; // Provider ID
+      const error = params["error"];
 
-        if (error) {
-          this.status = "error";
-          this.errorMessage = `Authorization failed: ${error}`;
-          this.autoCloseWindow();
-          return;
-        }
+      if (error) {
+        this.status = "error";
+        this.errorMessage = `Authorization failed: ${error}`;
+        this.autoCloseWindow();
+        return;
+      }
 
-        if (!code) {
-          this.status = "error";
-          this.errorMessage = "No authorization code received";
-          this.autoCloseWindow();
-          return;
-        }
+      if (!code) {
+        this.status = "error";
+        this.errorMessage = "No authorization code received";
+        this.autoCloseWindow();
+        return;
+      }
 
-        if (!state) {
-          this.status = "error";
-          this.errorMessage = "No provider ID received";
-          this.autoCloseWindow();
-          return;
-        }
+      if (!state) {
+        this.status = "error";
+        this.errorMessage = "No provider ID received";
+        this.autoCloseWindow();
+        return;
+      }
 
-        // Send authorization code to backend
-        this.http
-          .post(`/api/storage/google-photos/${state}/callback`, {
-            authorizationCode: code,
-          })
-          .subscribe({
-            next: () => {
-              this.status = "success";
-              this.autoCloseWindow(1000);
-            },
-            error: (err) => {
-              this.status = "error";
-              this.errorMessage =
-                err.error?.message ||
-                "Failed to connect to Google Photos. Please try again.";
-              this.autoCloseWindow(3000);
-            },
-          });
-      })
-      .pipe(take(1));
+      // Send authorization code to backend
+      this.http
+        .post(`/api/storage/google-photos/${state}/callback`, {
+          authorizationCode: code,
+        })
+        .subscribe({
+          next: () => {
+            this.status = "success";
+            this.autoCloseWindow(1000);
+          },
+          error: (err) => {
+            this.status = "error";
+            this.errorMessage =
+              err.error?.message ||
+              "Failed to connect to Google Photos. Please try again.";
+            this.autoCloseWindow(3000);
+          },
+        });
+    });
   }
 
   private autoCloseWindow(delay: number = 2000): void {
