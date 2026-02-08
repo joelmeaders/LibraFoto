@@ -174,4 +174,4 @@ cd apps/display && npm test  # Display frontend tests
 
 ---
 
-_LibraFoto - Your memories, beautifully displayed._
+_LibraFoto - No tagline yet_
