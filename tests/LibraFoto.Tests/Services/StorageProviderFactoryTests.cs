@@ -91,7 +91,7 @@ namespace LibraFoto.Tests.Services
         public async Task Cleanup()
         {
             _factory.ClearCache();
-            _serviceProvider.Dispose();
+            await _serviceProvider.DisposeAsync();
             await _db.DisposeAsync();
             await _connection.DisposeAsync();
             TestHelpers.CleanupTempDirectory(_testDirectory);
@@ -331,7 +331,7 @@ namespace LibraFoto.Tests.Services
         {
             // Arrange
             using var cts = new CancellationTokenSource();
-            cts.Cancel();
+            await cts.CancelAsync();
 
             // Act & Assert
             await Assert.That(async () =>
@@ -517,7 +517,7 @@ namespace LibraFoto.Tests.Services
         public async Task GetOrCreateDefaultLocalProviderAsync_CreatesWithConfiguredPath()
         {
             // Act
-            var provider = await _factory.GetOrCreateDefaultLocalProviderAsync();
+            _ = await _factory.GetOrCreateDefaultLocalProviderAsync();
 
             // Assert
             var dbProvider = await _db.StorageProviders.FirstAsync();
@@ -529,7 +529,7 @@ namespace LibraFoto.Tests.Services
         public async Task GetOrCreateDefaultLocalProviderAsync_CreatesWithDefaultSettings()
         {
             // Act
-            var provider = await _factory.GetOrCreateDefaultLocalProviderAsync();
+            _ = await _factory.GetOrCreateDefaultLocalProviderAsync();
 
             // Assert
             var dbProvider = await _db.StorageProviders.FirstAsync();

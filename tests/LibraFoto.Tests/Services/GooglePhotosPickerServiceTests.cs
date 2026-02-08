@@ -39,6 +39,12 @@ namespace LibraFoto.Tests.Services
             _service = new GooglePhotosPickerService(_httpClientFactory);
         }
 
+        [After(Test)]
+        public void Cleanup()
+        {
+            _httpHandler?.Dispose();
+        }
+
         #region CreateSessionAsync Tests
 
         [Test]
@@ -168,7 +174,7 @@ namespace LibraFoto.Tests.Services
         {
             // Arrange
             using var cts = new CancellationTokenSource();
-            cts.Cancel();
+            await cts.CancelAsync();
 
             // Act & Assert
             await Assert.ThrowsAsync<OperationCanceledException>(async () =>
@@ -230,7 +236,7 @@ namespace LibraFoto.Tests.Services
         {
             // Arrange
             using var cts = new CancellationTokenSource();
-            cts.Cancel();
+            await cts.CancelAsync();
 
             // Act & Assert
             await Assert.ThrowsAsync<OperationCanceledException>(async () =>
@@ -356,7 +362,7 @@ namespace LibraFoto.Tests.Services
         {
             // Arrange
             using var cts = new CancellationTokenSource();
-            cts.Cancel();
+            await cts.CancelAsync();
 
             // Act & Assert
             await Assert.ThrowsAsync<OperationCanceledException>(async () =>
@@ -403,7 +409,7 @@ namespace LibraFoto.Tests.Services
             _httpHandler.SetBinaryResponse(HttpStatusCode.OK, data, null);
 
             // Act
-            var (stream, contentType) = await _service.DownloadMediaItemAsync(
+            var (_, contentType) = await _service.DownloadMediaItemAsync(
                 "https://photos.google.com/photo/123/baseUrl",
                 TestAccessToken,
                 isVideo: false,
@@ -438,7 +444,7 @@ namespace LibraFoto.Tests.Services
         {
             // Arrange
             using var cts = new CancellationTokenSource();
-            cts.Cancel();
+            await cts.CancelAsync();
 
             // Act & Assert
             await Assert.ThrowsAsync<OperationCanceledException>(async () =>
@@ -488,7 +494,7 @@ namespace LibraFoto.Tests.Services
         {
             // Arrange
             using var cts = new CancellationTokenSource();
-            cts.Cancel();
+            await cts.CancelAsync();
 
             // Act & Assert
             await Assert.ThrowsAsync<OperationCanceledException>(async () =>

@@ -72,7 +72,7 @@ namespace LibraFoto.Tests.Modules.Auth
         {
             // Clear static state to prevent test interference
             AuthService.ClearStaticState();
-            _serviceProvider.Dispose();
+            await _serviceProvider.DisposeAsync();
             await _db.DisposeAsync();
             await _connection.DisposeAsync();
         }

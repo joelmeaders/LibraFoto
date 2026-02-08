@@ -33,7 +33,10 @@ namespace LibraFoto.Tests.Modules.Media
                 {
                     try
                     { File.Delete(file); }
-                    catch { }
+                    catch (IOException)
+                    {
+                        // Ignore if file is still in use
+                    }
                 }
             }
 
@@ -43,7 +46,10 @@ namespace LibraFoto.Tests.Modules.Media
             {
                 try
                 { Directory.Delete(_tempDir, true); }
-                catch { }
+                catch (IOException)
+                {
+                    // Ignore if directory is still in use
+                }
             }
 
             await Task.CompletedTask;

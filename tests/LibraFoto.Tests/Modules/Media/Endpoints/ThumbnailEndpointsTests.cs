@@ -76,12 +76,12 @@ namespace LibraFoto.Tests.Modules.Media.Endpoints
         public async Task GetThumbnail_ReturnsManagedThumbnail_WhenExists()
         {
             // Arrange
-            const long photoId = 1L;
+            const long PhotoId = 1L;
             var stream = new MemoryStream([1, 2, 3, 4]);
-            _thumbnailService.OpenThumbnailStream(photoId).Returns(stream);
+            _thumbnailService.OpenThumbnailStream(PhotoId).Returns(stream);
 
             // Act - Endpoint logic: OpenThumbnailStream returns stream
-            var result = _thumbnailService.OpenThumbnailStream(photoId);
+            var result = _thumbnailService.OpenThumbnailStream(PhotoId);
 
             // Assert
             await Assert.That(result).IsNotNull();
@@ -362,13 +362,13 @@ namespace LibraFoto.Tests.Modules.Media.Endpoints
         public async Task GenerateThumbnail_ReturnsBadRequest_OnException()
         {
             // Arrange
-            const long photoId = 12L;
+            const long PhotoId = 12L;
             var sourcePath = Path.Combine(_tempDir, "corrupt.jpg");
             await File.WriteAllTextAsync(sourcePath, "not an image");
 
             _thumbnailService.GenerateThumbnailAsync(
                 sourcePath,
-                photoId,
+                PhotoId,
                 Arg.Any<DateTime>(),
                 Arg.Any<CancellationToken>())
                 .Returns<ThumbnailResult>(_ => throw new Exception("Corrupt image data"));
@@ -376,7 +376,7 @@ namespace LibraFoto.Tests.Modules.Media.Endpoints
             // Act/Assert
             await Assert.ThrowsAsync<Exception>(async () =>
                 await _thumbnailService.GenerateThumbnailAsync(
-                    sourcePath, photoId, DateTime.UtcNow, CancellationToken.None));
+                    sourcePath, PhotoId, DateTime.UtcNow, CancellationToken.None));
         }
 
         #endregion
@@ -398,10 +398,10 @@ namespace LibraFoto.Tests.Modules.Media.Endpoints
         public async Task RefreshThumbnail_DeletesExistingManagedThumbnail()
         {
             // Arrange
-            const long photoId = 20L;
+            const long PhotoId = 20L;
             var photo = new Photo
             {
-                Id = photoId,
+                Id = PhotoId,
                 Filename = "photo20.jpg",
                 FilePath = "2024/01/photo20.jpg",
                 Width = 1920,
@@ -413,14 +413,14 @@ namespace LibraFoto.Tests.Modules.Media.Endpoints
             _db.Photos.Add(photo);
             await _db.SaveChangesAsync();
 
-            _thumbnailService.DeleteThumbnails(photoId).Returns(true);
+            _thumbnailService.DeleteThumbnails(PhotoId).Returns(true);
 
             // Act
-            var deleted = _thumbnailService.DeleteThumbnails(photoId);
+            var deleted = _thumbnailService.DeleteThumbnails(PhotoId);
 
             // Assert
             await Assert.That(deleted).IsTrue();
-            _thumbnailService.Received(1).DeleteThumbnails(photoId);
+            _thumbnailService.Received(1).DeleteThumbnails(PhotoId);
         }
 
         [Test]
@@ -428,11 +428,11 @@ namespace LibraFoto.Tests.Modules.Media.Endpoints
         public async Task RefreshThumbnail_DeletesExistingThumbnailPathFile()
         {
             // Arrange
-            const long photoId = 21L;
+            const long PhotoId = 21L;
             var thumbnailPath = "thumbs/2024/01/photo21_thumb.jpg";
             var photo = new Photo
             {
-                Id = photoId,
+                Id = PhotoId,
                 Filename = "photo21.jpg",
                 FilePath = "2024/01/photo21.jpg",
                 ThumbnailPath = thumbnailPath,
@@ -468,10 +468,10 @@ namespace LibraFoto.Tests.Modules.Media.Endpoints
         public async Task RefreshThumbnail_RegeneratesThumbnail_FromSourceFile()
         {
             // Arrange
-            const long photoId = 22L;
+            const long PhotoId = 22L;
             var photo = new Photo
             {
-                Id = photoId,
+                Id = PhotoId,
                 Filename = "photo22.jpg",
                 FilePath = "2024/01/photo22.jpg",
                 Width = 1920,
@@ -490,7 +490,7 @@ namespace LibraFoto.Tests.Modules.Media.Endpoints
             var newThumbPath = "thumbs/2024/01/photo22_thumb.jpg";
             _thumbnailService.GenerateThumbnailAsync(
                 sourceFullPath,
-                photoId,
+                PhotoId,
                 Arg.Any<DateTime>(),
                 Arg.Any<CancellationToken>())
                 .Returns(new ThumbnailResult
@@ -504,7 +504,7 @@ namespace LibraFoto.Tests.Modules.Media.Endpoints
 
             // Act
             var result = await _thumbnailService.GenerateThumbnailAsync(
-                sourceFullPath, photoId, photo.DateTaken!.Value, CancellationToken.None);
+                sourceFullPath, PhotoId, photo.DateTaken!.Value, CancellationToken.None);
 
             // Assert
             await Assert.That(result.Success).IsTrue();
@@ -516,10 +516,10 @@ namespace LibraFoto.Tests.Modules.Media.Endpoints
         public async Task RefreshThumbnail_ReturnsBadRequest_WhenSourceFileNotFound()
         {
             // Arrange
-            const long photoId = 23L;
+            const long PhotoId = 23L;
             var photo = new Photo
             {
-                Id = photoId,
+                Id = PhotoId,
                 Filename = "photo23.jpg",
                 FilePath = "2024/01/photo23.jpg",
                 Width = 1920,
@@ -545,13 +545,13 @@ namespace LibraFoto.Tests.Modules.Media.Endpoints
         public async Task RefreshThumbnail_UpdatesPhotoThumbnailPath()
         {
             // Arrange
-            const long photoId = 24L;
+            const long PhotoId = 24L;
             var oldThumbPath = "thumbs/old/photo24_thumb.jpg";
             var newThumbPath = "thumbs/2024/01/photo24_thumb.jpg";
 
             var photo = new Photo
             {
-                Id = photoId,
+                Id = PhotoId,
                 Filename = "photo24.jpg",
                 FilePath = "2024/01/photo24.jpg",
                 ThumbnailPath = oldThumbPath,
@@ -570,7 +570,7 @@ namespace LibraFoto.Tests.Modules.Media.Endpoints
 
             _thumbnailService.GenerateThumbnailAsync(
                 sourceFullPath,
-                photoId,
+                PhotoId,
                 Arg.Any<DateTime>(),
                 Arg.Any<CancellationToken>())
                 .Returns(new ThumbnailResult
@@ -587,7 +587,7 @@ namespace LibraFoto.Tests.Modules.Media.Endpoints
             await _db.SaveChangesAsync();
 
             // Assert
-            var updatedPhoto = await _db.Photos.FindAsync(photoId);
+            var updatedPhoto = await _db.Photos.FindAsync(PhotoId);
             await Assert.That(updatedPhoto!.ThumbnailPath).IsEqualTo(newThumbPath);
         }
 
@@ -1086,10 +1086,10 @@ namespace LibraFoto.Tests.Modules.Media.Endpoints
         public async Task RefreshThumbnail_HandlesDeleteFailure()
         {
             // Arrange
-            const long photoId = 90L;
+            const long PhotoId = 90L;
             var photo = new Photo
             {
-                Id = photoId,
+                Id = PhotoId,
                 Filename = "photo90.jpg",
                 FilePath = "2024/01/photo90.jpg",
                 ThumbnailPath = "thumbs/photo90_thumb.jpg",
@@ -1160,10 +1160,10 @@ namespace LibraFoto.Tests.Modules.Media.Endpoints
         public async Task GetThumbnail_StreamReturnedAfterGeneration()
         {
             // Arrange
-            const long photoId = 92L;
+            const long PhotoId = 92L;
             var photo = new Photo
             {
-                Id = photoId,
+                Id = PhotoId,
                 Filename = "photo92.jpg",
                 FilePath = "2024/01/photo92.jpg",
                 ThumbnailPath = null,
@@ -1182,7 +1182,7 @@ namespace LibraFoto.Tests.Modules.Media.Endpoints
 
             // First call returns null (no cached thumbnail), second call returns stream (after generation)
             var generatedStream = new MemoryStream([1, 2, 3, 4, 5]);
-            _thumbnailService.OpenThumbnailStream(photoId)
+            _thumbnailService.OpenThumbnailStream(PhotoId)
                 .Returns((Stream?)null, generatedStream);
 
             _thumbnailService.GenerateThumbnailAsync(
@@ -1200,9 +1200,9 @@ namespace LibraFoto.Tests.Modules.Media.Endpoints
                 });
 
             // Act - Simulate endpoint: first check returns null, generate, then check again
-            var firstCheck = _thumbnailService.OpenThumbnailStream(photoId);
-            await _thumbnailService.GenerateThumbnailAsync(sourceFullPath, photoId, DateTime.UtcNow, CancellationToken.None);
-            var secondCheck = _thumbnailService.OpenThumbnailStream(photoId);
+            var firstCheck = _thumbnailService.OpenThumbnailStream(PhotoId);
+            await _thumbnailService.GenerateThumbnailAsync(sourceFullPath, PhotoId, DateTime.UtcNow, CancellationToken.None);
+            var secondCheck = _thumbnailService.OpenThumbnailStream(PhotoId);
 
             // Assert
             await Assert.That(firstCheck).IsNull();
@@ -1368,10 +1368,10 @@ namespace LibraFoto.Tests.Modules.Media.Endpoints
         public async Task RefreshThumbnail_HandlesNullThumbnailPath()
         {
             // Arrange
-            const long photoId = 130L;
+            const long PhotoId = 130L;
             var photo = new Photo
             {
-                Id = photoId,
+                Id = PhotoId,
                 Filename = "photo130.jpg",
                 FilePath = "2024/01/photo130.jpg",
                 ThumbnailPath = null,  // Explicitly null

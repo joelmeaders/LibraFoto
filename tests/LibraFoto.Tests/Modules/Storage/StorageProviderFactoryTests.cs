@@ -356,8 +356,8 @@ namespace LibraFoto.Tests.Modules.Storage
         [Test]
         public async Task GetOrCreateDefaultLocalProviderAsync_UsesCustomPath_WhenConfigured()
         {
-            const string customPath = "/custom/photos/path";
-            _configuration["Storage:LocalPath"].Returns(customPath);
+            const string CustomPath = "/custom/photos/path";
+            _configuration["Storage:LocalPath"].Returns(CustomPath);
 
             var provider = await _factory.GetOrCreateDefaultLocalProviderAsync();
 
@@ -365,7 +365,7 @@ namespace LibraFoto.Tests.Modules.Storage
 
             // Verify configuration was saved with custom path
             var dbProvider = await _db.StorageProviders.FirstAsync();
-            await Assert.That(dbProvider.Configuration).Contains(customPath);
+            await Assert.That(dbProvider.Configuration).Contains(CustomPath);
         }
 
         [Test]
@@ -399,15 +399,15 @@ namespace LibraFoto.Tests.Modules.Storage
         [Test]
         public async Task GetProviderAsync_InitializesProviderWithCorrectData()
         {
-            const string providerName = "My Test Provider";
-            const string config = """{"BasePath":"./test","OrganizeByDate":false,"WatchForChanges":true}""";
+            const string ProviderName = "My Test Provider";
+            const string Config = """{ "BasePath":"./test","OrganizeByDate":false,"WatchForChanges":true}""";
 
             _db.StorageProviders.Add(new StorageProvider
             {
-                Name = providerName,
+                Name = ProviderName,
                 Type = StorageProviderType.Local,
                 IsEnabled = true,
-                Configuration = config
+                Configuration = Config
             });
             await _db.SaveChangesAsync();
             var id = (await _db.StorageProviders.FirstAsync()).Id;
@@ -416,22 +416,22 @@ namespace LibraFoto.Tests.Modules.Storage
 
             await Assert.That(provider).IsNotNull();
             await Assert.That(provider!.ProviderId).IsEqualTo(id);
-            await Assert.That(provider.DisplayName).IsEqualTo(providerName);
+            await Assert.That(provider.DisplayName).IsEqualTo(ProviderName);
             await Assert.That(provider.ProviderType).IsEqualTo(StorageProviderType.Local);
         }
 
         [Test]
         public async Task GetProviderAsync_GooglePhotosProvider_InitializesCorrectly()
         {
-            const string providerName = "Google Photos Test";
-            const string config = """{"RefreshToken":"test-token","ClientId":"test-client"}""";
+            const string ProviderName = "Google Photos Test";
+            const string Config = """{"RefreshToken":"test-token","ClientId":"test-client"}""";
 
             _db.StorageProviders.Add(new StorageProvider
             {
-                Name = providerName,
+                Name = ProviderName,
                 Type = StorageProviderType.GooglePhotos,
                 IsEnabled = true,
-                Configuration = config
+                Configuration = Config
             });
             await _db.SaveChangesAsync();
             var id = (await _db.StorageProviders.FirstAsync()).Id;
@@ -441,7 +441,7 @@ namespace LibraFoto.Tests.Modules.Storage
             await Assert.That(provider).IsNotNull();
             await Assert.That(provider is GooglePhotosProvider).IsTrue();
             await Assert.That(provider!.ProviderId).IsEqualTo(id);
-            await Assert.That(provider.DisplayName).IsEqualTo(providerName);
+            await Assert.That(provider.DisplayName).IsEqualTo(ProviderName);
             await Assert.That(provider.ProviderType).IsEqualTo(StorageProviderType.GooglePhotos);
         }
 

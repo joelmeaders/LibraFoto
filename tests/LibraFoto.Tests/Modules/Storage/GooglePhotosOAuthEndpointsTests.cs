@@ -371,7 +371,7 @@ namespace LibraFoto.Tests.Modules.Storage
             var badRequest = result.Result as BadRequest<ApiError>;
             await Assert.That(badRequest).IsNotNull();
             // Should be either TOKEN_EXCHANGE_FAILED or OAUTH_ERROR
-            await Assert.That(badRequest!.Value!.Code).IsIn(["TOKEN_EXCHANGE_FAILED", "OAUTH_ERROR"]);
+            await Assert.That(badRequest!.Value!.Code).IsIn("TOKEN_EXCHANGE_FAILED", "OAUTH_ERROR");
         }
 
         [Test]
@@ -444,8 +444,8 @@ namespace LibraFoto.Tests.Modules.Storage
                 AuthorizationCode = "test-code"
             };
 
-            var cts = new CancellationTokenSource();
-            cts.Cancel(); // Cancel immediately
+            using var cts = new CancellationTokenSource();
+            await cts.CancelAsync(); // Cancel immediately
 
             // Act & Assert
             await Assert.ThrowsAsync<OperationCanceledException>(async () =>
