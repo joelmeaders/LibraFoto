@@ -8,6 +8,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -329,6 +332,7 @@ jobs:
       - validate-version
       - build-backend
       - test-backend
+      - test-shell
       - build-admin
       - test-admin
       - build-display
@@ -340,6 +344,7 @@ jobs:
           if [[ "${{ needs.validate-version.result }}" != "success" ]] || \
              [[ "${{ needs.build-backend.result }}" != "success" ]] || \
              [[ "${{ needs.test-backend.result }}" != "success" ]] || \
+             [[ "${{ needs.test-shell.result }}" != "success" ]] || \
              [[ "${{ needs.build-admin.result }}" != "success" ]] || \
              [[ "${{ needs.test-admin.result }}" != "success" ]] || \
              [[ "${{ needs.build-display.result }}" != "success" ]] || \
@@ -358,6 +363,7 @@ jobs:
           echo "| Version Validation | ${{ needs.validate-version.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Build Backend | ${{ needs.build-backend.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Test Backend (≥80% coverage) | ${{ needs.test-backend.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Test Shell Scripts | ${{ needs.test-shell.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Build Admin | ${{ needs.build-admin.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Test Admin (≥80% coverage) | ${{ needs.test-admin.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Build Display | ${{ needs.build-display.result }} |" >> $GITHUB_STEP_SUMMARY
