@@ -246,6 +246,7 @@ namespace LibraFoto.Tests.Modules.Admin.Endpoints
         public async Task RemoveCoverPhoto_WithValidData_RemovesCoverPhoto()
         {
             // Arrange
+            _db.Photos.Add(TestHelpers.CreateTestPhoto(id: 1, filename: "cover.jpg"));
             _db.Albums.Add(new Album { Id = 1, Name = "Test Album", CoverPhotoId = 1, DateCreated = DateTime.UtcNow });
             await _db.SaveChangesAsync();
 

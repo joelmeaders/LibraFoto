@@ -92,12 +92,12 @@ namespace LibraFoto.Tests.Modules.Display
         public async Task GetNextPhotoAsync_ReturnsNull_WhenNoPhotos()
         {
             // Arrange
-            var settings = new DisplaySettings { Name = "Test", IsActive = true };
+            var settings = CreateTestSettings();
             _db.DisplaySettings.Add(settings);
             await _db.SaveChangesAsync();
 
-            // Act
-            var result = await _service.GetNextPhotoAsync();
+            // Act - use explicit settingsId
+            var result = await _service.GetNextPhotoAsync(settings.Id);
 
             // Assert
             await Assert.That(result).IsNull();
@@ -159,14 +159,7 @@ namespace LibraFoto.Tests.Modules.Display
             );
             await _db.SaveChangesAsync();
 
-            var settings = new DisplaySettings
-            {
-                Name = "Test",
-                IsActive = true,
-                SourceType = SourceType.Album,
-                SourceId = album1.Id,
-                Shuffle = false
-            };
+            var settings = CreateTestSettings(sourceType: SourceType.Album, sourceId: album1.Id);
             _db.DisplaySettings.Add(settings);
             await _db.SaveChangesAsync();
 
@@ -199,14 +192,7 @@ namespace LibraFoto.Tests.Modules.Display
             _db.PhotoTags.Add(new PhotoTag { PhotoId = photo1.Id, TagId = tag1.Id });
             await _db.SaveChangesAsync();
 
-            var settings = new DisplaySettings
-            {
-                Name = "Test",
-                IsActive = true,
-                SourceType = SourceType.Tag,
-                SourceId = tag1.Id,
-                Shuffle = false
-            };
+            var settings = CreateTestSettings(sourceType: SourceType.Tag, sourceId: tag1.Id);
             _db.DisplaySettings.Add(settings);
             await _db.SaveChangesAsync();
 
@@ -263,7 +249,7 @@ namespace LibraFoto.Tests.Modules.Display
         public async Task GetPreloadPhotosAsync_ReturnsMultiplePhotos()
         {
             // Arrange
-            var settings = new DisplaySettings { Name = "Test", IsActive = true, Shuffle = false };
+            var settings = CreateTestSettings(shuffle: false);
             _db.DisplaySettings.Add(settings);
             for (int i = 1; i <= 15; i++)
             {
@@ -278,11 +264,11 @@ namespace LibraFoto.Tests.Modules.Display
             }
             await _db.SaveChangesAsync();
 
-            // Reset state
-            _service.ResetSequence();
+            // Reset state - use explicit settingsId to avoid static state collisions
+            _service.ResetSequence(settings.Id);
 
-            // Act
-            var result = await _service.GetPreloadPhotosAsync(10);
+            // Act - use explicit settingsId
+            var result = await _service.GetPreloadPhotosAsync(10, settings.Id);
 
             // Assert - Should return up to 10 photos
             await Assert.That(result.Count).IsGreaterThanOrEqualTo(9);
@@ -293,7 +279,7 @@ namespace LibraFoto.Tests.Modules.Display
         public async Task GetPreloadPhotosAsync_ReturnsAllPhotos_WhenLessThanCount()
         {
             // Arrange
-            var settings = new DisplaySettings { Name = "Test", IsActive = true };
+            var settings = CreateTestSettings();
             _db.DisplaySettings.Add(settings);
             for (int i = 1; i <= 5; i++)
             {
@@ -308,11 +294,11 @@ namespace LibraFoto.Tests.Modules.Display
             }
             await _db.SaveChangesAsync();
 
-            // Reset state
-            _service.ResetSequence();
+            // Reset state - use explicit settingsId
+            _service.ResetSequence(settings.Id);
 
-            // Act
-            var result = await _service.GetPreloadPhotosAsync(10);
+            // Act - use explicit settingsId
+            var result = await _service.GetPreloadPhotosAsync(10, settings.Id);
 
             // Assert - When asking for 10 but only 5 exist, preload wraps and may return duplicates up to count 
             await Assert.That(result.Count).IsGreaterThanOrEqualTo(5);
@@ -323,7 +309,7 @@ namespace LibraFoto.Tests.Modules.Display
         public async Task ResetSequence_ClearsQueue()
         {
             // Arrange
-            var settings = new DisplaySettings { Name = "Test", IsActive = true, Shuffle = false };
+            var settings = CreateTestSettings(shuffle: false);
             _db.DisplaySettings.Add(settings);
             var photos = new[]
             {
@@ -333,11 +319,11 @@ namespace LibraFoto.Tests.Modules.Display
             _db.Photos.AddRange(photos);
             await _db.SaveChangesAsync();
 
-            var first = await _service.GetNextPhotoAsync();
+            var first = await _service.GetNextPhotoAsync(settings.Id);
 
             // Act
-            _service.ResetSequence();
-            var afterReset = await _service.GetNextPhotoAsync();
+            _service.ResetSequence(settings.Id);
+            var afterReset = await _service.GetNextPhotoAsync(settings.Id);
 
             // Assert - After reset, should restart from beginning
             await Assert.That(first).IsNotNull();
@@ -349,7 +335,7 @@ namespace LibraFoto.Tests.Modules.Display
         public async Task GetPhotoCountAsync_ReturnsCorrectCount()
         {
             // Arrange
-            var settings = new DisplaySettings { Name = "Test", IsActive = true };
+            var settings = CreateTestSettings();
             _db.DisplaySettings.Add(settings);
             for (int i = 1; i <= 7; i++)
             {
@@ -364,8 +350,8 @@ namespace LibraFoto.Tests.Modules.Display
             }
             await _db.SaveChangesAsync();
 
-            // Act
-            var count = await _service.GetPhotoCountAsync();
+            // Act - use explicit settingsId
+            var count = await _service.GetPhotoCountAsync(settings.Id);
 
             // Assert
             await Assert.That(count).IsEqualTo(7);
@@ -375,12 +361,12 @@ namespace LibraFoto.Tests.Modules.Display
         public async Task GetPhotoCountAsync_ReturnsZero_WhenNoPhotos()
         {
             // Arrange
-            var settings = new DisplaySettings { Name = "Test", IsActive = true };
+            var settings = CreateTestSettings();
             _db.DisplaySettings.Add(settings);
             await _db.SaveChangesAsync();
 
-            // Act
-            var count = await _service.GetPhotoCountAsync();
+            // Act - use explicit settingsId
+            var count = await _service.GetPhotoCountAsync(settings.Id);
 
             // Assert
             await Assert.That(count).IsEqualTo(0);
@@ -406,18 +392,12 @@ namespace LibraFoto.Tests.Modules.Display
             );
             await _db.SaveChangesAsync();
 
-            var settings = new DisplaySettings
-            {
-                Name = "Test",
-                IsActive = true,
-                SourceType = SourceType.Album,
-                SourceId = album.Id
-            };
+            var settings = CreateTestSettings(sourceType: SourceType.Album, sourceId: album.Id);
             _db.DisplaySettings.Add(settings);
             await _db.SaveChangesAsync();
 
-            // Act
-            var count = await _service.GetPhotoCountAsync();
+            // Act - use explicit settingsId
+            var count = await _service.GetPhotoCountAsync(settings.Id);
 
             // Assert - Should only count photos in the album
             await Assert.That(count).IsEqualTo(2);
