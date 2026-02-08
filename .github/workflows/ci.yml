@@ -3,10 +3,10 @@ name: CI
 on:
   push:
     branches:
-      - main
+      - master
   pull_request:
     branches:
-      - main
+      - master
 
 permissions:
   contents: read
@@ -31,7 +31,7 @@ jobs:
           VERSION=$(cat .version)
           echo "Version: $VERSION"
 
-          # Check if this is the main branch
+          # Check if this is the master branch
           BRANCH="${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}"
           echo "Branch: $BRANCH"
 
@@ -41,15 +41,15 @@ jobs:
           # Prerelease pattern: #.#.#-alpha.#, #.#.#-beta.#, #.#.#-rc.#
           PRERELEASE_PATTERN="^[0-9]+\.[0-9]+\.[0-9]+-(alpha|beta|rc)\.[0-9]+$"
 
-          if [[ "$BRANCH" == "main" ]]; then
-            # Main branch MUST use stable versions only
+          if [[ "$BRANCH" == "master" ]]; then
+            # Master branch MUST use stable versions only
             if [[ ! "$VERSION" =~ $STABLE_PATTERN ]]; then
-              echo "::error::Invalid version format for main branch: $VERSION"
-              echo "::error::Main branch requires stable versions (#.#.#)"
-              echo "::error::Prerelease versions are not allowed on main"
+              echo "::error::Invalid version format for master branch: $VERSION"
+              echo "::error::Master branch requires stable versions (#.#.#)"
+              echo "::error::Prerelease versions are not allowed on master"
               exit 1
             fi
-            echo "✅ Stable version '$VERSION' is valid for main branch"
+            echo "✅ Stable version '$VERSION' is valid for master branch"
           else
             # Feature branches MUST use prerelease versions
             if [[ "$VERSION" =~ $STABLE_PATTERN ]]; then
