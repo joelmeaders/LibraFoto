@@ -68,7 +68,15 @@ namespace LibraFoto.Modules.Storage.Endpoints
             GooglePhotosConfiguration? config = null;
             if (!string.IsNullOrEmpty(provider.Configuration))
             {
-                config = JsonSerializer.Deserialize<GooglePhotosConfiguration>(provider.Configuration);
+                try
+                {
+                    config = JsonSerializer.Deserialize<GooglePhotosConfiguration>(provider.Configuration);
+                }
+                catch (JsonException)
+                {
+                    // Invalid JSON in configuration - will fall back to environment variables
+                    config = null;
+                }
             }
 
             // Use environment variables if not in config
@@ -137,7 +145,15 @@ namespace LibraFoto.Modules.Storage.Endpoints
                 GooglePhotosConfiguration? existingConfig = null;
                 if (!string.IsNullOrEmpty(provider.Configuration))
                 {
-                    existingConfig = JsonSerializer.Deserialize<GooglePhotosConfiguration>(provider.Configuration);
+                    try
+                    {
+                        existingConfig = JsonSerializer.Deserialize<GooglePhotosConfiguration>(provider.Configuration);
+                    }
+                    catch (JsonException)
+                    {
+                        // Invalid JSON in configuration - will fall back to environment variables
+                        existingConfig = null;
+                    }
                 }
 
                 var clientId = existingConfig?.ClientId ?? configuration["GooglePhotos:ClientId"];

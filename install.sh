@@ -9,8 +9,8 @@
 # - Container deployment
 #
 # Usage:
-#   sudo ./install.sh           # Interactive installation
-#   sudo ./install.sh --help    # Show help
+#   sudo bash ./install.sh           # Interactive installation
+#   sudo bash ./install.sh --help    # Show help
 #
 # Requirements:
 #   - Raspberry Pi 4 or later
@@ -101,7 +101,7 @@ REQUIREMENTS:
     - At least 2GB RAM
 
 EXAMPLES:
-    sudo ./install.sh                # Interactive installation
+    sudo bash ./install.sh                # Interactive installation
 
 LOG FILE:
     Installation log is saved to: $LOG_FILE

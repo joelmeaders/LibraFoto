@@ -228,12 +228,12 @@ namespace LibraFoto.Tests.Helpers
         /// </summary>
         public static Tag CreateTestTag(
             long id = 1,
-            string name = "Test Tag",
+            string? name = null,
             string? color = "#FF5733") =>
             new()
             {
                 Id = id,
-                Name = name,
+                Name = name ?? $"Test Tag {id}",
                 Color = color
             };
     }

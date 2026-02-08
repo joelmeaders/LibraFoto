@@ -1,0 +1,12 @@
+{
+  "codeCoverage": {
+    "Configuration": {
+      "CodeCoverage": {
+        "ModulePaths": {
+          "Include": [".*\\.dll$"],
+          "Exclude": [".*tests\\.dll$", "*.Tests\\.dll$"]
+        }
+      }
+    }
+  }
+}

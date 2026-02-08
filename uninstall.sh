@@ -10,8 +10,8 @@
 # - Preserves data by default (photos, database)
 #
 # Usage:
-#   sudo ./uninstall.sh           # Interactive uninstall
-#   sudo ./uninstall.sh --help    # Show help
+#   sudo bash ./uninstall.sh           # Interactive uninstall
+#   sudo bash ./uninstall.sh --help    # Show help
 #
 # Version: 1.0.0
 # Repository: https://github.com/librafoto/librafoto
@@ -75,7 +75,7 @@ DESCRIPTION:
     - Validate that resources were properly removed
 
 EXAMPLE:
-    sudo ./uninstall.sh
+    sudo bash ./uninstall.sh
 
 LOG FILE:
     Uninstall log is saved to: $LOG_FILE
@@ -414,7 +414,7 @@ show_post_uninstall() {
     
     echo -e "${BOLD}To reinstall LibraFoto:${NC}"
     echo ""
-    echo "  sudo ./install.sh"
+    echo "  sudo bash ./install.sh"
     echo ""
     
     echo -e "${BOLD}Log file:${NC} $LOG_FILE"

@@ -415,7 +415,7 @@ jobs:
 
           3. Install:
           \`\`\`bash
-          sudo ./install.sh
+          sudo bash ./install.sh
           \`\`\`
 
           ### Build from Source
@@ -423,14 +423,14 @@ jobs:
           \`\`\`bash
           git clone https://github.com/${{ github.repository }}.git
           cd librafoto
-          sudo ./install.sh
+          sudo bash ./install.sh
           \`\`\`
 
           ## Updating
 
           If you installed from a release zip, run:
           \`\`\`bash
-          sudo ./update.sh
+          sudo bash ./update.sh
           \`\`\`
           The update script will automatically detect and download the latest release.
           EOF

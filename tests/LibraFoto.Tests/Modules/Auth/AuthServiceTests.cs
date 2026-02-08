@@ -10,12 +10,14 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
+using TUnit.Core;
 
 namespace LibraFoto.Tests.Modules.Auth
 {
     /// <summary>
     /// Tests for AuthService JWT authentication logic.
     /// </summary>
+    [NotInParallel]
     public class AuthServiceTests
     {
         private SqliteConnection _connection = null!;
@@ -54,12 +56,8 @@ namespace LibraFoto.Tests.Modules.Auth
 
             // Setup DI container for testing singleton service
             var services = new ServiceCollection();
-            services.AddScoped<LibraFotoDbContext>(_ =>
-            {
-                var opts = new DbContextOptionsBuilder<LibraFotoDbContext>()
-                    .UseSqlite(_connection).Options;
-                return new LibraFotoDbContext(opts);
-            });
+            // Use the same _db instance for all scopes to ensure data consistency
+            services.AddScoped<LibraFotoDbContext>(_ => _db);
             services.AddScoped<IUserService, UserService>();
             services.AddSingleton<IAuthService, AuthService>();
             services.AddSingleton<IConfiguration>(_configuration);
