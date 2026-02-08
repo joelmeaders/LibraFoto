@@ -326,7 +326,7 @@ jobs:
 
       - name: Install diff-cover
         if: github.event_name == 'pull_request'
-        run: python -m pip install --upgrade diff-cover=10.0.2
+        run: python -m pip install --upgrade diff-cover==10.0.2
 
       - name: Check PR diff coverage (admin)
         if: github.event_name == 'pull_request'
@@ -419,7 +419,7 @@ jobs:
 
       - name: Install diff-cover
         if: github.event_name == 'pull_request'
-        run: python -m pip install --upgrade diff-cover=10.0.2
+        run: python -m pip install --upgrade diff-cover==10.0.2
 
       - name: Check PR diff coverage (display)
         if: github.event_name == 'pull_request'
