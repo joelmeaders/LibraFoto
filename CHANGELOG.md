@@ -19,6 +19,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+## [0.1.2] - 2026-02-08
+
+### Changed
+
+- Enforced PR-only diff coverage checks in CI for backend, admin, and display tests
+- Added LCOV coverage output for the display Vitest suite to support diff coverage
+
 ## [0.1.1] - 2026-02-08
 
 ### Changed

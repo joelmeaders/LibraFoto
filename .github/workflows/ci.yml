@@ -113,6 +113,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -178,6 +180,28 @@ jobs:
             -reports:"./TestResults/*.cobertura.xml" \
             -targetdir:"./TestResults/CoverageReport" \
             -reporttypes:"Html;Cobertura;TextSummary"
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install diff-cover
+        run: python -m pip install --upgrade diff-cover
+
+      - name: Check PR diff coverage (backend)
+        run: |
+          git fetch origin main --depth=1
+
+          COVERAGE_FILE="./TestResults/CoverageReport/Cobertura.xml"
+          if [[ ! -f "$COVERAGE_FILE" ]]; then
+            echo "::error::Cobertura report not found at $COVERAGE_FILE"
+            exit 1
+          fi
+
+          diff-cover "$COVERAGE_FILE" \
+            --compare-branch origin/main \
+            --fail-under 80
 
       - name: Check backend coverage threshold
         continue-on-error: true
@@ -275,6 +299,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -288,6 +314,31 @@ jobs:
 
       - name: Run tests with coverage
         run: npm run test:coverage
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install diff-cover
+        run: python -m pip install --upgrade diff-cover
+
+      - name: Check PR diff coverage (admin)
+        working-directory: ${{ github.workspace }}
+        run: |
+          git fetch origin main --depth=1
+
+          COVERAGE_FILE="apps/admin/coverage/librafoto-admin/lcov.info"
+          if [[ ! -f "$COVERAGE_FILE" ]]; then
+            echo "::error::Admin coverage file not found at $COVERAGE_FILE"
+            ls -la apps/admin/coverage || true
+            ls -la apps/admin/coverage/librafoto-admin || true
+            exit 1
+          fi
+
+          diff-cover "$COVERAGE_FILE" \
+            --compare-branch origin/main \
+            --fail-under 80
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
@@ -338,6 +389,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -351,6 +404,30 @@ jobs:
 
       - name: Run tests with coverage
         run: npm run test:coverage -- --coverage.thresholds.lines=80 --coverage.thresholds.functions=80 --coverage.thresholds.branches=80 --coverage.thresholds.statements=80
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install diff-cover
+        run: python -m pip install --upgrade diff-cover
+
+      - name: Check PR diff coverage (display)
+        working-directory: ${{ github.workspace }}
+        run: |
+          git fetch origin main --depth=1
+
+          COVERAGE_FILE="apps/display/coverage/lcov.info"
+          if [[ ! -f "$COVERAGE_FILE" ]]; then
+            echo "::error::Display coverage file not found at $COVERAGE_FILE"
+            ls -la apps/display/coverage || true
+            exit 1
+          fi
+
+          diff-cover "$COVERAGE_FILE" \
+            --compare-branch origin/main \
+            --fail-under 80
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
