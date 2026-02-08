@@ -69,7 +69,17 @@
           }
         },
         "test": {
-          "builder": "@angular/build:unit-test"
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "coverage": {
+              "thresholds": {
+                "lines": 80,
+                "functions": 80,
+                "branches": 80,
+                "statements": 80
+              }
+            }
+          }
         }
       }
     }
