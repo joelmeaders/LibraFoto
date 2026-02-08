@@ -1,0 +1,62 @@
+using System.Reflection;
+using LibraFoto.Data;
+using LibraFoto.Modules.Storage.Endpoints;
+using LibraFoto.Modules.Storage.Interfaces;
+using LibraFoto.Modules.Storage.Models;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+
+namespace LibraFoto.Tests.Modules.Storage.Endpoints
+{
+    public static class StorageEndpointsTestHelper
+    {
+        private static readonly MethodInfo GetAllProvidersMethod = typeof(StorageEndpoints).GetMethod("GetAllProviders", BindingFlags.NonPublic | BindingFlags.Static)!;
+        private static readonly MethodInfo GetProviderMethod = typeof(StorageEndpoints).GetMethod("GetProvider", BindingFlags.NonPublic | BindingFlags.Static)!;
+        private static readonly MethodInfo CreateProviderMethod = typeof(StorageEndpoints).GetMethod("CreateProvider", BindingFlags.NonPublic | BindingFlags.Static)!;
+        private static readonly MethodInfo UpdateProviderMethod = typeof(StorageEndpoints).GetMethod("UpdateProvider", BindingFlags.NonPublic | BindingFlags.Static)!;
+        private static readonly MethodInfo DeleteProviderMethod = typeof(StorageEndpoints).GetMethod("DeleteProvider", BindingFlags.NonPublic | BindingFlags.Static)!;
+        private static readonly MethodInfo TriggerSyncMethod = typeof(StorageEndpoints).GetMethod("TriggerSync", BindingFlags.NonPublic | BindingFlags.Static)!;
+        private static readonly MethodInfo GetSyncStatusMethod = typeof(StorageEndpoints).GetMethod("GetSyncStatus", BindingFlags.NonPublic | BindingFlags.Static)!;
+        private static readonly MethodInfo CancelSyncMethod = typeof(StorageEndpoints).GetMethod("CancelSync", BindingFlags.NonPublic | BindingFlags.Static)!;
+
+        public static Task<Microsoft.AspNetCore.Http.HttpResults.Ok<StorageProviderDto[]>> GetAllProviders(LibraFotoDbContext db, IStorageProviderFactory factory, CancellationToken ct)
+        {
+            return (Task<Microsoft.AspNetCore.Http.HttpResults.Ok<StorageProviderDto[]>>)GetAllProvidersMethod.Invoke(null, [db, factory, ct])!;
+        }
+
+        public static Task<Microsoft.AspNetCore.Http.HttpResults.Results<Microsoft.AspNetCore.Http.HttpResults.Ok<StorageProviderDto>, Microsoft.AspNetCore.Http.HttpResults.NotFound<LibraFoto.Shared.DTOs.ApiError>>> GetProvider(long id, LibraFotoDbContext db, IStorageProviderFactory factory, CancellationToken ct)
+        {
+            return (Task<Microsoft.AspNetCore.Http.HttpResults.Results<Microsoft.AspNetCore.Http.HttpResults.Ok<StorageProviderDto>, Microsoft.AspNetCore.Http.HttpResults.NotFound<LibraFoto.Shared.DTOs.ApiError>>>)GetProviderMethod.Invoke(null, [id, db, factory, ct])!;
+        }
+
+        public static Task<Microsoft.AspNetCore.Http.HttpResults.Results<Microsoft.AspNetCore.Http.HttpResults.Created<StorageProviderDto>, Microsoft.AspNetCore.Http.HttpResults.BadRequest<LibraFoto.Shared.DTOs.ApiError>>> CreateProvider(CreateStorageProviderRequest request, LibraFotoDbContext db, IStorageProviderFactory factory, CancellationToken ct)
+        {
+            return (Task<Microsoft.AspNetCore.Http.HttpResults.Results<Microsoft.AspNetCore.Http.HttpResults.Created<StorageProviderDto>, Microsoft.AspNetCore.Http.HttpResults.BadRequest<LibraFoto.Shared.DTOs.ApiError>>>)CreateProviderMethod.Invoke(null, [request, db, factory, ct])!;
+        }
+
+        public static Task<Microsoft.AspNetCore.Http.HttpResults.Results<Microsoft.AspNetCore.Http.HttpResults.Ok<StorageProviderDto>, Microsoft.AspNetCore.Http.HttpResults.NotFound<LibraFoto.Shared.DTOs.ApiError>, Microsoft.AspNetCore.Http.HttpResults.BadRequest<LibraFoto.Shared.DTOs.ApiError>>> UpdateProvider(long id, UpdateStorageProviderRequest request, LibraFotoDbContext db, IStorageProviderFactory factory, CancellationToken ct)
+        {
+            return (Task<Microsoft.AspNetCore.Http.HttpResults.Results<Microsoft.AspNetCore.Http.HttpResults.Ok<StorageProviderDto>, Microsoft.AspNetCore.Http.HttpResults.NotFound<LibraFoto.Shared.DTOs.ApiError>, Microsoft.AspNetCore.Http.HttpResults.BadRequest<LibraFoto.Shared.DTOs.ApiError>>>)UpdateProviderMethod.Invoke(null, [id, request, db, factory, ct])!;
+        }
+
+        public static Task<Microsoft.AspNetCore.Http.HttpResults.Results<Microsoft.AspNetCore.Http.HttpResults.NoContent, Microsoft.AspNetCore.Http.HttpResults.NotFound<LibraFoto.Shared.DTOs.ApiError>>> DeleteProvider(DeleteProviderRequest request, LibraFotoDbContext db, IStorageProviderFactory factory, IConfiguration config, ILoggerFactory loggerFactory, CancellationToken ct)
+        {
+            return (Task<Microsoft.AspNetCore.Http.HttpResults.Results<Microsoft.AspNetCore.Http.HttpResults.NoContent, Microsoft.AspNetCore.Http.HttpResults.NotFound<LibraFoto.Shared.DTOs.ApiError>>>)DeleteProviderMethod.Invoke(null, [request, db, factory, config, loggerFactory, ct])!;
+        }
+
+        public static Task<Microsoft.AspNetCore.Http.HttpResults.Results<Microsoft.AspNetCore.Http.HttpResults.Ok<SyncResult>, Microsoft.AspNetCore.Http.HttpResults.NotFound<LibraFoto.Shared.DTOs.ApiError>>> TriggerSync(long id, SyncRequest? request, ISyncService syncService, CancellationToken ct)
+        {
+            return (Task<Microsoft.AspNetCore.Http.HttpResults.Results<Microsoft.AspNetCore.Http.HttpResults.Ok<SyncResult>, Microsoft.AspNetCore.Http.HttpResults.NotFound<LibraFoto.Shared.DTOs.ApiError>>>)TriggerSyncMethod.Invoke(null, [id, request, syncService, ct])!;
+        }
+
+        public static Task<Microsoft.AspNetCore.Http.HttpResults.Ok<SyncStatus>> GetSyncStatus(long id, ISyncService syncService, CancellationToken ct)
+        {
+            return (Task<Microsoft.AspNetCore.Http.HttpResults.Ok<SyncStatus>>)GetSyncStatusMethod.Invoke(null, [id, syncService, ct])!;
+        }
+
+        public static Microsoft.AspNetCore.Http.HttpResults.Ok<object> CancelSync(long id, ISyncService syncService)
+        {
+            return (Microsoft.AspNetCore.Http.HttpResults.Ok<object>)CancelSyncMethod.Invoke(null, [id, syncService])!;
+        }
+    }
+}

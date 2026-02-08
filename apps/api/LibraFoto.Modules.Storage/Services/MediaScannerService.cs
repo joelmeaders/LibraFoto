@@ -154,12 +154,13 @@ namespace LibraFoto.Modules.Storage.Services
         /// <inheritdoc />
         public string GenerateUniqueFilename(string originalFilename, string targetDirectory)
         {
-            var filename = Path.GetFileNameWithoutExtension(originalFilename);
-            var extension = Path.GetExtension(originalFilename);
-
-            // Sanitize filename - remove invalid characters
+            // Sanitize filename first - remove invalid characters
             var invalidChars = Path.GetInvalidFileNameChars();
-            filename = string.Join("_", filename.Split(invalidChars, StringSplitOptions.RemoveEmptyEntries));
+            var sanitized = string.Join("_", originalFilename.Split(invalidChars, StringSplitOptions.RemoveEmptyEntries));
+
+            // Now safely extract filename and extension from sanitized string
+            var filename = Path.GetFileNameWithoutExtension(sanitized);
+            var extension = Path.GetExtension(sanitized);
 
             if (string.IsNullOrWhiteSpace(filename))
             {

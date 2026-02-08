@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -21,12 +22,12 @@ namespace LibraFoto.Modules.Auth.Services
         private readonly IConfiguration _configuration;
         private readonly ILogger<AuthService> _logger;
 
-        // In-memory storage for refresh tokens (should be replaced with database storage)
-        private static readonly Dictionary<string, (long UserId, DateTime ExpiresAt)> _refreshTokens = new();
-        private static readonly Dictionary<long, HashSet<string>> _userRefreshTokens = new();
+        // Thread-safe in-memory storage for refresh tokens (should be replaced with database storage in production)
+        private static readonly ConcurrentDictionary<string, (long UserId, DateTime ExpiresAt)> _refreshTokens = new();
+        private static readonly ConcurrentDictionary<long, ConcurrentBag<string>> _userRefreshTokens = new();
 
-        // In-memory storage for invalidated tokens
-        private static readonly HashSet<string> _invalidatedTokens = new();
+        // Thread-safe in-memory storage for invalidated tokens
+        private static readonly ConcurrentBag<string> _invalidatedTokens = new();
 
         public AuthService(
             LibraFotoDbContext dbContext,
@@ -84,13 +85,12 @@ namespace LibraFoto.Modules.Auth.Services
         public Task LogoutAsync(long userId, CancellationToken cancellationToken = default)
         {
             // Invalidate all refresh tokens for the user
-            if (_userRefreshTokens.TryGetValue(userId, out var tokens))
+            if (_userRefreshTokens.TryRemove(userId, out var tokens))
             {
                 foreach (var token in tokens)
                 {
-                    _refreshTokens.Remove(token);
+                    _refreshTokens.TryRemove(token, out _);
                 }
-                _userRefreshTokens.Remove(userId);
             }
 
             _logger.LogInformation("User logged out: {UserId}", userId);
@@ -154,8 +154,7 @@ namespace LibraFoto.Modules.Auth.Services
 
             if (tokenData.ExpiresAt < DateTime.UtcNow)
             {
-                _refreshTokens.Remove(refreshToken);
-                _userRefreshTokens.GetValueOrDefault(tokenData.UserId)?.Remove(refreshToken);
+                _refreshTokens.TryRemove(refreshToken, out _);
                 _logger.LogWarning("Expired refresh token for user: {UserId}", tokenData.UserId);
                 return null;
             }
@@ -168,8 +167,7 @@ namespace LibraFoto.Modules.Auth.Services
             }
 
             // Remove old refresh token
-            _refreshTokens.Remove(refreshToken);
-            _userRefreshTokens.GetValueOrDefault(tokenData.UserId)?.Remove(refreshToken);
+            _refreshTokens.TryRemove(refreshToken, out _);
 
             // Generate new tokens
             var (token, expiresAt) = GenerateJwtToken(user);
@@ -221,11 +219,8 @@ namespace LibraFoto.Modules.Auth.Services
 
             _refreshTokens[refreshToken] = (userId, expiresAt);
 
-            if (!_userRefreshTokens.ContainsKey(userId))
-            {
-                _userRefreshTokens[userId] = new HashSet<string>();
-            }
-            _userRefreshTokens[userId].Add(refreshToken);
+            var userTokens = _userRefreshTokens.GetOrAdd(userId, _ => new ConcurrentBag<string>());
+            userTokens.Add(refreshToken);
 
             return refreshToken;
         }

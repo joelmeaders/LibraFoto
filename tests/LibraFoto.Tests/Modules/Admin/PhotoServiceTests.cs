@@ -28,9 +28,8 @@ namespace LibraFoto.Tests.Modules.Admin
         [Before(Test)]
         public async Task Setup()
         {
-            // Create SQLite in-memory database for each test
-            // Using a shared connection keeps the database alive for the test duration
-            _connection = new SqliteConnection("Data Source=:memory:");
+            // Use unique database for each test to avoid concurrency issues
+            _connection = new SqliteConnection($"Data Source=TestDb_{Guid.NewGuid():N};Mode=Memory;Cache=Shared");
             await _connection.OpenAsync();
 
             var options = new DbContextOptionsBuilder<LibraFotoDbContext>()

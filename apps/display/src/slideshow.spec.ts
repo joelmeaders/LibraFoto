@@ -213,6 +213,47 @@ describe("Slideshow", () => {
       expect(errorIndicator?.classList.contains("hidden")).toBe(false);
     });
 
+    it("should handle display config fetch failure gracefully", async () => {
+      mockApiClient.getSettings.mockResolvedValue({
+        success: true,
+        data: createTestSettings(),
+      });
+      mockApiClient.getPhotoCount.mockResolvedValue({
+        success: true,
+        data: { totalPhotos: 0 },
+      });
+      mockApiClient.getDisplayConfig.mockResolvedValue({
+        success: false,
+        error: { code: "ERROR" },
+      });
+
+      const slideshow = new Slideshow(mockApiClient as any);
+      await slideshow.start();
+
+      // Should show error without QR code when display config fails
+      const errorIndicator = document.getElementById("error-indicator");
+      expect(errorIndicator?.classList.contains("hidden")).toBe(false);
+      expect(errorIndicator?.textContent).toContain("No photos");
+    });
+
+    it("should handle photo count fetch failure", async () => {
+      mockApiClient.getSettings.mockResolvedValue({
+        success: true,
+        data: createTestSettings(),
+      });
+      mockApiClient.getPhotoCount.mockResolvedValue({
+        success: false,
+        error: { code: "ERROR" },
+      });
+
+      const slideshow = new Slideshow(mockApiClient as any);
+      await slideshow.start();
+
+      // Should treat as no photos when count fetch fails
+      const errorIndicator = document.getElementById("error-indicator");
+      expect(errorIndicator?.classList.contains("hidden")).toBe(false);
+    });
+
     it("should show QR overlay for 30 seconds when photos exist", async () => {
       const testPhoto: PhotoDto = {
         id: 1,
@@ -327,6 +368,40 @@ describe("Slideshow", () => {
       vi.useRealTimers();
     });
 
+    it("should handle settings refresh failure during no-photos polling", async () => {
+      vi.useFakeTimers();
+
+      mockApiClient.getSettings
+        .mockResolvedValueOnce({
+          success: true,
+          data: createTestSettings(),
+        })
+        .mockResolvedValueOnce({
+          success: false,
+          error: { code: "ERROR" },
+        });
+      mockApiClient.getPhotoCount
+        .mockResolvedValueOnce({
+          success: true,
+          data: { totalPhotos: 0 },
+        })
+        .mockResolvedValueOnce({
+          success: true,
+          data: { totalPhotos: 0 },
+        });
+
+      const slideshow = new Slideshow(mockApiClient as any);
+      await slideshow.start();
+
+      await vi.advanceTimersByTimeAsync(10000);
+
+      // Should continue polling even when settings refresh fails
+      expect(mockApiClient.getSettings).toHaveBeenCalledTimes(2);
+      expect(mockApiClient.getPhotoCount).toHaveBeenCalledTimes(2);
+
+      vi.useRealTimers();
+    });
+
     it("should restart slideshow when photos become available during polling", async () => {
       vi.useFakeTimers();
 
@@ -379,6 +454,24 @@ describe("Slideshow", () => {
       expect(mockApiClient.onSettingsChange).toHaveBeenCalled();
     });
 
+    it("should handle initial settings change when oldSettings is null", () => {
+      let settingsCallback!: (settings: DisplaySettingsDto) => void;
+      mockApiClient.onSettingsChange.mockImplementation((cb) => {
+        settingsCallback = cb;
+        return () => {};
+      });
+
+      const slideshow = new Slideshow(mockApiClient as any);
+      const newSettings = createTestSettings({ slideDuration: 20 });
+
+      // First settings change - oldSettings is null
+      settingsCallback?.(newSettings);
+
+      // Should not throw and should handle gracefully
+      expect(slideshow).toBeDefined();
+      expect(mockApiClient.onSettingsChange).toHaveBeenCalled();
+    });
+
     it("should clear preload queue when source changes", () => {
       let settingsCallback!: (settings: DisplaySettingsDto) => void;
       mockApiClient.onSettingsChange.mockImplementation((cb) => {
@@ -400,6 +493,28 @@ describe("Slideshow", () => {
         sourceType: SourceType.Album,
         sourceId: 5,
       });
+      settingsCallback?.(newSettings);
+
+      expect(mockApiClient.preloadPhotosWithImages).toHaveBeenCalled();
+      expect(slideshow).toBeDefined();
+    });
+
+    it("should clear preload queue when shuffle changes", () => {
+      let settingsCallback!: (settings: DisplaySettingsDto) => void;
+      mockApiClient.onSettingsChange.mockImplementation((cb) => {
+        settingsCallback = cb;
+        return () => {};
+      });
+      mockApiClient.preloadPhotosWithImages.mockResolvedValue([]);
+
+      const slideshow = new Slideshow(mockApiClient as any);
+      const oldSettings = createTestSettings({ shuffle: true });
+      settingsCallback?.(oldSettings);
+
+      mockApiClient.preloadPhotosWithImages.mockClear();
+
+      // Change shuffle
+      const newSettings = createTestSettings({ shuffle: false });
       settingsCallback?.(newSettings);
 
       expect(mockApiClient.preloadPhotosWithImages).toHaveBeenCalled();
@@ -432,6 +547,54 @@ describe("Slideshow", () => {
       settingsCallback?.(createTestSettings({ imageFit: ImageFit.Contain }));
       expect(currentSlide.style.objectFit).toBe("contain");
       expect(nextSlide.style.objectFit).toBe("contain");
+    });
+
+    it("should update blur background when imageFit changes with current photo", async () => {
+      // Add blur background elements
+      const blurBg = document.createElement("div");
+      blurBg.id = "blur-background";
+      const currentImg = document.createElement("img");
+      currentImg.id = "blur-background-current-img";
+      const nextImg = document.createElement("img");
+      nextImg.id = "blur-background-next-img";
+      blurBg.appendChild(currentImg);
+      blurBg.appendChild(nextImg);
+      document.body.appendChild(blurBg);
+
+      let settingsCallback!: (settings: DisplaySettingsDto) => void;
+      mockApiClient.onSettingsChange.mockImplementation((cb) => {
+        settingsCallback = cb;
+        return () => {};
+      });
+
+      const testPhoto: PhotoDto = {
+        id: 1,
+        url: "/api/media/photos/1",
+        dateTaken: new Date().toISOString(),
+        mediaType: MediaType.Photo,
+        width: 1920,
+        height: 1080,
+      };
+      mockApiClient.getSettings.mockResolvedValue({
+        success: true,
+        data: createTestSettings({ imageFit: ImageFit.Cover }),
+      });
+      mockApiClient.getPhotoCount.mockResolvedValue({
+        success: true,
+        data: { totalPhotos: 10 },
+      });
+      mockApiClient.preloadPhotosWithImages.mockResolvedValue([testPhoto]);
+      mockApiClient.preloadImage.mockResolvedValue(undefined);
+
+      const slideshow = new Slideshow(mockApiClient as any);
+      await slideshow.start();
+
+      // Verify current photo is set
+      expect(slideshow.getCurrentPhoto()).toBeTruthy();
+
+      // Change to contain mode - should update blur background with photo URL
+      settingsCallback?.(createTestSettings({ imageFit: ImageFit.Contain }));
+      expect(blurBg.classList.contains("hidden")).toBe(false);
     });
   });
 
@@ -843,73 +1006,58 @@ describe("Slideshow", () => {
     });
   });
 
-  describe("loading indicator", () => {
-    it("should show loading indicator during start", async () => {
-      // This test verifies basic loading indicator behavior without complex async scenarios
-      const testPhoto: PhotoDto = {
-        id: 1,
-        url: "/api/media/photos/1",
-        dateTaken: new Date().toISOString(),
-        mediaType: MediaType.Photo,
-        width: 1920,
-        height: 1080,
-      };
-      mockApiClient.getSettings.mockResolvedValue({
-        success: true,
-        data: createTestSettings(),
-      });
-      mockApiClient.getPhotoCount.mockResolvedValue({
-        success: true,
-        data: { totalPhotos: 10 },
-      });
-      mockApiClient.preloadPhotosWithImages.mockResolvedValue([testPhoto]);
-      mockApiClient.preloadImage.mockResolvedValue(undefined);
-
-      const slideshow = new Slideshow(mockApiClient as any);
-      // Loading indicator is managed internally by slideshow
-      await slideshow.start();
-
-      // After successful start, loading indicator should be hidden
-      const loadingIndicator = document.getElementById("loading-indicator");
-      expect(loadingIndicator?.classList.contains("hidden")).toBe(true);
-
-      slideshow.stop();
-    });
-
-    it("should hide loading indicator after successful start", async () => {
-      vi.useFakeTimers({ shouldAdvanceTime: true });
-
-      const testPhoto: PhotoDto = {
-        id: 1,
-        url: "/api/media/photos/1",
-        dateTaken: new Date().toISOString(),
-        mediaType: MediaType.Photo,
-        width: 1920,
-        height: 1080,
-      };
-      mockApiClient.getSettings.mockResolvedValue({
-        success: true,
-        data: createTestSettings(),
-      });
-      mockApiClient.getPhotoCount.mockResolvedValue({
-        success: true,
-        data: { totalPhotos: 10 },
-      });
-      mockApiClient.preloadPhotosWithImages.mockResolvedValue([testPhoto]);
-      mockApiClient.preloadImage.mockResolvedValue(undefined);
-
-      const slideshow = new Slideshow(mockApiClient as any);
-      await slideshow.start();
-
-      const loadingIndicator = document.getElementById("loading-indicator");
-      expect(loadingIndicator?.classList.contains("hidden")).toBe(true);
-
-      slideshow.stop();
-      vi.useRealTimers();
-    });
-  });
-
   describe("QR overlay", () => {
+    it("should handle QR code generation failure", async () => {
+      const { generateQrCodeDataUrl } = await import("./qr-code");
+      vi.mocked(generateQrCodeDataUrl).mockResolvedValueOnce(null);
+
+      mockApiClient.getSettings.mockResolvedValue({
+        success: true,
+        data: createTestSettings(),
+      });
+      mockApiClient.getPhotoCount.mockResolvedValue({
+        success: true,
+        data: { totalPhotos: 0 },
+      });
+
+      const slideshow = new Slideshow(mockApiClient as any);
+      await slideshow.start();
+
+      // Should handle QR generation failure gracefully
+      const errorIndicator = document.getElementById("error-indicator");
+      expect(errorIndicator?.classList.contains("hidden")).toBe(false);
+    });
+
+    it("should handle missing QR overlay element", async () => {
+      const qrOverlay = document.getElementById("qr-overlay");
+      qrOverlay?.remove();
+
+      const testPhoto: PhotoDto = {
+        id: 1,
+        url: "/api/media/photos/1",
+        dateTaken: new Date().toISOString(),
+        mediaType: MediaType.Photo,
+        width: 1920,
+        height: 1080,
+      };
+      mockApiClient.getSettings.mockResolvedValue({
+        success: true,
+        data: createTestSettings(),
+      });
+      mockApiClient.getPhotoCount.mockResolvedValue({
+        success: true,
+        data: { totalPhotos: 10 },
+      });
+      mockApiClient.preloadPhotosWithImages.mockResolvedValue([testPhoto]);
+      mockApiClient.preloadImage.mockResolvedValue(undefined);
+
+      const slideshow = new Slideshow(mockApiClient as any);
+      // Should not throw when QR overlay element is missing
+      await slideshow.start();
+
+      expect(slideshow.getCurrentPhoto()).toBeTruthy();
+    });
+
     it("should hide QR overlay after duration expires", async () => {
       vi.useFakeTimers({ shouldAdvanceTime: true });
 

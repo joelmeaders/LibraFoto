@@ -9,5 +9,15 @@
     <Version>$(VersionFileContent)</Version>
     
     <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
+    
+    <!-- Code Coverage Settings -->
+    <CoverletOutputFormat>cobertura</CoverletOutputFormat>
+    <ExcludeByFile>**/Migrations/**/*.cs</ExcludeByFile>
+    <ExcludeByAttribute>ExcludeFromCodeCoverage,GeneratedCode,CompilerGenerated</ExcludeByAttribute>
+  </PropertyGroup>
+  
+  <!-- Exclude test projects from code coverage -->
+  <PropertyGroup Condition="'$(IsTestProject)' == 'true'">
+    <CollectCoverage>false</CollectCoverage>
   </PropertyGroup>
 </Project>
