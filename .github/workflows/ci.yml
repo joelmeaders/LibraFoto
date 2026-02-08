@@ -3,10 +3,10 @@ name: CI
 on:
   push:
     branches:
-      - master
+      - main
   pull_request:
     branches:
-      - master
+      - main
 
 permissions:
   contents: read
@@ -43,20 +43,20 @@ jobs:
           # Prerelease pattern: #.#.#-alpha.#, #.#.#-beta.#, #.#.#-rc.#
           PRERELEASE_PATTERN="^[0-9]+\.[0-9]+\.[0-9]+-(alpha|beta|rc)\.[0-9]+$"
 
-          if [[ "$TARGET_BRANCH" == "master" ]]; then
-            # PRs to master or pushes to master MUST use stable versions
+          if [[ "$TARGET_BRANCH" == "main" ]]; then
+            # PRs to main or pushes to main MUST use stable versions
             if [[ ! "$VERSION" =~ $STABLE_PATTERN ]]; then
-              echo "::error::Invalid version format for master: $VERSION"
-              echo "::error::PRs to master require stable versions (#.#.#)"
+              echo "::error::Invalid version format for main: $VERSION"
+              echo "::error::PRs to main require stable versions (#.#.#)"
               echo "::error::Prerelease versions are not allowed"
               exit 1
             fi
-            echo "✅ Stable version '$VERSION' is valid for master"
+            echo "✅ Stable version '$VERSION' is valid for main"
           else
-            # PRs to non-master or pushes to non-master branches MUST use prerelease versions
+            # PRs to non-main or pushes to non-main branches MUST use prerelease versions
             if [[ "$VERSION" =~ $STABLE_PATTERN ]]; then
               echo "::error::Stable version '$VERSION' not allowed for target branch '$TARGET_BRANCH'"
-              echo "::error::Non-master branches must use prerelease versions like:"
+              echo "::error::Non-main branches must use prerelease versions like:"
               echo "::error::  - 1.0.0-alpha.1"
               echo "::error::  - 1.0.0-beta.2"
               echo "::error::  - 1.0.0-rc.1"
@@ -71,7 +71,7 @@ jobs:
               exit 1
             fi
             
-            echo "✅ Prerelease version '$VERSION' is valid for non-master branch '$TARGET_BRANCH'"
+            echo "✅ Prerelease version '$VERSION' is valid for non-main branch '$TARGET_BRANCH'"
           fi
 
   # =============================================================================

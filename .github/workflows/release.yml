@@ -1,12 +1,12 @@
 name: Release
 
 # Build Docker images, package platform-specific zip releases, and create GitHub Release.
-# Stable releases: Triggered by pushes to master branch with stable version in .version
+# Stable releases: Triggered by pushes to main branch with stable version in .version
 # Prereleases: Triggered by version tags (e.g., v1.2.0-alpha.1)
 on:
   push:
     branches:
-      - master
+      - main
     tags:
       - "v*.*.*"
 
@@ -75,7 +75,7 @@ jobs:
             
             if [[ "$IS_PRERELEASE" != "true" ]]; then
               echo "::error::Tag-based releases are only for prereleases (alpha/beta/rc)"
-              echo "::error::For stable releases, push to master branch instead"
+              echo "::error::For stable releases, push to main branch instead"
               exit 1
             fi
             
@@ -83,14 +83,14 @@ jobs:
             echo "✅ Prerelease version $FILE_VERSION validated for tag-based release"
             
           else
-            # Branch push - only create release for stable versions on master
+            # Branch push - only create release for stable versions on main
             if [[ "$IS_PRERELEASE" == "true" ]]; then
-              echo "⏭️  Skipping release - prerelease version on master branch"
+              echo "⏭️  Skipping release - prerelease version on main branch"
               echo "::notice::Prerelease versions should use tags (e.g., git tag v${FILE_VERSION})"
               echo "SHOULD_RELEASE=false" >> $GITHUB_OUTPUT
             else
               echo "SHOULD_RELEASE=true" >> $GITHUB_OUTPUT
-              echo "✅ Stable version $FILE_VERSION validated for master branch release"
+              echo "✅ Stable version $FILE_VERSION validated for main branch release"
             fi
           fi
 
@@ -459,7 +459,7 @@ jobs:
           else
             echo "## Release Created :rocket:" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
-            echo "**Trigger:** Push to master branch" >> $GITHUB_STEP_SUMMARY
+            echo "**Trigger:** Push to main branch" >> $GITHUB_STEP_SUMMARY
           fi
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Version:** ${VERSION}" >> $GITHUB_STEP_SUMMARY

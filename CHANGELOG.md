@@ -19,6 +19,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+## [0.1.1] - 2026-02-08
+
+### Changed
+
+- Renamed default branch to `main` and aligned CI/update checks with the new branch name
+
 ## [0.1.0] - 2026-02-07
 
 ### Added
