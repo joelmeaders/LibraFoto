@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 ### Changed
+- Renamed default branch to `main` and aligned CI/update checks with the new branch name
 
 ### Deprecated
 

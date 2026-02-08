@@ -125,12 +125,6 @@ namespace LibraFoto.Modules.Admin.Services
                 var currentCommit = await RunGitCommandAsync("rev-parse HEAD", cancellationToken);
                 var remoteCommit = await RunGitCommandAsync("rev-parse origin/main", cancellationToken);
 
-                if (!remoteCommit.Success)
-                {
-                    // Try master branch
-                    remoteCommit = await RunGitCommandAsync("rev-parse origin/master", cancellationToken);
-                }
-
                 if (!currentCommit.Success || !remoteCommit.Success)
                 {
                     return new UpdateCheckResponse
@@ -162,10 +156,6 @@ namespace LibraFoto.Modules.Admin.Services
 
                 // Count commits behind
                 var countResult = await RunGitCommandAsync("rev-list --count HEAD..origin/main", cancellationToken);
-                if (!countResult.Success)
-                {
-                    countResult = await RunGitCommandAsync("rev-list --count HEAD..origin/master", cancellationToken);
-                }
 
                 var commitsBehind = 0;
                 if (countResult.Success && int.TryParse(countResult.Output?.Trim(), out var count))
@@ -175,10 +165,6 @@ namespace LibraFoto.Modules.Admin.Services
 
                 // Get changelog
                 var logResult = await RunGitCommandAsync("log --oneline HEAD..origin/main -10", cancellationToken);
-                if (!logResult.Success)
-                {
-                    logResult = await RunGitCommandAsync("log --oneline HEAD..origin/master -10", cancellationToken);
-                }
 
                 var changelog = new List<string>();
                 if (logResult.Success && !string.IsNullOrEmpty(logResult.Output))
@@ -193,10 +179,6 @@ namespace LibraFoto.Modules.Admin.Services
                 // Try to get latest version from .version file on remote
                 var latestVersion = currentVersion;
                 var showResult = await RunGitCommandAsync("show origin/main:.version", cancellationToken);
-                if (!showResult.Success)
-                {
-                    showResult = await RunGitCommandAsync("show origin/master:.version", cancellationToken);
-                }
 
                 if (showResult.Success && !string.IsNullOrEmpty(showResult.Output))
                 {

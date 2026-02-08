@@ -198,7 +198,7 @@ check_for_updates_git() {
     current_commit=$(git rev-parse HEAD)
 
     local remote_commit
-    remote_commit=$(git rev-parse origin/main 2>/dev/null || git rev-parse origin/master 2>/dev/null)
+    remote_commit=$(git rev-parse origin/main 2>/dev/null)
 
     if [[ "$current_commit" == "$remote_commit" ]]; then
         log_success "Already up to date"
@@ -210,7 +210,7 @@ check_for_updates_git() {
 
     # Count commits behind
     local commits_behind
-    commits_behind=$(git rev-list --count HEAD..origin/main 2>/dev/null || git rev-list --count HEAD..origin/master 2>/dev/null || echo "?")
+    commits_behind=$(git rev-list --count HEAD..origin/main 2>/dev/null || echo "?")
 
     echo ""
     echo -e "${GREEN}${BOLD}Update available!${NC}"
@@ -223,7 +223,6 @@ check_for_updates_git() {
     echo -e "${BOLD}Recent changes:${NC}"
     echo ""
     git log --oneline HEAD..origin/main 2>/dev/null | head -10 || \
-    git log --oneline HEAD..origin/master 2>/dev/null | head -10 || \
     echo "  (Unable to retrieve changelog)"
     echo ""
 

@@ -29,14 +29,14 @@
 
 **Format**:
 
-- Stable: `1.2.0` (for PRs to master or pushes to master)
-- Prerelease: `1.2.0-alpha.1`, `1.2.0-beta.2`, `1.2.0-rc.1` (for PRs to non-master branches)
+- Stable: `1.2.0` (for PRs to main or pushes to main)
+- Prerelease: `1.2.0-alpha.1`, `1.2.0-beta.2`, `1.2.0-rc.1` (for PRs to non-main branches)
 
 **CI Enforcement** (based on PR target branch):
 
-- PRs to master: Fail if `.version` has prerelease suffix (must be stable)
+- PRs to main: Fail if `.version` has prerelease suffix (must be stable)
 - PRs to other branches: Fail if `.version` is stable (must be prerelease)
-- Pushes to master: Fail if `.version` has prerelease suffix
+- Pushes to main: Fail if `.version` has prerelease suffix
 - Pushes to other branches: Fail if `.version` is stable
 - Check locally: `cat .version`
 
@@ -48,7 +48,7 @@ echo "1.3.0-alpha.1" > .version
 git add .version && git commit -m "Start 1.3.0 development"
 ```
 
-**Before creating PR to master**: Update `.version` to stable (e.g., `1.3.0`) and commit.
+**Before creating PR to main**: Update `.version` to stable (e.g., `1.3.0`) and commit.
 
 ## Architecture Overview
 
