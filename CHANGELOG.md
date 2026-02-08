@@ -19,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
-## [0.1.0-alpha.2] - 2026-02-07
+## [0.1.0] - 2026-02-07
 
 ### Added
 - Initial alpha release of LibraFoto
@@ -40,6 +40,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Comprehensive E2E tests with Playwright
 - TUnit backend testing with 80% coverage requirement
 - CI/CD with GitHub Actions for build validation and releases
-
-[unreleased]: https://github.com/librafoto/librafoto/compare/v0.1.0-alpha.2...HEAD
-[0.1.0-alpha.2]: https://github.com/librafoto/librafoto/releases/tag/v0.1.0-alpha.2

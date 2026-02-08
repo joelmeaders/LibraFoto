@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -21,14 +21,10 @@ namespace LibraFoto.Data.Migrations
                     SlideDuration = table.Column<int>(type: "INTEGER", nullable: false),
                     Transition = table.Column<int>(type: "INTEGER", nullable: false),
                     TransitionDuration = table.Column<int>(type: "INTEGER", nullable: false),
-                    ShowOverlay = table.Column<bool>(type: "INTEGER", nullable: false),
-                    OverlayPosition = table.Column<int>(type: "INTEGER", nullable: false),
-                    ShowDate = table.Column<bool>(type: "INTEGER", nullable: false),
-                    ShowTime = table.Column<bool>(type: "INTEGER", nullable: false),
-                    ShowLocation = table.Column<bool>(type: "INTEGER", nullable: false),
                     SourceType = table.Column<int>(type: "INTEGER", nullable: false),
                     SourceId = table.Column<long>(type: "INTEGER", nullable: true),
                     Shuffle = table.Column<bool>(type: "INTEGER", nullable: false),
+                    ImageFit = table.Column<int>(type: "INTEGER", nullable: false),
                     IsActive = table.Column<bool>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
@@ -82,35 +78,6 @@ namespace LibraFoto.Data.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Users", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "CachedFiles",
-                columns: table => new
-                {
-                    Id = table.Column<long>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    FileHash = table.Column<string>(type: "TEXT", nullable: false),
-                    OriginalUrl = table.Column<string>(type: "TEXT", nullable: false),
-                    ProviderId = table.Column<long>(type: "INTEGER", nullable: false),
-                    ProviderFileId = table.Column<string>(type: "TEXT", nullable: true),
-                    PickerSessionId = table.Column<string>(type: "TEXT", nullable: true),
-                    LocalPath = table.Column<string>(type: "TEXT", nullable: false),
-                    FileSize = table.Column<long>(type: "INTEGER", nullable: false),
-                    ContentType = table.Column<string>(type: "TEXT", nullable: false),
-                    CachedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    LastAccessedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    AccessCount = table.Column<int>(type: "INTEGER", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_CachedFiles", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_CachedFiles_StorageProviders_ProviderId",
-                        column: x => x.ProviderId,
-                        principalTable: "StorageProviders",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -291,32 +258,6 @@ namespace LibraFoto.Data.Migrations
                 column: "SortOrder");
 
             migrationBuilder.CreateIndex(
-                name: "IX_CachedFiles_FileHash",
-                table: "CachedFiles",
-                column: "FileHash",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_CachedFiles_LastAccessedDate",
-                table: "CachedFiles",
-                column: "LastAccessedDate");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_CachedFiles_ProviderFileId",
-                table: "CachedFiles",
-                column: "ProviderFileId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_CachedFiles_ProviderId",
-                table: "CachedFiles",
-                column: "ProviderId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_CachedFiles_ProviderId_ProviderFileId",
-                table: "CachedFiles",
-                columns: new[] { "ProviderId", "ProviderFileId" });
-
-            migrationBuilder.CreateIndex(
                 name: "IX_DisplaySettings_IsActive",
                 table: "DisplaySettings",
                 column: "IsActive");
@@ -424,9 +365,6 @@ namespace LibraFoto.Data.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "CachedFiles");
-
             migrationBuilder.DropTable(
                 name: "DisplaySettings");
 

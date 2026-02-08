@@ -1,6 +1,6 @@
-import { inject, Injectable, signal } from '@angular/core';
-import { Observable, tap } from 'rxjs';
-import { ApiService } from './api.service';
+import { inject, Injectable, signal } from "@angular/core";
+import { Observable, tap } from "rxjs";
+import { ApiService } from "./api.service";
 import {
   AlbumDto,
   CreateAlbumRequest,
@@ -10,14 +10,14 @@ import {
   ReorderPhotosRequest,
   BulkOperationResult,
   PhotoListDto,
-  PagedResult
-} from '../models';
+  PagedResult,
+} from "../models";
 
 /**
  * Service for album management operations.
  */
 @Injectable({
-  providedIn: 'root'
+  providedIn: "root",
 })
 export class AlbumService {
   private readonly api = inject(ApiService);
@@ -37,11 +37,11 @@ export class AlbumService {
    */
   getAlbums(): Observable<AlbumDto[]> {
     this._isLoading.set(true);
-    return this.api.get<AlbumDto[]>('/api/admin/albums').pipe(
-      tap(albums => {
+    return this.api.get<AlbumDto[]>("/api/admin/albums").pipe(
+      tap((albums) => {
         this._albums.set(albums);
         this._isLoading.set(false);
-      })
+      }),
     );
   }
 
@@ -49,19 +49,19 @@ export class AlbumService {
    * Get a single album by ID.
    */
   getAlbum(id: number): Observable<AlbumDto> {
-    return this.api.get<AlbumDto>(`/api/admin/albums/${id}`).pipe(
-      tap(album => this._selectedAlbum.set(album))
-    );
+    return this.api
+      .get<AlbumDto>(`/api/admin/albums/${id}`)
+      .pipe(tap((album) => this._selectedAlbum.set(album)));
   }
 
   /**
    * Create a new album.
    */
   createAlbum(request: CreateAlbumRequest): Observable<AlbumDto> {
-    return this.api.post<AlbumDto>('/api/admin/albums', request).pipe(
-      tap(album => {
-        this._albums.update(albums => [...albums, album]);
-      })
+    return this.api.post<AlbumDto>("/api/admin/albums", request).pipe(
+      tap((album) => {
+        this._albums.update((albums) => [...albums, album]);
+      }),
     );
   }
 
@@ -70,12 +70,14 @@ export class AlbumService {
    */
   updateAlbum(id: number, request: UpdateAlbumRequest): Observable<AlbumDto> {
     return this.api.put<AlbumDto>(`/api/admin/albums/${id}`, request).pipe(
-      tap(album => {
-        this._albums.update(albums => albums.map(a => a.id === id ? album : a));
+      tap((album) => {
+        this._albums.update((albums) =>
+          albums.map((a) => (a.id === id ? album : a)),
+        );
         if (this._selectedAlbum()?.id === id) {
           this._selectedAlbum.set(album);
         }
-      })
+      }),
     );
   }
 
@@ -85,40 +87,65 @@ export class AlbumService {
   deleteAlbum(id: number): Observable<void> {
     return this.api.delete<void>(`/api/admin/albums/${id}`).pipe(
       tap(() => {
-        this._albums.update(albums => albums.filter(a => a.id !== id));
+        this._albums.update((albums) => albums.filter((a) => a.id !== id));
         if (this._selectedAlbum()?.id === id) {
           this._selectedAlbum.set(null);
         }
-      })
+      }),
     );
   }
 
   /**
    * Add photos to an album.
    */
-  addPhotosToAlbum(albumId: number, request: AddPhotosToAlbumRequest): Observable<BulkOperationResult> {
-    return this.api.post<BulkOperationResult>(`/api/admin/albums/${albumId}/photos`, request);
+  addPhotosToAlbum(
+    albumId: number,
+    request: AddPhotosToAlbumRequest,
+  ): Observable<BulkOperationResult> {
+    return this.api.post<BulkOperationResult>(
+      `/api/admin/albums/${albumId}/photos`,
+      request,
+    );
   }
 
   /**
    * Remove photos from an album.
    */
-  removePhotosFromAlbum(albumId: number, request: RemovePhotosFromAlbumRequest): Observable<BulkOperationResult> {
-    return this.api.post<BulkOperationResult>(`/api/admin/albums/${albumId}/photos/remove`, request);
+  removePhotosFromAlbum(
+    albumId: number,
+    request: RemovePhotosFromAlbumRequest,
+  ): Observable<BulkOperationResult> {
+    return this.api.post<BulkOperationResult>(
+      `/api/admin/albums/${albumId}/photos/remove`,
+      request,
+    );
   }
 
   /**
    * Reorder photos within an album.
    */
-  reorderPhotos(albumId: number, request: ReorderPhotosRequest): Observable<void> {
-    return this.api.put<void>(`/api/admin/albums/${albumId}/photos/reorder`, request);
+  reorderPhotos(
+    albumId: number,
+    request: ReorderPhotosRequest,
+  ): Observable<void> {
+    return this.api.put<void>(
+      `/api/admin/albums/${albumId}/photos/reorder`,
+      request,
+    );
   }
 
   /**
    * Get photos in an album (paginated).
    */
-  getAlbumPhotos(albumId: number, page = 1, pageSize = 50): Observable<PagedResult<PhotoListDto>> {
-    return this.api.get<PagedResult<PhotoListDto>>(`/api/admin/albums/${albumId}/photos`, { page, pageSize });
+  getAlbumPhotos(
+    albumId: number,
+    page = 1,
+    pageSize = 50,
+  ): Observable<PagedResult<PhotoListDto>> {
+    return this.api.get<PagedResult<PhotoListDto>>(
+      `/api/admin/albums/${albumId}/photos`,
+      { page, pageSize },
+    );
   }
 
   /**
@@ -131,9 +158,9 @@ export class AlbumService {
   /**
    * Get thumbnail URL for album cover.
    */
-  getCoverThumbnailUrl(album: AlbumDto, size: string = ''): string | null {
+  getCoverThumbnailUrl(album: AlbumDto, size: string = ""): string | null {
     if (album.coverPhotoId) {
-      let url = `${this.api['baseUrl']}/api/media/thumbnails/${album.coverPhotoId}`;
+      let url = `/api/media/thumbnails/${album.coverPhotoId}`;
       if (size) {
         url += `/${size}`;
       }

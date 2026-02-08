@@ -1,7 +1,8 @@
-import { inject } from '@angular/core';
-import { Router, type CanActivateFn } from '@angular/router';
-import { AuthService } from '../services/auth.service';
-import { UserRole } from '../models';
+import { inject } from "@angular/core";
+import { Router, type CanActivateFn } from "@angular/router";
+import { AuthService } from "../services/auth.service";
+import { UserRole } from "../models";
+import { firstValueFrom } from "rxjs";
 
 /**
  * Guard that checks if the user is authenticated.
@@ -16,7 +17,7 @@ export const authGuard: CanActivateFn = () => {
   }
 
   // Store the attempted URL for redirecting after login
-  router.navigate(['/login']);
+  router.navigate(["/login"]);
   return false;
 };
 
@@ -29,7 +30,7 @@ export const adminGuard: CanActivateFn = () => {
   const router = inject(Router);
 
   if (!authService.isAuthenticated()) {
-    router.navigate(['/login']);
+    router.navigate(["/login"]);
     return false;
   }
 
@@ -38,7 +39,7 @@ export const adminGuard: CanActivateFn = () => {
   }
 
   // User is authenticated but not admin
-  router.navigate(['/dashboard']);
+  router.navigate(["/dashboard"]);
   return false;
 };
 
@@ -51,7 +52,7 @@ export const editorGuard: CanActivateFn = () => {
   const router = inject(Router);
 
   if (!authService.isAuthenticated()) {
-    router.navigate(['/login']);
+    router.navigate(["/login"]);
     return false;
   }
 
@@ -60,7 +61,7 @@ export const editorGuard: CanActivateFn = () => {
   }
 
   // User is authenticated but doesn't have edit permissions
-  router.navigate(['/dashboard']);
+  router.navigate(["/dashboard"]);
   return false;
 };
 
@@ -73,13 +74,13 @@ export const setupGuard: CanActivateFn = async () => {
   const router = inject(Router);
 
   try {
-    const status = await authService.checkSetupStatus().toPromise();
-    
+    const status = await firstValueFrom(authService.checkSetupStatus());
+
     if (status?.isSetupRequired) {
-      router.navigate(['/setup']);
+      router.navigate(["/setup"]);
       return false;
     }
-    
+
     return true;
   } catch {
     // If we can't check setup status, allow access
@@ -95,18 +96,18 @@ export const setupPageGuard: CanActivateFn = async () => {
   const router = inject(Router);
 
   try {
-    const status = await authService.checkSetupStatus().toPromise();
-    
+    const status = await firstValueFrom(authService.checkSetupStatus());
+
     if (status?.isSetupRequired) {
       return true;
     }
-    
+
     // Setup not required, redirect to login
-    router.navigate(['/login']);
+    router.navigate(["/login"]);
     return false;
   } catch {
     // If we can't check, redirect to login
-    router.navigate(['/login']);
+    router.navigate(["/login"]);
     return false;
   }
 };
@@ -120,7 +121,7 @@ export const noAuthGuard: CanActivateFn = () => {
   const router = inject(Router);
 
   if (authService.isAuthenticated()) {
-    router.navigate(['/dashboard']);
+    router.navigate(["/dashboard"]);
     return false;
   }
 
@@ -137,13 +138,13 @@ export function roleGuard(requiredRole: UserRole): CanActivateFn {
     const router = inject(Router);
 
     if (!authService.isAuthenticated()) {
-      router.navigate(['/login']);
+      router.navigate(["/login"]);
       return false;
     }
 
     const currentUser = authService.currentUser();
     if (!currentUser || currentUser.role < requiredRole) {
-      router.navigate(['/dashboard']);
+      router.navigate(["/dashboard"]);
       return false;
     }
 

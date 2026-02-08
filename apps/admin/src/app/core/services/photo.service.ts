@@ -148,7 +148,7 @@ export class PhotoService {
    */
   getThumbnailUrl(photo: PhotoListDto): string {
     if (photo.id) {
-      return `${this.api["baseUrl"]}/api/media/thumbnails/${photo.id}`;
+      return `/api/media/thumbnails/${photo.id}`;
     }
     return "/assets/placeholder.png";
   }
@@ -157,7 +157,7 @@ export class PhotoService {
    * Get the URL for a full-size photo.
    */
   getPhotoUrl(photo: PhotoDetailDto): string {
-    return `${this.api["baseUrl"]}/api/media/photos/${photo.filePath}`;
+    return `/api/media/photos/${photo.filePath}`;
   }
 
   /**

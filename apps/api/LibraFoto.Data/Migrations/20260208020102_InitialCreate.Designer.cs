@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LibraFoto.Data.Migrations
 {
     [DbContext(typeof(LibraFotoDbContext))]
-    [Migration("20260106013039_testing")]
-    partial class Testing
+    [Migration("20260208020102_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -61,6 +61,9 @@ namespace LibraFoto.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("ImageFit")
+                        .HasColumnType("INTEGER");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("INTEGER");
 
@@ -68,21 +71,6 @@ namespace LibraFoto.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
-
-                    b.Property<int>("OverlayPosition")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("ShowDate")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("ShowLocation")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("ShowOverlay")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("ShowTime")
-                        .HasColumnType("INTEGER");
 
                     b.Property<bool>("Shuffle")
                         .HasColumnType("INTEGER");
@@ -205,15 +193,7 @@ namespace LibraFoto.Data.Migrations
                     b.Property<long?>("ProviderId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("ThumbnailLargePath")
-                        .HasMaxLength(1024)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ThumbnailMediumPath")
-                        .HasMaxLength(1024)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ThumbnailSmallPath")
+                    b.Property<string>("ThumbnailPath")
                         .HasMaxLength(1024)
                         .HasColumnType("TEXT");
 
@@ -275,6 +255,48 @@ namespace LibraFoto.Data.Migrations
                     b.HasIndex("TagId");
 
                     b.ToTable("PhotoTags");
+                });
+
+            modelBuilder.Entity("LibraFoto.Data.Entities.PickerSession", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("MediaItemsSet")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("PickerUri")
+                        .IsRequired()
+                        .HasMaxLength(2048)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("ProviderId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("SessionId")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("ExpiresAt");
+
+                    b.HasIndex("ProviderId");
+
+                    b.HasIndex("SessionId")
+                        .IsUnique();
+
+                    b.ToTable("PickerSessions");
                 });
 
             modelBuilder.Entity("LibraFoto.Data.Entities.StorageProvider", b =>
@@ -342,6 +364,7 @@ namespace LibraFoto.Data.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Email")
+                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("TEXT");
 
@@ -356,16 +379,9 @@ namespace LibraFoto.Data.Migrations
                     b.Property<int>("Role")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("Username")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("Email");
-
-                    b.HasIndex("Username")
+                    b.HasIndex("Email")
                         .IsUnique();
 
                     b.ToTable("Users");
@@ -445,6 +461,17 @@ namespace LibraFoto.Data.Migrations
                     b.Navigation("Photo");
 
                     b.Navigation("Tag");
+                });
+
+            modelBuilder.Entity("LibraFoto.Data.Entities.PickerSession", b =>
+                {
+                    b.HasOne("LibraFoto.Data.Entities.StorageProvider", "Provider")
+                        .WithMany()
+                        .HasForeignKey("ProviderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Provider");
                 });
 
             modelBuilder.Entity("LibraFoto.Data.Entities.Album", b =>

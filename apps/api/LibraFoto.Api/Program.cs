@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Text;
 using LibraFoto.Api;
 using LibraFoto.Api.Endpoints;
@@ -70,7 +71,8 @@ try
     builder.Services.AddProblemDetails();
 
     // Configure JWT authentication
-    var jwtKey = builder.Configuration["Jwt:Key"] ?? "LibraFoto-Default-Secret-Key-Change-In-Production-32chars";
+    var jwtKey = builder.Configuration["Jwt:Key"] ??
+        throw new InvalidOperationException("JWT key is not configured. Please set the 'Jwt:Key' configuration value.");
     var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "LibraFoto";
     var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "LibraFoto";
 
@@ -137,7 +139,8 @@ try
     }
 
     // Root endpoint for API info
-    app.MapGet("/", () => TypedResults.Ok(new ApiInfo("LibraFoto API", "1.0.0")));
+    var version = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "unknown";
+    app.MapGet("/", () => TypedResults.Ok(new ApiInfo("LibraFoto API", version)));
 
     await app.RunAsync();
 }
