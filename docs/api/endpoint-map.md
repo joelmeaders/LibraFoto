@@ -2,6 +2,8 @@
 
 > **Total: 94 endpoints** across 5 modules + 1 root endpoint
 
+Endpoints are implemented with **FastEndpoints** and organized by **vertical slice** within each module’s `Features/` folders. The route list below remains the canonical surface area; only structural implementation details have changed.
+
 ## Summary
 
 | Module      | Group                | Endpoints |

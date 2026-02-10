@@ -15,4 +15,8 @@
     <ProjectReference Include="..\LibraFoto.Shared\LibraFoto.Shared.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="FastEndpoints" Version="7.2.0" />
+  </ItemGroup>
+
 </Project>

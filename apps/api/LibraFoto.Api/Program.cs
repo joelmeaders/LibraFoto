@@ -1,6 +1,5 @@
-using System.Reflection;
 using System.Text;
-using LibraFoto.Api;
+using FastEndpoints;
 using LibraFoto.Api.Endpoints;
 using LibraFoto.Api.Infrastructure;
 using LibraFoto.Data;
@@ -96,6 +95,21 @@ try
     var connectionString = builder.Configuration.GetConnectionString("LibraFotoDb") ?? $"Data Source={LibraFotoDefaults.GetDefaultDatabasePath()}";
     builder.Services.AddDataModule(connectionString);
 
+    // Register FastEndpoints
+    builder.Services.AddFastEndpoints(options =>
+    {
+        // Explicitly scan module assemblies for endpoint discovery
+        options.Assemblies =
+        [
+            typeof(Program).Assembly,
+            typeof(AdminModule).Assembly,
+            typeof(AuthModule).Assembly,
+            typeof(DisplayModule).Assembly,
+            typeof(MediaModule).Assembly,
+            typeof(StorageModule).Assembly
+        ];
+    });
+
     // Register module services
     builder.Services.AddDisplayModule();
     builder.Services.AddAdminModule();
@@ -122,25 +136,17 @@ try
     app.UseAuthentication();
     app.UseAuthorization();
 
+    // Use FastEndpoints middleware
+    app.UseFastEndpoints();
+
     // Map Aspire default endpoints (/health, /alive)
     app.MapDefaultEndpoints();
-
-    // Map module endpoints
-    app.MapDisplayEndpoints();
-    app.MapAdminEndpoints();
-    app.MapStorageEndpoints();
-    app.MapMediaEndpoints();
-    app.MapAuthEndpoints();
 
     // Only map test endpoints if explicitly enabled (e.g. for E2E tests)
     if (Environment.GetEnvironmentVariable("ENABLE_TEST_ENDPOINTS") == "true")
     {
         app.MapTestEndpoints();
     }
-
-    // Root endpoint for API info
-    var version = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "unknown";
-    app.MapGet("/", () => TypedResults.Ok(new ApiInfo("LibraFoto API", version)));
 
     await app.RunAsync();
 }
@@ -150,5 +156,8 @@ catch (Exception ex)
 }
 finally
 {
-    Log.CloseAndFlush();
+    await Log.CloseAndFlushAsync();
 }
+
+// Make Program accessible to WebApplicationFactory for integration testing
+public partial class Program { }

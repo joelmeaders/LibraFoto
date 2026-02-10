@@ -9,6 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="FastEndpoints" Version="7.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.2" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.2">
       <PrivateAssets>all</PrivateAssets>
@@ -26,10 +27,6 @@
     <ProjectReference Include="..\LibraFoto.Modules.Storage\LibraFoto.Modules.Storage.csproj" />
     <ProjectReference Include="..\LibraFoto.Modules.Media\LibraFoto.Modules.Media.csproj" />
     <ProjectReference Include="..\LibraFoto.Modules.Auth\LibraFoto.Modules.Auth.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="logs\" />
   </ItemGroup>
 
 </Project>

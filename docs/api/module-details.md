@@ -1,5 +1,15 @@
 # LibraFoto API — Module Details
 
+## Endpoint Organization (FastEndpoints)
+
+Endpoints are implemented using **FastEndpoints** and grouped by **vertical slice** within each module project. Each feature typically lives in its own file under `Features/<Area>/`, containing:
+
+- Endpoint class (request/response handling)
+- Request/response DTOs
+- Validators (when needed)
+
+This keeps API surface definitions close to the behavior they serve and aligns with the module boundaries described below.
+
 ## Auth Module
 
 ### Services

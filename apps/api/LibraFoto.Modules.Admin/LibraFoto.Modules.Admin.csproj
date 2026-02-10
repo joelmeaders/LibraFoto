@@ -17,4 +17,8 @@
     <ProjectReference Include="..\LibraFoto.Modules.Storage\LibraFoto.Modules.Storage.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="FastEndpoints" Version="7.2.0" />
+  </ItemGroup>
+
 </Project>

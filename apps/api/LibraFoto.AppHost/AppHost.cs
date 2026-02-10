@@ -1,5 +1,3 @@
-using LibraFoto.Shared.Configuration;
-
 var builder = DistributedApplication.CreateBuilder(args);
 
 // Don't use Aspire's AddSqlite resource - it adds incompatible connection string parameters

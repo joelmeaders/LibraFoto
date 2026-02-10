@@ -1,20 +1,19 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace LibraFoto.Modules.Auth.Models
-{
-    /// <summary>
-    /// Request model for creating a guest upload link.
-    /// </summary>
-    public record CreateGuestLinkRequest(
-        [Required]
-        [StringLength(100, MinimumLength = 1)]
-        string Name,
+namespace LibraFoto.Modules.Auth.Models;
 
-        DateTime? ExpiresAt,
+/// <summary>
+/// Request model for creating a guest upload link.
+/// </summary>
+public record CreateGuestLinkRequest(
+    [Required]
+    [StringLength(100, MinimumLength = 1)]
+    string Name,
 
-        [Range(1, 1000)]
-        int? MaxUploads,
+    DateTime? ExpiresAt,
 
-        long? TargetAlbumId
-    );
-}
+    [Range(1, 1000)]
+    int? MaxUploads,
+
+    long? TargetAlbumId
+);

@@ -2,7 +2,7 @@
 
 ## High-Level Architecture
 
-LibraFoto is a **modular monolith** built on .NET 10 with ASP.NET Core Minimal APIs. The API serves two frontend applications (Admin Angular SPA and Display vanilla TypeScript) through an Nginx reverse proxy in production.
+LibraFoto is a **modular monolith** built on .NET 10 with ASP.NET Core **FastEndpoints**. The API serves two frontend applications (Admin Angular SPA and Display vanilla TypeScript) through an Nginx reverse proxy in production.
 
 ```mermaid
 graph TD
@@ -94,6 +94,16 @@ graph TD
 | **Media**   | Media processing               | Photo/video file serving, thumbnail generation (400×400 JPEG), EXIF metadata extraction, reverse geocoding, image processing (resize, rotate, convert) |
 | **Storage** | Storage abstraction            | Multi-provider support (Local, Google Photos), file upload (single/batch/guest), sync engine, OAuth flows, Google Photos Picker, LRU disk cache        |
 
+## FastEndpoints + Vertical Slice Structure
+
+Each module is organized by **feature slices** under a `Features/` folder. A typical feature folder contains the FastEndpoints class plus its request/response DTOs and any validators or helpers that are specific to that slice. This keeps routing, validation, and DTOs close to the behavior they support and avoids cross-module coupling.
+
+**Example structure (within a module project):**
+
+- `Features/Photos/GetPhotosEndpoint.cs` (endpoint + DTOs + validators)
+- `Features/Albums/CreateAlbumEndpoint.cs`
+- `Features/Storage/UpdateStorageProviderEndpoint.cs`
+
 ## Request Flow
 
 ```mermaid
@@ -102,7 +112,7 @@ sequenceDiagram
     participant Nginx
     participant API as LibraFoto.Api
     participant MW as Middleware
-    participant Module as Module Endpoint
+    participant Module as FastEndpoint
     participant Service as Module Service
     participant DB as SQLite (EF Core)
     participant FS as File System
@@ -112,7 +122,7 @@ sequenceDiagram
     API->>MW: Exception Handler
     MW->>MW: Authentication (JWT)
     MW->>MW: Authorization
-    MW->>Module: Route to Endpoint
+    MW->>Module: Route to FastEndpoint
 
     alt Read Operation
         Module->>Service: Call Service Method
@@ -159,7 +169,7 @@ flowchart TD
     RegisterModules --> Build["Build Application"]
     Build --> Migrate["Apply Database Migrations"]
     Migrate --> Middleware["UseExceptionHandler<br/>UseAuthentication<br/>UseAuthorization"]
-    Middleware --> MapEndpoints["Map Endpoints:<br/>Aspire Defaults → Display<br/>→ Admin → Storage<br/>→ Media → Auth"]
+    Middleware --> MapEndpoints["Map Endpoints:<br/>FastEndpoints discovery + Aspire Defaults<br/>→ Display → Admin → Storage → Media → Auth"]
     MapEndpoints --> TestEndpoints{"ENABLE_TEST_ENDPOINTS<br/>== true?"}
     TestEndpoints -->|Yes| MapTest["Map Test Endpoints"]
     TestEndpoints -->|No| Run
