@@ -1,6 +1,7 @@
 using LibraFoto.Data;
 using LibraFoto.Data.Entities;
-using LibraFoto.Modules.Admin.Models;
+using LibraFoto.Modules.Admin.Features.Shared;
+using LibraFoto.Modules.Admin.Services.Shared;
 using LibraFoto.Modules.Media.Services;
 using LibraFoto.Modules.Storage.Interfaces;
 using LibraFoto.Shared.Configuration;

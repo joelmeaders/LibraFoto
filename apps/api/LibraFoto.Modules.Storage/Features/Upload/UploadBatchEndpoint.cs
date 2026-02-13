@@ -1,7 +1,8 @@
 using FastEndpoints;
 using LibraFoto.Data;
 using LibraFoto.Modules.Storage.Interfaces;
-using LibraFoto.Modules.Storage.Models;
+using LibraFoto.Modules.Storage.Features.Shared;
+using LibraFoto.Modules.Storage.Services.Shared;
 using LibraFoto.Modules.Storage.Services;
 using LibraFoto.Shared.DTOs;
 using Microsoft.AspNetCore.Http;

@@ -2,7 +2,8 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
-using LibraFoto.Modules.Storage.Models;
+using LibraFoto.Modules.Storage.Features.Shared;
+using LibraFoto.Modules.Storage.Services.Shared;
 using LibraFoto.Modules.Storage.Services;
 using NSubstitute;
 

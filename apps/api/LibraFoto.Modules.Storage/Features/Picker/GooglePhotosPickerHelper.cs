@@ -3,7 +3,8 @@ using Google.Apis.Auth.OAuth2;
 using Google.Apis.Auth.OAuth2.Flows;
 using Google.Apis.Auth.OAuth2.Responses;
 using LibraFoto.Data;
-using LibraFoto.Modules.Storage.Models;
+using LibraFoto.Modules.Storage.Features.Shared;
+using LibraFoto.Modules.Storage.Services.Shared;
 using Microsoft.Extensions.Logging;
 
 namespace LibraFoto.Modules.Storage.Features.Picker;

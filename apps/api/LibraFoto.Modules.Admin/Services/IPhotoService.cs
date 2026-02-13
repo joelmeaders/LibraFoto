@@ -1,4 +1,5 @@
-using LibraFoto.Modules.Admin.Models;
+using LibraFoto.Modules.Admin.Features.Shared;
+using LibraFoto.Modules.Admin.Services.Shared;
 using LibraFoto.Shared.DTOs;
 
 namespace LibraFoto.Modules.Admin.Services;

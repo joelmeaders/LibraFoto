@@ -1,4 +1,5 @@
-using LibraFoto.Modules.Storage.Models;
+using LibraFoto.Modules.Storage.Features.Shared;
+using LibraFoto.Modules.Storage.Services.Shared;
 using Microsoft.Extensions.Logging;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Jpeg;

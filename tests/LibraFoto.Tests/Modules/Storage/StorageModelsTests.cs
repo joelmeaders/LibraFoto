@@ -1,5 +1,6 @@
 using LibraFoto.Data.Enums;
-using LibraFoto.Modules.Storage.Models;
+using LibraFoto.Modules.Storage.Features.Shared;
+using LibraFoto.Modules.Storage.Services.Shared;
 
 namespace LibraFoto.Tests.Modules.Storage;
 
