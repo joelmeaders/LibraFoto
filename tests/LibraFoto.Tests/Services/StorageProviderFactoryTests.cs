@@ -34,7 +34,7 @@ public class StorageProviderFactoryTests
     public async Task Setup()
     {
         // Create unique in-memory database for each test
-        _connection = new SqliteConnection($"Data Source=TestDb_{Guid.NewGuid():N};Mode=Memory;Cache=Shared");
+        _connection = new SqliteConnection($"Data Source=TestDb_{Guid.NewGuid():N};Mode=Memory");
         await _connection.OpenAsync();
 
         var options = new DbContextOptionsBuilder<LibraFotoDbContext>()
@@ -519,7 +519,10 @@ public class StorageProviderFactoryTests
         // Assert
         var dbProvider = await _db.StorageProviders.FirstAsync();
         await Assert.That(dbProvider.Configuration).IsNotNull();
-        await Assert.That(dbProvider.Configuration!).Contains(_testDirectory);
+
+        var config = JsonSerializer.Deserialize<LocalStorageConfiguration>(dbProvider.Configuration!);
+        await Assert.That(config).IsNotNull();
+        await Assert.That(config!.BasePath).IsEqualTo(_testDirectory);
     }
 
     [Test]

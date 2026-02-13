@@ -13,6 +13,7 @@ namespace LibraFoto.Tests.Modules.Storage;
 /// <summary>
 /// Tests for LocalStorageProvider.
 /// </summary>
+[NotInParallel]
 public class LocalStorageProviderTests
 {
     private string _tempDir = null!;
@@ -502,7 +503,7 @@ public class LocalStorageProviderTests
     {
         using var stream = new MemoryStream(new byte[10000]);
         using var cts = new CancellationTokenSource();
-        cts.Cancel();
+        await cts.CancelAsync();
 
         await Assert.That(async () => await _provider.UploadFileAsync("test.jpg", stream, "image/jpeg", cts.Token))
             .Throws<OperationCanceledException>();
@@ -575,7 +576,7 @@ public class LocalStorageProviderTests
         var uploadResult = await _provider.UploadFileAsync("test.jpg", stream, "image/jpeg");
 
         using var cts = new CancellationTokenSource();
-        cts.Cancel();
+        await cts.CancelAsync();
 
         await Assert.That(async () => await _provider.DownloadFileAsync(uploadResult.FileId!, cts.Token))
             .Throws<OperationCanceledException>();

@@ -1,6 +1,4 @@
-using System.Collections.Concurrent;
 using System.IdentityModel.Tokens.Jwt;
-using System.Runtime.CompilerServices;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -11,8 +9,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
-
-[assembly: InternalsVisibleTo("LibraFoto.Tests")]
 
 namespace LibraFoto.Modules.Auth.Services;
 
@@ -25,21 +21,17 @@ public class AuthService : IAuthService
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly IConfiguration _configuration;
     private readonly ILogger<AuthService> _logger;
-
-    // Thread-safe in-memory storage for refresh tokens (should be replaced with database storage in production)
-    private static readonly ConcurrentDictionary<string, (long UserId, DateTime ExpiresAt)> _refreshTokens = new();
-    private static readonly ConcurrentDictionary<long, ConcurrentBag<string>> _userRefreshTokens = new();
-
-    // Thread-safe in-memory storage for invalidated tokens
-    private static readonly ConcurrentBag<string> _invalidatedTokens = [];
+    private readonly ITokenStore _tokenStore;
 
     public AuthService(
         IServiceScopeFactory scopeFactory,
         IConfiguration configuration,
+        ITokenStore tokenStore,
         ILogger<AuthService> logger)
     {
         _scopeFactory = scopeFactory;
         _configuration = configuration;
+        _tokenStore = tokenStore;
         _logger = logger;
     }
 
@@ -90,13 +82,7 @@ public class AuthService : IAuthService
     public Task LogoutAsync(long userId, CancellationToken cancellationToken = default)
     {
         // Invalidate all refresh tokens for the user
-        if (_userRefreshTokens.TryRemove(userId, out var tokens))
-        {
-            foreach (var token in tokens)
-            {
-                _refreshTokens.TryRemove(token, out _);
-            }
-        }
+        _tokenStore.RemoveAllUserRefreshTokens(userId);
 
         _logger.LogInformation("User logged out: {UserId}", userId);
         return Task.CompletedTask;
@@ -115,7 +101,7 @@ public class AuthService : IAuthService
     {
         try
         {
-            if (_invalidatedTokens.Contains(token))
+            if (_tokenStore.IsTokenInvalidated(token))
             {
                 return Task.FromResult<long?>(null);
             }
@@ -153,39 +139,39 @@ public class AuthService : IAuthService
     /// <inheritdoc />
     public async Task<LoginResponse?> RefreshTokenAsync(string refreshToken, CancellationToken cancellationToken = default)
     {
-        if (!_refreshTokens.TryGetValue(refreshToken, out var tokenData))
+        if (!_tokenStore.TryGetRefreshToken(refreshToken, out var userId, out var expiresAt))
         {
             _logger.LogWarning("Invalid refresh token");
             return null;
         }
 
-        if (tokenData.ExpiresAt < DateTime.UtcNow)
+        if (expiresAt < DateTime.UtcNow)
         {
-            _refreshTokens.TryRemove(refreshToken, out _);
-            _logger.LogWarning("Expired refresh token for user: {UserId}", tokenData.UserId);
+            _tokenStore.RemoveRefreshToken(refreshToken);
+            _logger.LogWarning("Expired refresh token for user: {UserId}", userId);
             return null;
         }
 
         using var scope = _scopeFactory.CreateScope();
         var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
 
-        var user = await userService.GetUserByIdAsync(tokenData.UserId, cancellationToken);
+        var user = await userService.GetUserByIdAsync(userId, cancellationToken);
         if (user == null)
         {
-            _logger.LogWarning("User not found for refresh token: {UserId}", tokenData.UserId);
+            _logger.LogWarning("User not found for refresh token: {UserId}", userId);
             return null;
         }
 
         // Remove old refresh token
-        _refreshTokens.TryRemove(refreshToken, out _);
+        _tokenStore.RemoveRefreshToken(refreshToken);
 
         // Generate new tokens
-        var (token, expiresAt) = GenerateJwtToken(user);
+        var (token, newExpiresAt) = GenerateJwtToken(user);
         var newRefreshToken = GenerateRefreshToken(user.Id);
 
-        _logger.LogInformation("Token refreshed for user: {UserId}", tokenData.UserId);
+        _logger.LogInformation("Token refreshed for user: {UserId}", userId);
 
-        return new LoginResponse(token, newRefreshToken, expiresAt, user);
+        return new LoginResponse(token, newRefreshToken, newExpiresAt, user);
     }
 
     private (string Token, DateTime ExpiresAt) GenerateJwtToken(UserDto user)
@@ -227,10 +213,7 @@ public class AuthService : IAuthService
         var refreshToken = Convert.ToBase64String(randomBytes);
         var expiresAt = DateTime.UtcNow.AddDays(GetRefreshTokenExpirationDays());
 
-        _refreshTokens[refreshToken] = (userId, expiresAt);
-
-        var userTokens = _userRefreshTokens.GetOrAdd(userId, _ => []);
-        userTokens.Add(refreshToken);
+        _tokenStore.StoreRefreshToken(refreshToken, userId, expiresAt);
 
         return refreshToken;
     }
@@ -248,14 +231,4 @@ public class AuthService : IAuthService
     private int GetJwtExpirationMinutes() => int.Parse(_configuration["Jwt:ExpirationMinutes"] ?? "60");
 
     private int GetRefreshTokenExpirationDays() => int.Parse(_configuration["Jwt:RefreshTokenExpirationDays"] ?? "7");
-
-    /// <summary>
-    /// Clears all static token storage. For testing purposes only.
-    /// </summary>
-    internal static void ClearStaticState()
-    {
-        _refreshTokens.Clear();
-        _userRefreshTokens.Clear();
-        _invalidatedTokens.Clear();
-    }
 }

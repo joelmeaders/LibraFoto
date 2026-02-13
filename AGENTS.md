@@ -18,4 +18,9 @@ APM_STANDARDS {
 ## Tool/Technology Standards
 - Use the latest available FastEndpoints version compatible with .NET 10.
 
+## .NET Unit tests
+- Testing is done with TUnit - load the TUnit skill for more information.
+- run with `dotnet run --project tests\LibraFoto.Tests`.
+- dotnet test is not longer supported and will not work.
+
 } //APM_STANDARDS

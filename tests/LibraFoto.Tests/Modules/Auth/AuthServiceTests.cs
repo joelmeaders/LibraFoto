@@ -23,12 +23,13 @@ public class AuthServiceTests
     private ServiceProvider _serviceProvider = null!;
     private AuthService _service = null!;
     private IConfiguration _configuration = null!;
+    private ITokenStore _tokenStore = null!;
 
     [Before(Test)]
     public async Task Setup()
     {
         // Use unique database for each test to avoid concurrency issues
-        _connection = new SqliteConnection($"Data Source=TestDb_{Guid.NewGuid():N};Mode=Memory;Cache=Shared");
+        _connection = new SqliteConnection($"Data Source=TestDb_{Guid.NewGuid():N};Mode=Memory");
         await _connection.OpenAsync();
 
         var options = new DbContextOptionsBuilder<LibraFotoDbContext>()
@@ -57,19 +58,21 @@ public class AuthServiceTests
         // Use the same _db instance for all scopes to ensure data consistency
         services.AddScoped<LibraFotoDbContext>(_ => _db);
         services.AddScoped<IUserService, UserService>();
+        services.AddSingleton<ITokenStore, InMemoryTokenStore>();
         services.AddSingleton<IAuthService, AuthService>();
         services.AddSingleton<IConfiguration>(_configuration);
         services.AddSingleton(typeof(ILogger<>), typeof(NullLogger<>));
 
         _serviceProvider = services.BuildServiceProvider();
         _service = (AuthService)_serviceProvider.GetRequiredService<IAuthService>();
+        _tokenStore = _serviceProvider.GetRequiredService<ITokenStore>();
     }
 
     [After(Test)]
     public async Task Cleanup()
     {
-        // Clear static state to prevent test interference
-        AuthService.ClearStaticState();
+        // Clear token store to prevent test interference
+        _tokenStore.Clear();
         await _serviceProvider.DisposeAsync();
         await _db.DisposeAsync();
         await _connection.DisposeAsync();
@@ -211,7 +214,7 @@ public class AuthServiceTests
     [Test]
     public async Task ValidateTokenAsync_WithInvalidToken_ReturnsNull()
     {
-        // Act  
+        // Act
         var userId = await _service.ValidateTokenAsync("invalid.token.here");
 
         // Assert

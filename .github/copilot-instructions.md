@@ -20,7 +20,7 @@
 
 1. Research → Understand existing patterns before coding
 2. Implement → Follow module/endpoint patterns below
-3. Test → Run `dotnet test apps/api/LibraFoto.slnx` and fix failures
+3. Test → Run `dotnet run --project tests/LibraFoto.Tests` and fix failures
 4. Build → Verify `dotnet build apps/api/LibraFoto.slnx` succeeds
 
 ## Version Management
@@ -52,21 +52,23 @@ git add .version && git commit -m "Start 1.3.0 development"
 
 ## Architecture Overview
 
-**Modular monolith** in .NET 10 with clear module boundaries:
+**Modular monolith** in .NET 10 with vertical slice architecture using FastEndpoints:
 
 ```
 apps/api/
-├── LibraFoto.Api/              # Host: Program.cs startup, global middleware
+├── LibraFoto.Api/              # Host: Program.cs startup, global middleware, FastEndpoints registration
 ├── LibraFoto.Data/             # EF Core + SQLite, migrations, entities
 ├── LibraFoto.Shared/           # DTOs: PagedResult<T>, ApiError, PaginationInfo
 ├── LibraFoto.ServiceDefaults/  # Aspire: AddServiceDefaults(), MapDefaultEndpoints()
-└── LibraFoto.Modules.*/        # Each module: Endpoints/, Services/, Models/
-    ├── Admin/               # Photo/album/tag management
-    ├── Auth/                # JWT auth, users, guest links
-    ├── Display/             # Slideshow, display settings
-    ├── Media/               # Thumbnails, metadata, ImageSharp processing
-    └── Storage/             # IStorageProvider implementations (Local, GooglePhotos)
+└── LibraFoto.Modules.*/        # Each module: Features/, Services/, Models/
+    ├── Admin/               # Features: Photos/, Albums/, Tags/, System/
+    ├── Auth/                # Features: Authentication/, Users/, GuestLinks/, Setup/
+    ├── Display/             # Features: Slideshow/, Settings/
+    ├── Media/               # Features: Thumbnails/, Metadata/
+    └── Storage/             # Features: Providers/, Sync/; IStorageProvider implementations
 ```
+
+**Vertical slices**: Each feature (e.g., `GetPhotosEndpoint.cs`) contains endpoint + request/response DTOs in a single file. Services remain module-level for shared business logic.
 
 **Frontends**: Display = Vite/TS (`apps/display`), Admin = Angular 21 + Material (`apps/admin`). Nginx proxies `/api/*` in production.
 
@@ -128,48 +130,78 @@ docker compose -f docker-compose.release.yml up -d  # Release mode
 
 ## Module Pattern
 
-Each module follows this structure (see [AdminModule.cs](apps/api/LibraFoto.Modules.Admin/AdminModule.cs)):
+Each module registers its services via `Add{ModuleName}Module` extension method (see [AdminModule.cs](apps/api/LibraFoto.Modules.Admin/AdminModule.cs)):
 
 ```csharp
-// Registration: Add{ModuleName}Module
 public static IServiceCollection AddAdminModule(this IServiceCollection services)
 {
     services.AddScoped<IPhotoService, PhotoService>();
-    // ...
+    services.AddScoped<IAlbumService, AlbumService>();
+    services.AddScoped<ITagService, TagService>();
     return services;
-}
-
-// Endpoint mapping: Map{ModuleName}Endpoints
-public static IEndpointRouteBuilder MapAdminEndpoints(this IEndpointRouteBuilder app)
-{
-    app.MapGroup("/api/admin").MapPhotoEndpoints().MapAlbumEndpoints();
-    return app;
 }
 ```
 
-In `Program.cs`: call `builder.AddServiceDefaults()` before `Build()`, then `app.MapDefaultEndpoints()` after. Register modules with `builder.Services.Add{X}Module()` and map with `app.Map{X}Endpoints()`.
+Endpoints are auto-discovered by FastEndpoints via assembly scanning in `Program.cs`:
+
+```csharp
+builder.Services.AddFastEndpoints(options =>
+{
+    options.Assemblies = [
+        typeof(Program).Assembly,
+        typeof(AdminModule).Assembly,
+        typeof(AuthModule).Assembly,
+        // ... all module assemblies
+    ];
+});
+```
+
+In `Program.cs`: call `builder.AddServiceDefaults()` before `Build()`, register modules with `builder.Services.Add{X}Module()`, then `app.UseFastEndpoints()` and `app.MapDefaultEndpoints()` after build.
 
 ## API Endpoint Pattern
 
-See [PhotoEndpoints.cs](apps/api/LibraFoto.Modules.Admin/Endpoints/PhotoEndpoints.cs):
+FastEndpoints vertical slice pattern (see [GetPhotosEndpoint.cs](apps/api/LibraFoto.Modules.Admin/Features/Photos/GetPhotosEndpoint.cs)):
 
 ```csharp
-var group = app.MapGroup("/photos").WithTags("Photos");
-
-group.MapGet("/", GetPhotos).WithName("GetPhotos");
-
-private static async Task<Ok<PagedResult<PhotoListDto>>> GetPhotos(
-    IPhotoService photoService, int page = 1, int pageSize = 50, ...)
+/// <summary>Paginated list of photos with optional filtering.</summary>
+public sealed class GetPhotosEndpoint : Endpoint<GetPhotosRequest, Ok<PagedResult<PhotoListDto>>>
 {
-    var result = await photoService.GetPhotosAsync(filter, ct);
-    return TypedResults.Ok(result);
+    public override void Configure()
+    {
+        Get("/api/admin/photos");
+        Tags("Photos");
+        Summary(s => { s.Summary = "Get paginated list of photos"; });
+    }
+
+    public override async Task<Ok<PagedResult<PhotoListDto>>> ExecuteAsync(
+        GetPhotosRequest req, CancellationToken ct)
+    {
+        var photoService = Resolve<IPhotoService>();
+        // Business logic...
+        var result = await photoService.GetPhotosAsync(filter, ct);
+        return TypedResults.Ok(result);
+    }
 }
 
-// For errors, use Results<Ok<T>, NotFound<ApiError>> union types
-private static async Task<Results<Ok<PhotoDetailDto>, NotFound>> GetPhotoById(...)
+// Request DTO with FastEndpoints attributes
+public sealed class GetPhotosRequest
+{
+    [QueryParam] public int? Page { get; init; }
+    [QueryParam] public int? PageSize { get; init; }
+    // ...
+}
 ```
 
-Use `TypedResults.Ok(...)`, `TypedResults.NotFound()`, `TypedResults.NoContent()`. Wrap paginated responses in `PagedResult<T>` with `PaginationInfo`.
+**Key patterns:**
+
+- One endpoint class per operation, inherits from `Endpoint<TRequest, TResponse>` or `EndpointWithoutRequest<TResponse>`
+- Request DTOs use `[QueryParam]`, `[FromBody]`, `[FromRoute]` attributes
+- Return strongly-typed results: `Ok<T>`, `NotFound`, `NoContent`, etc.
+- Use `Results<Ok<T>, NotFound<ApiError>>` union types for multiple possible responses
+- Resolve services with `Resolve<IService>()` inside `ExecuteAsync`
+- Wrap paginated responses in `PagedResult<T>` with `PaginationInfo`
+
+See [GetTagsEndpoint.cs](apps/api/LibraFoto.Modules.Admin/Features/Tags/GetTagsEndpoint.cs) for a simpler example without request parameters.
 
 ## Storage Provider Pattern
 
@@ -195,8 +227,8 @@ See [LocalStorageProvider.cs](apps/api/LibraFoto.Modules.Storage/Providers/Local
 ## Testing
 
 ```bash
-# Backend tests (TUnit)
-dotnet test apps/api/LibraFoto.slnx
+# Backend tests (TUnit) - use run, not test
+dotnet run --project tests/LibraFoto.Tests
 
 # Frontend unit tests
 cd apps/display && npm test   # Vitest
@@ -210,7 +242,7 @@ $env:ENABLE_TEST_ENDPOINTS="true"; dotnet run --project apps/api/LibraFoto.Api
 $env:SKIP_WEB_SERVER="true"; cd tests/e2e && npm test
 ```
 
-Backend tests use TUnit with NSubstitute for mocking. Use in-memory SQLite for database tests:
+Backend tests use TUnit with NSubstitute for mocking. **Important**: Use `dotnet run` not `dotnet test` for TUnit projects. Use in-memory SQLite for database tests:
 
 ```csharp
 var options = new DbContextOptionsBuilder<LibraFotoDbContext>()
@@ -286,10 +318,12 @@ testGetDeployMode() {
 
 - Build after changes: `dotnet build apps/api/LibraFoto.slnx`
 - Write unit tests for new functionality—test behavior, not framework code.
-- Run tests after changes and fix any failures.
+- Run tests after changes and fix any failures: `dotnet run --project tests/LibraFoto.Tests`
 - Use records for DTOs (see `LibraFoto.Shared/DTOs/`).
 - Follow existing module structure when adding new features.
 - Use `CancellationToken` in async methods for proper cancellation support.
+- One endpoint per file in `Features/` folders, using FastEndpoints base classes.
+- Follow vertical slice architecture: endpoint + DTOs in same file, business logic in services.
 
 ## Frontend Patterns
 

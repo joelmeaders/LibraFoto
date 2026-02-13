@@ -21,7 +21,7 @@ public class SlideshowServiceTests
     [Before(Test)]
     public async Task Setup()
     {
-        _connection = new SqliteConnection($"Data Source=TestDb_{Guid.NewGuid():N};Mode=Memory;Cache=Shared");
+        _connection = new SqliteConnection($"Data Source=TestDb_{Guid.NewGuid():N};Mode=Memory");
         await _connection.OpenAsync();
 
         // Create initial DbContext just to create schema
@@ -56,7 +56,7 @@ public class SlideshowServiceTests
             _service.ResetSequence(setting.Id);
         }
 
-        _serviceProvider.Dispose();
+        await _serviceProvider.DisposeAsync();
         await _db.DisposeAsync();
         await _connection.DisposeAsync();
     }
@@ -316,7 +316,7 @@ public class SlideshowServiceTests
         // Act - use explicit settingsId
         var result = await _service.GetPreloadPhotosAsync(10, settings.Id);
 
-        // Assert - When asking for 10 but only 5 exist, preload wraps and may return duplicates up to count 
+        // Assert - When asking for 10 but only 5 exist, preload wraps and may return duplicates up to count
         await Assert.That(result.Count).IsGreaterThanOrEqualTo(5);
         await Assert.That(result.Count).IsLessThanOrEqualTo(10);
     }

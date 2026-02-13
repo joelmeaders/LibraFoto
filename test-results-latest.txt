@@ -1,0 +1,53 @@
+
+ΓûêΓûêΓûêΓûêΓûêΓûêΓûêΓûêΓòùΓûêΓûêΓòù   ΓûêΓûêΓòùΓûêΓûêΓûêΓòù   ΓûêΓûêΓòùΓûêΓûêΓòùΓûêΓûêΓûêΓûêΓûêΓûêΓûêΓûêΓòù
+ΓòÜΓòÉΓòÉΓûêΓûêΓòöΓòÉΓòÉΓò¥ΓûêΓûêΓòæ   ΓûêΓûêΓòæΓûêΓûêΓûêΓûêΓòù  ΓûêΓûêΓòæΓûêΓûêΓòæΓòÜΓòÉΓòÉΓûêΓûêΓòöΓòÉΓòÉΓò¥
+   ΓûêΓûêΓòæ   ΓûêΓûêΓòæ   ΓûêΓûêΓòæΓûêΓûêΓòöΓûêΓûêΓòù ΓûêΓûêΓòæΓûêΓûêΓòæ   ΓûêΓûêΓòæ
+   ΓûêΓûêΓòæ   ΓûêΓûêΓòæ   ΓûêΓûêΓòæΓûêΓûêΓòæΓòÜΓûêΓûêΓòùΓûêΓûêΓòæΓûêΓûêΓòæ   ΓûêΓûêΓòæ
+   ΓûêΓûêΓòæ   ΓòÜΓûêΓûêΓûêΓûêΓûêΓûêΓòöΓò¥ΓûêΓûêΓòæ ΓòÜΓûêΓûêΓûêΓûêΓòæΓûêΓûêΓòæ   ΓûêΓûêΓòæ
+   ΓòÜΓòÉΓò¥    ΓòÜΓòÉΓòÉΓòÉΓòÉΓòÉΓò¥ ΓòÜΓòÉΓò¥  ΓòÜΓòÉΓòÉΓòÉΓò¥ΓòÜΓòÉΓò¥   ΓòÜΓòÉΓò¥
+
+   TUnit v1.13.40.0 | 64-bit | Microsoft Windows 10.0.26300 | win-x64 | .NET 10.0.2 | Microsoft Testing Platform v2.1.0
+
+   Engine Mode: SourceGenerated
+
+failed ScanDirectoryAsync_WithSubdirectories_ReturnsAllFiles (14ms)
+  TUnit.Engine.Exceptions.TestFailedException: OperationCanceledException: The operation was canceled.
+failed ScanDirectoryAsync_IdentifiesHiddenFiles (9ms)
+  TUnit.Engine.Exceptions.TestFailedException: OperationCanceledException: The operation was canceled.
+failed ScanDirectoryAsync_SupportsAllVideoFormats (23ms)
+  TUnit.Engine.Exceptions.TestFailedException: OperationCanceledException: The operation was canceled.
+failed ScanDirectoryAsync_SetsCorrectRelativePath (16ms)
+  TUnit.Engine.Exceptions.TestFailedException: OperationCanceledException: The operation was canceled.
+failed ScanDirectoryAsync_WithMediaFiles_ReturnsMediaFiles (19ms)
+  TUnit.Engine.Exceptions.TestFailedException: OperationCanceledException: The operation was canceled.
+failed ScanDirectoryAsync_CapturesFileMetadata (9ms)
+  TUnit.Engine.Exceptions.TestFailedException: OperationCanceledException: The operation was canceled.
+failed ScanDirectoryAsync_SetsCorrectMediaType (14ms)
+  TUnit.Engine.Exceptions.TestFailedException: OperationCanceledException: The operation was canceled.
+failed ScanDirectoryAsync_RespectsCancellationToken (97ms)
+  TUnit.Engine.Exceptions.TestFailedException: OperationCanceledException: The operation was canceled.
+Test execution stopped due to fail-fast.
+Unhandled exception. System.Threading.Tasks.TaskCanceledException: A task was canceled.
+   at TUnit.Engine.Scheduling.TestScheduler.ExecuteUnlimitedAsync(List`1 tests, CancellationToken cancellationToken)
+   at TUnit.Engine.Scheduling.TestScheduler.ExecuteWithGlobalLimitAsync(AbstractExecutableTest[] tests, CancellationToken cancellationToken)
+   at TUnit.Engine.Scheduling.TestScheduler.ExecuteTestsAsync(AbstractExecutableTest[] tests, CancellationToken cancellationToken)
+   at TUnit.Engine.Scheduling.TestScheduler.ExecuteGroupedTestsAsync(GroupedTests groupedTests, CancellationToken cancellationToken)
+   at TUnit.Engine.Scheduling.TestScheduler.ScheduleAndExecuteAsync(List`1 testList, CancellationToken cancellationToken)
+   at TUnit.Engine.TestSessionCoordinator.ExecuteTestsCore(List`1 testList, CancellationToken cancellationToken)
+   at TUnit.Engine.TestSessionCoordinator.ExecuteTests(IEnumerable`1 tests, ITestExecutionFilter filter, IMessageBus messageBus, CancellationToken cancellationToken)
+   at TUnit.Engine.TestSessionCoordinator.ExecuteTests(IEnumerable`1 tests, ITestExecutionFilter filter, IMessageBus messageBus, CancellationToken cancellationToken)
+   at TUnit.Engine.Framework.TestRequestHandler.HandleRunRequestAsync(TUnitServiceProvider serviceProvider, RunTestExecutionRequest request, ExecuteRequestContext context, ITestExecutionFilter testExecutionFilter)
+   at TUnit.Engine.Framework.TestRequestHandler.HandleRequestAsync(TestExecutionRequest request, TUnitServiceProvider serviceProvider, ExecuteRequestContext context, ITestExecutionFilter testExecutionFilter)
+   at TUnit.Engine.Framework.TUnitTestFramework.ExecuteRequestAsync(ExecuteRequestContext context)
+   at TUnit.Engine.Framework.TUnitTestFramework.ExecuteRequestAsync(ExecuteRequestContext context)
+   at Microsoft.Testing.Platform.Requests.TestHostTestFrameworkInvoker.ExecuteRequestAsync(ITestFramework testFramework, TestExecutionRequest request, IMessageBus messageBus, CancellationToken cancellationToken) in /_/src/Platform/Microsoft.Testing.Platform/Requests/TestHostTestFrameworkInvoker.cs:line 92
+   at Microsoft.Testing.Platform.Requests.TestHostTestFrameworkInvoker.ExecuteAsync(ITestFramework testFramework, ClientInfo client, CancellationToken cancellationToken) in /_/src/Platform/Microsoft.Testing.Platform/Requests/TestHostTestFrameworkInvoker.cs:line 73
+   at Microsoft.Testing.Platform.Hosts.CommonHost.ExecuteRequestAsync(ProxyOutputDevice outputDevice, ITestSessionContext testSessionInfo, ServiceProvider serviceProvider, BaseMessageBus baseMessageBus, ITestFramework testFramework, ClientInfo client) in /_/src/Platform/Microsoft.Testing.Platform/Hosts/CommonTestHost.cs:line 166
+   at Microsoft.Testing.Platform.Hosts.ConsoleTestHost.InternalRunAsync(CancellationToken cancellationToken) in /_/src/Platform/Microsoft.Testing.Platform/Hosts/ConsoleTestHost.cs:line 85
+   at Microsoft.Testing.Platform.Hosts.ConsoleTestHost.InternalRunAsync(CancellationToken cancellationToken) in /_/src/Platform/Microsoft.Testing.Platform/Hosts/ConsoleTestHost.cs:line 117
+   at Microsoft.Testing.Platform.Hosts.CommonHost.RunTestAppAsync(IPlatformOpenTelemetryService platformOTelService, CancellationToken testApplicationCancellationToken) in /_/src/Platform/Microsoft.Testing.Platform/Hosts/CommonTestHost.cs:line 130
+   at Microsoft.Testing.Platform.Hosts.CommonHost.RunAsync() in /_/src/Platform/Microsoft.Testing.Platform/Hosts/CommonTestHost.cs:line 44
+   at Microsoft.Testing.Platform.Hosts.CommonHost.RunAsync() in /_/src/Platform/Microsoft.Testing.Platform/Hosts/CommonTestHost.cs:line 83
+   at Microsoft.Testing.Platform.Builder.TestApplication.RunAsync() in /_/src/Platform/Microsoft.Testing.Platform/Builder/TestApplication.cs:line 223
+   at LibraFoto.Tests.MicrosoftTestingPlatformEntryPoint.Main(String[] args) in D:\Just or fun\LibraFoto\LibraFoto\tests\LibraFoto.Tests\obj\Debug\net10.0\MicrosoftTestingPlatformEntryPoint.cs:line 18
+   at LibraFoto.Tests.MicrosoftTestingPlatformEntryPoint.<Main>(String[] args)

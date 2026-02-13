@@ -22,7 +22,7 @@ public class UserServiceTests
     public async Task Setup()
     {
         // Use unique database for each test to avoid concurrency issues
-        _connection = new SqliteConnection($"Data Source=TestDb_{Guid.NewGuid():N};Mode=Memory;Cache=Shared");
+        _connection = new SqliteConnection($"Data Source=TestDb_{Guid.NewGuid():N};Mode=Memory");
         await _connection.OpenAsync();
 
         var options = new DbContextOptionsBuilder<LibraFotoDbContext>()

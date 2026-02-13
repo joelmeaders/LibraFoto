@@ -15,6 +15,9 @@ public static class AuthModule
     /// </summary>
     public static IServiceCollection AddAuthModule(this IServiceCollection services)
     {
+        // Register token storage as singleton (shared across all requests)
+        services.AddSingleton<ITokenStore, InMemoryTokenStore>();
+
         // Register auth services (singleton for AuthService to maintain token state, scoped for others)
         services.AddSingleton<IAuthService, AuthService>();
         services.AddScoped<IUserService, UserService>();

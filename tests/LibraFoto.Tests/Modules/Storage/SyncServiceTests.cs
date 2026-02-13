@@ -12,6 +12,7 @@ using NSubstitute;
 
 namespace LibraFoto.Tests.Modules.Storage;
 
+[NotInParallel]
 public class SyncServiceTests
 {
     private SqliteConnection _connection = null!;
@@ -23,7 +24,7 @@ public class SyncServiceTests
     [Before(Test)]
     public async Task Setup()
     {
-        _connection = new SqliteConnection($"Data Source=TestDb_{Guid.NewGuid():N};Mode=Memory;Cache=Shared");
+        _connection = new SqliteConnection($"Data Source=TestDb_{Guid.NewGuid():N};Mode=Memory");
         await _connection.OpenAsync();
         var options = new DbContextOptionsBuilder<LibraFotoDbContext>()
             .UseSqlite(_connection).EnableDetailedErrors().Options;
@@ -289,7 +290,7 @@ public class SyncServiceTests
         _db.StorageProviders.Add(TestHelpers.CreateTestStorageProvider(1L, "Test Provider"));
         await _db.SaveChangesAsync();
 
-        var cts = new CancellationTokenSource();
+        using var cts = new CancellationTokenSource();
         provider.GetFilesAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(async callInfo =>
             {
@@ -495,11 +496,11 @@ public class SyncServiceTests
         _providerFactory.GetProviderAsync(1L, Arg.Any<CancellationToken>()).Returns(provider1);
         _providerFactory.GetProviderAsync(2L, Arg.Any<CancellationToken>()).Returns(provider2);
 
-        var cts = new CancellationTokenSource();
+        using var cts = new CancellationTokenSource();
         var request = new SyncRequest();
 
         // Cancel after first provider
-        cts.Cancel();
+        await cts.CancelAsync();
 
         // Act & Assert - should throw OperationCanceledException
         await Assert.That(async () =>

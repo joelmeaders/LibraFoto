@@ -361,7 +361,7 @@ public class GeocodingServiceTests
             count++;
             if (count >= 2)
             {
-                cts.Cancel();
+                await cts.CancelAsync();
             }
         }
 

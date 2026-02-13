@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text.Json;
 using LibraFoto.Data;
 using LibraFoto.Data.Entities;
@@ -18,8 +19,14 @@ public class StorageProviderDeletionTests
     private static async Task<(GooglePhotosProvider provider, LibraFotoDbContext dbContext)> CreateProviderAsync()
     {
         var logger = NullLogger<GooglePhotosProvider>.Instance;
+
+        // Create a mock HTTP message handler that returns success for token revocation
+        var mockHandler = new MockHttpMessageHandler(_ =>
+            Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)));
+
+        var httpClient = new HttpClient(mockHandler);
         var httpClientFactory = Substitute.For<IHttpClientFactory>();
-        httpClientFactory.CreateClient(Arg.Any<string>()).Returns(new HttpClient());
+        httpClientFactory.CreateClient(Arg.Any<string>()).Returns(httpClient);
 
         var options = new DbContextOptionsBuilder<LibraFotoDbContext>()
             .UseInMemoryDatabase($"TestDb_{Guid.NewGuid()}")
@@ -162,5 +169,25 @@ public class StorageProviderDeletionTests
 
         // Other fields should be preserved
         await Assert.That(config.ClientId).IsEqualTo(originalClientId);
+    }
+
+    /// <summary>
+    /// Mock HTTP message handler for testing HTTP client calls.
+    /// </summary>
+    private sealed class MockHttpMessageHandler : HttpMessageHandler
+    {
+        private readonly Func<HttpRequestMessage, Task<HttpResponseMessage>> _handler;
+
+        public MockHttpMessageHandler(Func<HttpRequestMessage, Task<HttpResponseMessage>> handler)
+        {
+            _handler = handler;
+        }
+
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+        {
+            return _handler(request);
+        }
     }
 }

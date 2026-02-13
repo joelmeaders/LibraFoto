@@ -91,18 +91,38 @@ public class LocalStorageProvider : IStorageProvider
         var scannedFiles = await _mediaScanner.ScanDirectoryAsync(targetPath, recursive: true, cancellationToken);
         var filteredFiles = scannedFiles.Where(f => !IsThumbnailPath(f.RelativePath));
 
-        return filteredFiles.Select(f => new StorageFileInfo
+        return filteredFiles.Select(f =>
         {
-            FileId = f.RelativePath.Replace('\\', '/'), // Normalize path separators
-            FileName = f.FileName,
-            FullPath = f.FullPath,
-            FileSize = f.FileSize,
-            ContentType = f.ContentType,
-            MediaType = f.MediaType,
-            CreatedDate = f.CreatedTime,
-            ModifiedDate = f.ModifiedTime,
-            IsFolder = false,
-            ParentFolderId = Path.GetDirectoryName(f.RelativePath)?.Replace('\\', '/')
+            // Calculate ParentFolderId relative to base path
+            var parentDir = Path.GetDirectoryName(f.RelativePath)?.Replace('\\', '/');
+            string? parentFolderId;
+
+            if (string.IsNullOrEmpty(folderId))
+            {
+                // Scanning from base - use relative parent dir
+                parentFolderId = string.IsNullOrEmpty(parentDir) ? null : parentDir;
+            }
+            else
+            {
+                // Scanning from subfolder - combine folderId with relative parent dir
+                parentFolderId = string.IsNullOrEmpty(parentDir)
+                    ? folderId
+                    : Path.Combine(folderId, parentDir).Replace('\\', '/');
+            }
+
+            return new StorageFileInfo
+            {
+                FileId = f.RelativePath.Replace('\\', '/'), // Normalize path separators
+                FileName = f.FileName,
+                FullPath = f.FullPath,
+                FileSize = f.FileSize,
+                ContentType = f.ContentType,
+                MediaType = f.MediaType,
+                CreatedDate = f.CreatedTime,
+                ModifiedDate = f.ModifiedTime,
+                IsFolder = false,
+                ParentFolderId = parentFolderId
+            };
         });
     }
 
@@ -143,6 +163,9 @@ public class LocalStorageProvider : IStorageProvider
     {
         try
         {
+            // Check cancellation early
+            cancellationToken.ThrowIfCancellationRequested();
+
             // Validate content type
             if (!_mediaScanner.IsSupportedMediaFile(fileName))
             {
@@ -187,6 +210,11 @@ public class LocalStorageProvider : IStorageProvider
                 FileSize = fileInfo.Length,
                 ContentType = contentType
             };
+        }
+        catch (OperationCanceledException)
+        {
+            // Re-throw cancellation exceptions so they propagate properly
+            throw;
         }
         catch (Exception ex)
         {
