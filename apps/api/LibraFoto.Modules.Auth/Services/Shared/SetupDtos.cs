@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace LibraFoto.Modules.Auth.Models;
+namespace LibraFoto.Modules.Auth.Services.Shared;
 
 /// <summary>
 /// Request model for initial setup - creating the first admin user.

@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using LibraFoto.Data.Enums;
 
-namespace LibraFoto.Modules.Auth.Models;
+namespace LibraFoto.Modules.Auth.Services.Shared;
 
 /// <summary>
 /// Request model for creating a new user.

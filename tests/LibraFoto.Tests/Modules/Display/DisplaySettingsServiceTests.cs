@@ -1,7 +1,7 @@
 using LibraFoto.Data;
 using LibraFoto.Data.Entities;
 using LibraFoto.Data.Enums;
-using LibraFoto.Modules.Display.Models;
+using LibraFoto.Modules.Display.Services.Shared;
 using LibraFoto.Modules.Display.Services;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;

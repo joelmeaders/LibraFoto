@@ -1,5 +1,4 @@
 using FastEndpoints;
-using LibraFoto.Modules.Auth.Models;
 using LibraFoto.Modules.Auth.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -46,3 +45,5 @@ public sealed class ValidateTokenEndpoint : EndpointWithoutRequest<Ok<TokenValid
         return TypedResults.Ok(new TokenValidationResult(userId.HasValue, userId));
     }
 }
+
+public record TokenValidationResult(bool IsValid, long? UserId);

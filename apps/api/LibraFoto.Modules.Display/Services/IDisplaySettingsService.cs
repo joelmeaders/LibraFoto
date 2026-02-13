@@ -1,4 +1,4 @@
-using LibraFoto.Modules.Display.Models;
+using LibraFoto.Modules.Display.Services.Shared;
 
 namespace LibraFoto.Modules.Display.Services;
 

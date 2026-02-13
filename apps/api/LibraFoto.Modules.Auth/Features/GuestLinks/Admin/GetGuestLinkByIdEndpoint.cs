@@ -1,7 +1,7 @@
 using FastEndpoints;
 using LibraFoto.Data.Enums;
-using LibraFoto.Modules.Auth.Models;
 using LibraFoto.Modules.Auth.Services;
+using LibraFoto.Modules.Auth.Services.Shared;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 

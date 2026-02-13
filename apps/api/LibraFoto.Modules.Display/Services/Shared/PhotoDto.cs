@@ -1,6 +1,6 @@
 using LibraFoto.Data.Enums;
 
-namespace LibraFoto.Modules.Display.Models;
+namespace LibraFoto.Modules.Display.Services.Shared;
 
 /// <summary>
 /// Photo data transfer object for display frontend.

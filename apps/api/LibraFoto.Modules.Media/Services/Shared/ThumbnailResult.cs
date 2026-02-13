@@ -1,4 +1,4 @@
-namespace LibraFoto.Modules.Media.Models;
+namespace LibraFoto.Modules.Media.Services.Shared;
 
 /// <summary>
 /// Result of thumbnail generation operation.

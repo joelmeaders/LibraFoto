@@ -1,6 +1,6 @@
 using LibraFoto.Data.Enums;
 
-namespace LibraFoto.Modules.Display.Models;
+namespace LibraFoto.Modules.Display.Services.Shared;
 
 /// <summary>
 /// Display settings data transfer object for the frontend.

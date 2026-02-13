@@ -1,6 +1,6 @@
 using LibraFoto.Data.Enums;
-using LibraFoto.Modules.Auth.Models;
 using LibraFoto.Modules.Auth.Services;
+using LibraFoto.Modules.Auth.Services.Shared;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 

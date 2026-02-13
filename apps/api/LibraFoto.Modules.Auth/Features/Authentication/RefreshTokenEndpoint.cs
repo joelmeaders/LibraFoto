@@ -1,8 +1,9 @@
 using FastEndpoints;
-using LibraFoto.Modules.Auth.Models;
 using LibraFoto.Modules.Auth.Services;
+using LibraFoto.Modules.Auth.Services.Shared;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
+using System.ComponentModel.DataAnnotations;
 
 namespace LibraFoto.Modules.Auth.Features.Authentication;
 
@@ -55,3 +56,8 @@ public sealed class RefreshTokenEndpoint : Endpoint<RefreshTokenRequest, Results
         return TypedResults.Ok(result);
     }
 }
+
+public record RefreshTokenRequest(
+    [Required]
+    string RefreshToken
+);

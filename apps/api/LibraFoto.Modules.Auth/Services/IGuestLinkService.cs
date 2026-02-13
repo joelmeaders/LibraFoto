@@ -1,4 +1,4 @@
-using LibraFoto.Modules.Auth.Models;
+using LibraFoto.Modules.Auth.Services.Shared;
 
 namespace LibraFoto.Modules.Auth.Services;
 

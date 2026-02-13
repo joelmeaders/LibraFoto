@@ -1,6 +1,6 @@
 using LibraFoto.Data;
 using LibraFoto.Data.Entities;
-using LibraFoto.Modules.Display.Models;
+using LibraFoto.Modules.Display.Services.Shared;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 

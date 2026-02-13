@@ -1,4 +1,4 @@
-using LibraFoto.Modules.Media.Models;
+using LibraFoto.Modules.Media.Services.Shared;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.Formats.Png;

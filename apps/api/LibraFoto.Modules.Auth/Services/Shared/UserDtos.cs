@@ -1,6 +1,6 @@
 using LibraFoto.Data.Enums;
 
-namespace LibraFoto.Modules.Auth.Models;
+namespace LibraFoto.Modules.Auth.Services.Shared;
 
 /// <summary>
 /// User data transfer object (without sensitive data).

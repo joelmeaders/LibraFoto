@@ -1,4 +1,22 @@
-namespace LibraFoto.Modules.Auth.Models;
+using System.ComponentModel.DataAnnotations;
+
+namespace LibraFoto.Modules.Auth.Services.Shared;
+
+/// <summary>
+/// Request model for creating a guest upload link.
+/// </summary>
+public record CreateGuestLinkRequest(
+    [Required]
+    [StringLength(100, MinimumLength = 1)]
+    string Name,
+
+    DateTime? ExpiresAt,
+
+    [Range(1, 1000)]
+    int? MaxUploads,
+
+    long? TargetAlbumId
+);
 
 /// <summary>
 /// Guest link data transfer object for display.

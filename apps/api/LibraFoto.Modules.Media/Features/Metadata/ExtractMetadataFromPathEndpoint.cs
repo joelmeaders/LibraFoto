@@ -1,5 +1,5 @@
 using FastEndpoints;
-using LibraFoto.Modules.Media.Models;
+using LibraFoto.Modules.Media.Services.Shared;
 using LibraFoto.Modules.Media.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
