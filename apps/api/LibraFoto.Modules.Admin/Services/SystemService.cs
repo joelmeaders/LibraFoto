@@ -220,6 +220,19 @@ public class SystemService : ISystemService
     /// <inheritdoc />
     public Task<UpdateTriggerResponse> TriggerUpdateAsync(CancellationToken cancellationToken = default)
     {
+        // Self-update should never run in development/test environments.
+        // Running update scripts during tests can terminate the test host process.
+        if (_environment.IsDevelopment() || _environment.IsEnvironment("Testing"))
+        {
+            _logger.LogInformation(
+                "Skipping self-update trigger in environment: {Environment}",
+                _environment.EnvironmentName);
+
+            return Task.FromResult(new UpdateTriggerResponse(
+                "Update is disabled in development/testing environments.",
+                0));
+        }
+
         var isDocker = IsRunningInDocker();
         var scriptPath = GetUpdateScriptPath(isDocker);
 

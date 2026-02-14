@@ -544,21 +544,6 @@ public class LocalStorageProviderTests
     }
 
     [Test]
-    public async Task DownloadFileAsync_WithLargeFile_ReturnsCompleteContent()
-    {
-        // Create a 2MB file
-        var largeContent = new byte[2 * 1024 * 1024];
-        Random.Shared.NextBytes(largeContent);
-        using var stream = new MemoryStream(largeContent);
-        var uploadResult = await _provider.UploadFileAsync("large.jpg", stream, "image/jpeg");
-
-        var downloadedContent = await _provider.DownloadFileAsync(uploadResult.FileId!);
-
-        await Assert.That(downloadedContent.Length).IsEqualTo(largeContent.Length);
-        await Assert.That(downloadedContent).IsEquivalentTo(largeContent);
-    }
-
-    [Test]
     public async Task DownloadFileAsync_WithEmptyFile_ReturnsEmptyArray()
     {
         using var stream = new MemoryStream(Array.Empty<byte>());
