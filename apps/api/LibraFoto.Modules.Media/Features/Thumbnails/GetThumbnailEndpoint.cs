@@ -1,7 +1,7 @@
 using FastEndpoints;
-using LibraFoto.Data;
-using LibraFoto.Modules.Media.Services.Shared;
 using LibraFoto.Modules.Media.Services;
+using LibraFoto.Modules.Media.Services.Repositories;
+using LibraFoto.Modules.Media.Services.Shared;
 using LibraFoto.Shared.Configuration;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -28,7 +28,7 @@ public sealed class GetThumbnailEndpoint : EndpointWithoutRequest<Results<FileSt
     public override async Task<Results<FileStreamHttpResult, NotFound>> ExecuteAsync(CancellationToken ct)
     {
         var thumbnailService = Resolve<IThumbnailService>();
-        var dbContext = Resolve<LibraFotoDbContext>();
+        var mediaPhotoRepository = Resolve<IMediaPhotoRepository>();
         var configuration = Resolve<IConfiguration>();
         var photoId = Route<long>("photoId");
 
@@ -38,7 +38,7 @@ public sealed class GetThumbnailEndpoint : EndpointWithoutRequest<Results<FileSt
             return TypedResults.File(stream, "image/jpeg", enableRangeProcessing: true);
         }
 
-        var photo = await dbContext.Photos.FindAsync([photoId], ct);
+        var photo = await mediaPhotoRepository.GetPhotoByIdAsync(photoId, ct);
         if (photo is null)
         {
             return TypedResults.NotFound();
@@ -64,7 +64,7 @@ public sealed class GetThumbnailEndpoint : EndpointWithoutRequest<Results<FileSt
             if (result is not null)
             {
                 photo.ThumbnailPath = result.Path;
-                await dbContext.SaveChangesAsync(ct);
+                await mediaPhotoRepository.SaveChangesAsync(ct);
 
                 stream = thumbnailService.OpenThumbnailStream(photoId);
                 if (stream is not null)
@@ -75,6 +75,7 @@ public sealed class GetThumbnailEndpoint : EndpointWithoutRequest<Results<FileSt
         }
         catch
         {
+            // Best effort: if thumbnail generation fails, endpoint returns NotFound below.
         }
 
         return TypedResults.NotFound();

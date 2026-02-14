@@ -1,13 +1,12 @@
 using LibraFoto.Data;
 using LibraFoto.Data.Enums;
 using LibraFoto.Modules.Storage.Interfaces;
-using LibraFoto.Modules.Storage.Features.Shared;
-using LibraFoto.Modules.Storage.Services.Shared;
 using LibraFoto.Modules.Storage.Services;
+using LibraFoto.Modules.Storage.Services.Repositories;
+using LibraFoto.Modules.Storage.Services.Shared;
 using LibraFoto.Tests.Helpers;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 
@@ -19,7 +18,7 @@ public class SyncServiceTests
     private SqliteConnection _connection = null!;
     private LibraFotoDbContext _db = null!;
     private IStorageProviderFactory _providerFactory = null!;
-    private IServiceProvider _serviceProvider = null!;
+    private IStoragePersistenceRepository _storageRepository = null!;
     private SyncService _syncService = null!;
 
     [Before(Test)]
@@ -33,18 +32,11 @@ public class SyncServiceTests
         await _db.Database.EnsureCreatedAsync();
 
         _providerFactory = Substitute.For<IStorageProviderFactory>();
-
-        // Set up scoped service provider so SyncService can resolve LibraFotoDbContext
-        var scope = Substitute.For<IServiceScope>();
-        scope.ServiceProvider.GetService(typeof(LibraFotoDbContext)).Returns(_db);
-        var scopeFactory = Substitute.For<IServiceScopeFactory>();
-        scopeFactory.CreateScope().Returns(scope);
-        _serviceProvider = Substitute.For<IServiceProvider>();
-        _serviceProvider.GetService(typeof(IServiceScopeFactory)).Returns(scopeFactory);
+        _storageRepository = new StoragePersistenceRepository(_db);
 
         _syncService = new SyncService(
             _providerFactory,
-            _serviceProvider,
+            _storageRepository,
             NullLogger<SyncService>.Instance);
     }
 
@@ -634,11 +626,11 @@ public class SyncServiceTests
         _db.StorageProviders.Add(TestHelpers.CreateTestStorageProvider(1L, "Test Provider"));
         await _db.SaveChangesAsync();
 
-        // Create files where one will cause an error (null FileName simulation)
+        // Create files where one will cause an error (null FileId triggers per-item processing failure)
         var files = new List<StorageFileInfo>
         {
             TestHelpers.CreateTestStorageFileInfo("file1", "good1.jpg", MediaType.Photo, 1000),
-            new StorageFileInfo { FileId = "bad-file", FileName = null!, FileSize = 2000, IsFolder = false },
+            new StorageFileInfo { FileId = null!, FileName = "bad.jpg", FileSize = 2000, IsFolder = false },
             TestHelpers.CreateTestStorageFileInfo("file2", "good2.jpg", MediaType.Photo, 3000)
         };
 

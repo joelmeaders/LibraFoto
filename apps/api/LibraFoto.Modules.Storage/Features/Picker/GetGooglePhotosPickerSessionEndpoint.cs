@@ -1,13 +1,11 @@
 using FastEndpoints;
-using LibraFoto.Data;
 using LibraFoto.Data.Enums;
 using LibraFoto.Modules.Storage.Features.Shared;
-using LibraFoto.Modules.Storage.Services.Shared;
 using LibraFoto.Modules.Storage.Services;
+using LibraFoto.Modules.Storage.Services.Repositories;
 using LibraFoto.Shared.DTOs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace LibraFoto.Modules.Storage.Features.Picker;
@@ -38,22 +36,22 @@ public sealed class GetGooglePhotosPickerSessionEndpoint : Endpoint<GetGooglePho
         GetGooglePhotosPickerSessionRequest req,
         CancellationToken ct)
     {
-        var dbContext = Resolve<LibraFotoDbContext>();
+        var storageRepository = Resolve<IStoragePersistenceRepository>();
         var pickerService = Resolve<GooglePhotosPickerService>();
         var loggerFactory = Resolve<ILoggerFactory>();
-        return await HandleRequestAsync(req.ProviderId, req.SessionId, dbContext, pickerService, loggerFactory, ct);
+        return await HandleRequestAsync(req.ProviderId, req.SessionId, storageRepository, pickerService, loggerFactory, ct);
     }
 
     internal static async Task<Results<Ok<PickerSessionDto>, NotFound<ApiError>, BadRequest<ApiError>>> HandleRequestAsync(
         long providerId,
         string sessionId,
-        LibraFotoDbContext dbContext,
+        IStoragePersistenceRepository storageRepository,
         GooglePhotosPickerService pickerService,
         ILoggerFactory loggerFactory,
         CancellationToken cancellationToken)
     {
         var logger = loggerFactory.CreateLogger(LoggerCategory);
-        var provider = await dbContext.StorageProviders.FindAsync([providerId], cancellationToken);
+        var provider = await storageRepository.GetProviderByIdAsync(providerId, cancellationToken);
 
         if (provider == null || provider.Type != StorageProviderType.GooglePhotos)
         {
@@ -72,18 +70,17 @@ public sealed class GetGooglePhotosPickerSessionEndpoint : Endpoint<GetGooglePho
             return TypedResults.BadRequest(new ApiError(OAuthFailedCode, OAuthFailedMessage));
         }
 
-        await GooglePhotosPickerHelper.PersistConfigAsync(provider, config!, dbContext, cancellationToken);
+        await GooglePhotosPickerHelper.PersistConfigAsync(provider, config!, storageRepository, cancellationToken);
 
         var session = await pickerService.GetSessionAsync(sessionId, accessToken, cancellationToken);
 
-        var entity = await dbContext.PickerSessions
-            .FirstOrDefaultAsync(s => s.ProviderId == providerId && s.SessionId == sessionId, cancellationToken);
+        var entity = await storageRepository.GetPickerSessionAsync(providerId, sessionId, cancellationToken);
 
         if (entity != null)
         {
             entity.MediaItemsSet = session.MediaItemsSet;
             entity.ExpiresAt = session.ExpireTime;
-            await dbContext.SaveChangesAsync(cancellationToken);
+            await storageRepository.SaveChangesAsync(cancellationToken);
         }
 
         return TypedResults.Ok(GooglePhotosPickerHelper.MapSessionDto(session));

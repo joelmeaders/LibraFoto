@@ -1,9 +1,8 @@
 using FastEndpoints;
-using LibraFoto.Data;
 using LibraFoto.Modules.Storage.Interfaces;
-using LibraFoto.Modules.Storage.Features.Shared;
-using LibraFoto.Modules.Storage.Services.Shared;
 using LibraFoto.Modules.Storage.Services;
+using LibraFoto.Modules.Storage.Services.Repositories;
+using LibraFoto.Modules.Storage.Services.Shared;
 using LibraFoto.Shared.DTOs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -38,7 +37,7 @@ public sealed class UploadBatchEndpoint : Endpoint<UploadBatchRequest, Results<O
         var mediaScanner = Resolve<IMediaScannerService>();
         var imageImport = Resolve<IImageImportService>();
         var configuration = Resolve<IConfiguration>();
-        var dbContext = Resolve<LibraFotoDbContext>();
+        var storageRepository = Resolve<IStoragePersistenceRepository>();
         var logger = Resolve<ILogger<object>>();
         var files = Files?.ToList() ?? [];
 
@@ -49,7 +48,7 @@ public sealed class UploadBatchEndpoint : Endpoint<UploadBatchRequest, Results<O
             mediaScanner,
             imageImport,
             configuration,
-            dbContext,
+                storageRepository,
             logger,
             ct);
     }
@@ -61,7 +60,7 @@ public sealed class UploadBatchEndpoint : Endpoint<UploadBatchRequest, Results<O
         IMediaScannerService mediaScanner,
         IImageImportService imageImport,
         IConfiguration configuration,
-        LibraFotoDbContext dbContext,
+        IStoragePersistenceRepository storageRepository,
         ILogger<object> logger,
         CancellationToken cancellationToken)
     {
@@ -106,7 +105,7 @@ public sealed class UploadBatchEndpoint : Endpoint<UploadBatchRequest, Results<O
                 mediaScanner,
                 imageImport,
                 configuration,
-                dbContext,
+                storageRepository,
                 logger,
                 cancellationToken);
 

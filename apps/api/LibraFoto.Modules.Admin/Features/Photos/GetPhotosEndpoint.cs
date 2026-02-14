@@ -1,8 +1,7 @@
 using FastEndpoints;
 using LibraFoto.Data.Enums;
-using LibraFoto.Modules.Admin.Features.Shared;
-using LibraFoto.Modules.Admin.Services.Shared;
 using LibraFoto.Modules.Admin.Services;
+using LibraFoto.Modules.Admin.Services.Shared;
 using LibraFoto.Shared.DTOs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;

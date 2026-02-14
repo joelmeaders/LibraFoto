@@ -2,6 +2,7 @@ using System.Text;
 using FastEndpoints;
 using LibraFoto.Api.Endpoints;
 using LibraFoto.Api.Infrastructure;
+using LibraFoto.Api.Repositories;
 using LibraFoto.Data;
 using LibraFoto.Modules.Admin;
 using LibraFoto.Modules.Auth;
@@ -116,6 +117,7 @@ try
     builder.Services.AddStorageModule();
     builder.Services.AddMediaModule();
     builder.Services.AddAuthModule();
+    builder.Services.AddScoped<ITestDataResetRepository, TestDataResetRepository>();
 
     // Log configuration paths for debugging
     var dbConnectionString = builder.Configuration.GetConnectionString("LibraFotoDb") ?? $"Data Source={LibraFotoDefaults.GetDefaultDatabasePath()}";

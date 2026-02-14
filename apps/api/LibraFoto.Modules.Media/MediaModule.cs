@@ -1,6 +1,6 @@
 using LibraFoto.Modules.Media.Services;
+using LibraFoto.Modules.Media.Services.Repositories;
 using LibraFoto.Shared.Configuration;
-using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -28,6 +28,7 @@ public static class MediaModule
 
         services.AddScoped<IMetadataService, MetadataService>();
         services.AddScoped<IImageProcessor, ImageProcessor>();
+        services.AddScoped<IMediaPhotoRepository, MediaPhotoRepository>();
 
         // Register HttpClient for geocoding service with proper configuration
         services.AddHttpClient<IGeocodingService, GeocodingService>(client =>

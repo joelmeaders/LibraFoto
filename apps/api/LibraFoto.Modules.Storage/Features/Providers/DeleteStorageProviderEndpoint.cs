@@ -1,10 +1,9 @@
 using FastEndpoints;
-using LibraFoto.Data;
 using LibraFoto.Modules.Storage.Interfaces;
+using LibraFoto.Modules.Storage.Services.Repositories;
 using LibraFoto.Shared.DTOs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -33,23 +32,23 @@ public sealed class DeleteStorageProviderEndpoint : Endpoint<DeleteProviderReque
         DeleteProviderRequest req,
         CancellationToken ct)
     {
-        var dbContext = Resolve<LibraFotoDbContext>();
+        var storageRepository = Resolve<IStoragePersistenceRepository>();
         var factory = Resolve<IStorageProviderFactory>();
         var configuration = Resolve<IConfiguration>();
         var loggerFactory = Resolve<ILoggerFactory>();
-        return await HandleRequestAsync(req, dbContext, factory, configuration, loggerFactory, ct);
+        return await HandleRequestAsync(req, storageRepository, factory, configuration, loggerFactory, ct);
     }
 
     internal static async Task<Results<NoContent, NotFound<ApiError>>> HandleRequestAsync(
         DeleteProviderRequest request,
-        LibraFotoDbContext dbContext,
+        IStoragePersistenceRepository storageRepository,
         IStorageProviderFactory factory,
         IConfiguration configuration,
         ILoggerFactory loggerFactory,
         CancellationToken cancellationToken)
     {
         var logger = loggerFactory.CreateLogger(LoggerCategory);
-        var entity = await dbContext.StorageProviders.FindAsync([request.Id], cancellationToken);
+        var entity = await storageRepository.GetProviderByIdAsync(request.Id, cancellationToken);
 
         if (entity == null)
         {
@@ -57,10 +56,10 @@ public sealed class DeleteStorageProviderEndpoint : Endpoint<DeleteProviderReque
         }
 
         await DisconnectOAuthProviderAsync(entity, factory, logger, cancellationToken);
-        await HandleProviderPhotosAsync(request, dbContext, configuration, logger, cancellationToken);
+        await HandleProviderPhotosAsync(request, storageRepository, configuration, logger, cancellationToken);
 
-        dbContext.StorageProviders.Remove(entity);
-        await dbContext.SaveChangesAsync(cancellationToken);
+        await storageRepository.RemoveProviderAsync(entity, cancellationToken);
+        await storageRepository.SaveChangesAsync(cancellationToken);
         factory.ClearCache();
 
         logger.LogInformation("Deleted storage provider {ProviderId}", request.Id);
@@ -93,17 +92,17 @@ public sealed class DeleteStorageProviderEndpoint : Endpoint<DeleteProviderReque
 
     private static async Task HandleProviderPhotosAsync(
         DeleteProviderRequest request,
-        LibraFotoDbContext dbContext,
+        IStoragePersistenceRepository storageRepository,
         IConfiguration configuration,
         ILogger logger,
         CancellationToken cancellationToken)
     {
-        var photos = await dbContext.Photos.Where(p => p.ProviderId == request.Id).ToListAsync(cancellationToken);
+        var photos = await storageRepository.GetPhotosByProviderAsync(request.Id, cancellationToken);
 
         if (request.DeletePhotos)
         {
             await DeleteProviderPhotoThumbnailsAsync(photos, configuration, logger);
-            dbContext.Photos.RemoveRange(photos);
+            await storageRepository.RemovePhotosAsync(photos);
             logger.LogInformation("Deleted {Count} photos from provider {ProviderId}", photos.Count, request.Id);
             return;
         }

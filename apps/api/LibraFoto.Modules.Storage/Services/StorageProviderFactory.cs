@@ -1,12 +1,10 @@
 using System.Text.Json;
-using LibraFoto.Data;
 using LibraFoto.Data.Enums;
 using LibraFoto.Modules.Storage.Interfaces;
-using LibraFoto.Modules.Storage.Features.Shared;
-using LibraFoto.Modules.Storage.Services.Shared;
 using LibraFoto.Modules.Storage.Providers;
+using LibraFoto.Modules.Storage.Services.Repositories;
+using LibraFoto.Modules.Storage.Services.Shared;
 using LibraFoto.Shared.Configuration;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -19,6 +17,7 @@ namespace LibraFoto.Modules.Storage.Services;
 public class StorageProviderFactory : IStorageProviderFactory
 {
     private readonly IServiceProvider _serviceProvider;
+    private readonly IStoragePersistenceRepository _storageRepository;
     private readonly IConfiguration _configuration;
     private readonly ILogger<StorageProviderFactory> _logger;
     private readonly Dictionary<long, IStorageProvider> _providerCache = [];
@@ -26,10 +25,12 @@ public class StorageProviderFactory : IStorageProviderFactory
 
     public StorageProviderFactory(
         IServiceProvider serviceProvider,
+        IStoragePersistenceRepository storageRepository,
         IConfiguration configuration,
         ILogger<StorageProviderFactory> logger)
     {
         _serviceProvider = serviceProvider;
+        _storageRepository = storageRepository;
         _configuration = configuration;
         _logger = logger;
     }
@@ -45,12 +46,7 @@ public class StorageProviderFactory : IStorageProviderFactory
             }
         }
 
-        using var scope = _serviceProvider.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<LibraFotoDbContext>();
-
-        var entity = await dbContext.StorageProviders
-            .AsNoTracking()
-            .FirstOrDefaultAsync(p => p.Id == providerId && p.IsEnabled, cancellationToken);
+        var entity = await _storageRepository.GetEnabledProviderByIdAsync(providerId, cancellationToken);
 
         if (entity == null)
         {
@@ -71,13 +67,7 @@ public class StorageProviderFactory : IStorageProviderFactory
     /// <inheritdoc />
     public async Task<IEnumerable<IStorageProvider>> GetAllProvidersAsync(CancellationToken cancellationToken = default)
     {
-        using var scope = _serviceProvider.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<LibraFotoDbContext>();
-
-        var entities = await dbContext.StorageProviders
-            .AsNoTracking()
-            .Where(p => p.IsEnabled)
-            .ToListAsync(cancellationToken);
+        var entities = await _storageRepository.GetEnabledProvidersAsync(cancellationToken);
 
         var providers = new List<IStorageProvider>();
 
@@ -111,13 +101,7 @@ public class StorageProviderFactory : IStorageProviderFactory
         StorageProviderType type,
         CancellationToken cancellationToken = default)
     {
-        using var scope = _serviceProvider.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<LibraFotoDbContext>();
-
-        var entities = await dbContext.StorageProviders
-            .AsNoTracking()
-            .Where(p => p.Type == type && p.IsEnabled)
-            .ToListAsync(cancellationToken);
+        var entities = await _storageRepository.GetEnabledProvidersByTypeAsync(type, cancellationToken);
 
         var providers = new List<IStorageProvider>();
 
@@ -158,7 +142,7 @@ public class StorageProviderFactory : IStorageProviderFactory
             StorageProviderType.GooglePhotos => new GooglePhotosProvider(
                 _serviceProvider.GetRequiredService<ILogger<GooglePhotosProvider>>(),
                 _serviceProvider.GetRequiredService<IHttpClientFactory>(),
-                _serviceProvider.GetRequiredService<LibraFotoDbContext>()),
+                _storageRepository),
             StorageProviderType.GoogleDrive => throw new NotImplementedException("Google Drive provider not yet implemented"),
             StorageProviderType.OneDrive => throw new NotImplementedException("OneDrive provider not yet implemented"),
             _ => throw new ArgumentOutOfRangeException(nameof(type), $"Unknown storage provider type: {type}")
@@ -168,12 +152,8 @@ public class StorageProviderFactory : IStorageProviderFactory
     /// <inheritdoc />
     public async Task<IStorageProvider> GetOrCreateDefaultLocalProviderAsync(CancellationToken cancellationToken = default)
     {
-        using var scope = _serviceProvider.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<LibraFotoDbContext>();
-
         // Try to find existing local provider
-        var localProvider = await dbContext.StorageProviders
-            .FirstOrDefaultAsync(p => p.Type == StorageProviderType.Local, cancellationToken);
+        var localProvider = await _storageRepository.GetProviderByTypeAsync(StorageProviderType.Local, cancellationToken);
 
         if (localProvider != null)
         {
@@ -199,8 +179,8 @@ public class StorageProviderFactory : IStorageProviderFactory
             Configuration = JsonSerializer.Serialize(config)
         };
 
-        dbContext.StorageProviders.Add(newProvider);
-        await dbContext.SaveChangesAsync(cancellationToken);
+        await _storageRepository.AddProviderAsync(newProvider, cancellationToken);
+        await _storageRepository.SaveChangesAsync(cancellationToken);
 
         _logger.LogInformation("Created default local storage provider at {Path}", defaultPath);
 

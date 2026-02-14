@@ -1,12 +1,11 @@
 using FastEndpoints;
-using LibraFoto.Data;
 using LibraFoto.Data.Enums;
-using LibraFoto.Modules.Storage.Interfaces;
 using LibraFoto.Modules.Storage.Features.Shared;
+using LibraFoto.Modules.Storage.Interfaces;
+using LibraFoto.Modules.Storage.Services.Repositories;
 using LibraFoto.Modules.Storage.Services.Shared;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.EntityFrameworkCore;
 
 namespace LibraFoto.Modules.Storage.Features.Providers;
 
@@ -33,19 +32,17 @@ public sealed class GetStorageProvidersEndpoint : Endpoint<GetStorageProvidersRe
 
     public override async Task<Ok<StorageProviderDto[]>> ExecuteAsync(GetStorageProvidersRequest req, CancellationToken ct)
     {
-        var dbContext = Resolve<LibraFotoDbContext>();
+        var storageRepository = Resolve<IStoragePersistenceRepository>();
         var factory = Resolve<IStorageProviderFactory>();
-        return await HandleRequestAsync(dbContext, factory, ct);
+        return await HandleRequestAsync(storageRepository, factory, ct);
     }
 
     internal static async Task<Ok<StorageProviderDto[]>> HandleRequestAsync(
-        LibraFotoDbContext dbContext,
+        IStoragePersistenceRepository storageRepository,
         IStorageProviderFactory factory,
         CancellationToken cancellationToken)
     {
-        var entities = await dbContext.StorageProviders
-            .AsNoTracking()
-            .ToArrayAsync(cancellationToken);
+        var entities = await storageRepository.GetAllProvidersAsync(cancellationToken);
 
         var providers = new List<StorageProviderDto>();
 
@@ -69,7 +66,7 @@ public sealed class GetStorageProvidersEndpoint : Endpoint<GetStorageProvidersRe
                 }
             }
 
-            var photoCount = await dbContext.Photos.CountAsync(p => p.ProviderId == entity.Id, cancellationToken);
+            var photoCount = await storageRepository.CountPhotosByProviderAsync(entity.Id, cancellationToken);
 
             providers.Add(new StorageProviderDto
             {

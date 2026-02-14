@@ -1,7 +1,7 @@
 using FastEndpoints;
-using LibraFoto.Data;
-using LibraFoto.Modules.Media.Services.Shared;
 using LibraFoto.Modules.Media.Services;
+using LibraFoto.Modules.Media.Services.Repositories;
+using LibraFoto.Modules.Media.Services.Shared;
 using LibraFoto.Shared.Configuration;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -31,7 +31,7 @@ public sealed class RefreshThumbnailsEndpoint : Endpoint<RefreshThumbnailsReques
         CancellationToken ct)
     {
         var thumbnailService = Resolve<IThumbnailService>();
-        var dbContext = Resolve<LibraFotoDbContext>();
+        var mediaPhotoRepository = Resolve<IMediaPhotoRepository>();
         var configuration = Resolve<IConfiguration>();
 
         if (req.PhotoIds is null || req.PhotoIds.Length == 0)
@@ -45,7 +45,7 @@ public sealed class RefreshThumbnailsEndpoint : Endpoint<RefreshThumbnailsReques
 
         foreach (var photoId in req.PhotoIds)
         {
-            var photo = await dbContext.Photos.FindAsync([photoId], ct);
+            var photo = await mediaPhotoRepository.GetPhotoByIdAsync(photoId, ct);
             if (photo is null)
             {
                 failed++;
@@ -89,7 +89,7 @@ public sealed class RefreshThumbnailsEndpoint : Endpoint<RefreshThumbnailsReques
             }
         }
 
-        await dbContext.SaveChangesAsync(ct);
+        await mediaPhotoRepository.SaveChangesAsync(ct);
 
         return TypedResults.Ok(new RefreshThumbnailsResult(succeeded, failed, errors.ToArray()));
     }

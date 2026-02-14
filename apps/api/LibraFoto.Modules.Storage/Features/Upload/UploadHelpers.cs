@@ -1,10 +1,9 @@
-using LibraFoto.Data;
 using LibraFoto.Data.Entities;
 using LibraFoto.Data.Enums;
 using LibraFoto.Modules.Storage.Interfaces;
-using LibraFoto.Modules.Storage.Features.Shared;
-using LibraFoto.Modules.Storage.Services.Shared;
 using LibraFoto.Modules.Storage.Services;
+using LibraFoto.Modules.Storage.Services.Repositories;
+using LibraFoto.Modules.Storage.Services.Shared;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using SixLabors.ImageSharp;
@@ -24,7 +23,7 @@ internal static class UploadHelpers
         IMediaScannerService mediaScanner,
         IImageImportService imageImport,
         IConfiguration configuration,
-        LibraFotoDbContext dbContext,
+        IStoragePersistenceRepository storageRepository,
         ILogger<object> logger,
         CancellationToken cancellationToken)
     {
@@ -55,8 +54,8 @@ internal static class UploadHelpers
                 Height = 0
             };
 
-            dbContext.Photos.Add(photo);
-            await dbContext.SaveChangesAsync(cancellationToken);
+            await storageRepository.AddPhotoAsync(photo, cancellationToken);
+            await storageRepository.SaveChangesAsync(cancellationToken);
 
             var yearMonth = Path.Combine(dateTaken.Year.ToString(), dateTaken.Month.ToString("D2"));
             var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
@@ -125,19 +124,19 @@ internal static class UploadHelpers
 
             if (albumId.HasValue)
             {
-                var album = await dbContext.Albums.FindAsync([albumId.Value], cancellationToken);
+                var album = await storageRepository.GetAlbumByIdAsync(albumId.Value, cancellationToken);
                 if (album != null)
                 {
-                    dbContext.PhotoAlbums.Add(new PhotoAlbum
+                    await storageRepository.AddPhotoAlbumAsync(new PhotoAlbum
                     {
                         Photo = photo,
                         AlbumId = albumId.Value,
                         SortOrder = 0
-                    });
+                    }, cancellationToken);
                 }
             }
 
-            await dbContext.SaveChangesAsync(cancellationToken);
+            await storageRepository.SaveChangesAsync(cancellationToken);
 
             logger.LogInformation("Successfully uploaded {FileName} as photo {PhotoId}", file.FileName, photo.Id);
 
@@ -179,8 +178,8 @@ internal static class UploadHelpers
             {
                 try
                 {
-                    dbContext.Photos.Remove(photo);
-                    await dbContext.SaveChangesAsync(CancellationToken.None);
+                    await storageRepository.RemovePhotoAsync(photo, CancellationToken.None);
+                    await storageRepository.SaveChangesAsync(CancellationToken.None);
                 }
                 catch { }
             }

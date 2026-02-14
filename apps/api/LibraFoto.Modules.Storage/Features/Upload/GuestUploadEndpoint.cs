@@ -1,13 +1,11 @@
 using FastEndpoints;
-using LibraFoto.Data;
 using LibraFoto.Modules.Storage.Interfaces;
-using LibraFoto.Modules.Storage.Features.Shared;
-using LibraFoto.Modules.Storage.Services.Shared;
 using LibraFoto.Modules.Storage.Services;
+using LibraFoto.Modules.Storage.Services.Repositories;
+using LibraFoto.Modules.Storage.Services.Shared;
 using LibraFoto.Shared.DTOs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -39,7 +37,7 @@ public sealed class GuestUploadEndpoint : Endpoint<GuestUploadRequest, Results<O
         var mediaScanner = Resolve<IMediaScannerService>();
         var imageImport = Resolve<IImageImportService>();
         var configuration = Resolve<IConfiguration>();
-        var dbContext = Resolve<LibraFotoDbContext>();
+        var storageRepository = Resolve<IStoragePersistenceRepository>();
         var logger = Resolve<ILogger<object>>();
         var files = Files?.ToList() ?? [];
 
@@ -50,7 +48,7 @@ public sealed class GuestUploadEndpoint : Endpoint<GuestUploadRequest, Results<O
             mediaScanner,
             imageImport,
             configuration,
-            dbContext,
+                storageRepository,
             logger,
             ct);
     }
@@ -62,13 +60,11 @@ public sealed class GuestUploadEndpoint : Endpoint<GuestUploadRequest, Results<O
         IMediaScannerService mediaScanner,
         IImageImportService imageImport,
         IConfiguration configuration,
-        LibraFotoDbContext dbContext,
+        IStoragePersistenceRepository storageRepository,
         ILogger<object> logger,
         CancellationToken cancellationToken)
     {
-        var guestLink = await dbContext.GuestLinks
-            .AsNoTracking()
-            .FirstOrDefaultAsync(g => g.Id == linkId, cancellationToken);
+        var guestLink = await storageRepository.GetGuestLinkByIdAsync(linkId, cancellationToken);
 
         if (guestLink == null)
         {
@@ -112,7 +108,7 @@ public sealed class GuestUploadEndpoint : Endpoint<GuestUploadRequest, Results<O
                 mediaScanner,
                 imageImport,
                 configuration,
-                dbContext,
+                storageRepository,
                 logger,
                 cancellationToken);
 
@@ -129,11 +125,11 @@ public sealed class GuestUploadEndpoint : Endpoint<GuestUploadRequest, Results<O
 
         if (successful > 0)
         {
-            var linkToUpdate = await dbContext.GuestLinks.FindAsync([guestLink.Id], cancellationToken);
+            var linkToUpdate = await storageRepository.GetGuestLinkByIdAsync(guestLink.Id, cancellationToken);
             if (linkToUpdate != null)
             {
                 linkToUpdate.CurrentUploads += successful;
-                await dbContext.SaveChangesAsync(cancellationToken);
+                await storageRepository.SaveChangesAsync(cancellationToken);
             }
         }
 

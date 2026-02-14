@@ -2,6 +2,7 @@ using LibraFoto.Data;
 using LibraFoto.Data.Entities;
 using LibraFoto.Data.Enums;
 using LibraFoto.Modules.Auth.Services;
+using LibraFoto.Modules.Auth.Services.Repositories;
 using LibraFoto.Modules.Auth.Services.Shared;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
@@ -55,8 +56,9 @@ public class AuthServiceTests
 
         // Setup DI container for testing singleton service
         var services = new ServiceCollection();
-        // Use the same _db instance for all scopes to ensure data consistency
-        services.AddScoped<LibraFotoDbContext>(_ => _db);
+        // Use a scoped context per operation while sharing the same open SQLite in-memory connection
+        services.AddScoped<LibraFotoDbContext>(_ => new LibraFotoDbContext(options));
+        services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IUserService, UserService>();
         services.AddSingleton<ITokenStore, InMemoryTokenStore>();
         services.AddSingleton<IAuthService, AuthService>();

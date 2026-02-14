@@ -1,9 +1,9 @@
 using LibraFoto.Data;
 using LibraFoto.Data.Entities;
 using LibraFoto.Data.Enums;
-using LibraFoto.Modules.Admin.Features.Shared;
-using LibraFoto.Modules.Admin.Services.Shared;
 using LibraFoto.Modules.Admin.Services;
+using LibraFoto.Modules.Admin.Services.Repositories;
+using LibraFoto.Modules.Admin.Services.Shared;
 using LibraFoto.Modules.Media.Services;
 using LibraFoto.Modules.Storage.Interfaces;
 using LibraFoto.Tests.Helpers;
@@ -49,7 +49,7 @@ public class PhotoServiceTests
         _thumbnailService = Substitute.For<IThumbnailService>();
         _providerFactory = Substitute.For<IStorageProviderFactory>();
 
-        _service = new PhotoService(_db, _thumbnailService, _providerFactory, _configuration, NullLogger<PhotoService>.Instance);
+        _service = new PhotoService(new PhotoRepository(_db), _thumbnailService, _providerFactory, _configuration, NullLogger<PhotoService>.Instance);
     }
 
     [After(Test)]
@@ -1459,7 +1459,7 @@ public class PhotoServiceTests
         IConfiguration? configuration = null)
     {
         return new PhotoService(
-            _db,
+            new PhotoRepository(_db),
             thumbnailService ?? _thumbnailService,
             providerFactory ?? _providerFactory,
             configuration ?? _configuration,

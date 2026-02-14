@@ -2,6 +2,7 @@ using LibraFoto.Data;
 using LibraFoto.Data.Entities;
 using LibraFoto.Data.Enums;
 using LibraFoto.Modules.Admin.Services;
+using LibraFoto.Modules.Admin.Services.Repositories;
 using LibraFoto.Modules.Media.Services;
 using LibraFoto.Modules.Storage.Interfaces;
 using LibraFoto.Tests.Helpers;
@@ -51,7 +52,7 @@ public class PhotoServiceIntegrationTests
         _configuration = Substitute.For<IConfiguration>();
         _configuration["Storage:LocalPath"].Returns(_tempDir);
 
-        _service = new PhotoService(_db, _thumbnailService, _providerFactory, _configuration, NullLogger<PhotoService>.Instance);
+        _service = new PhotoService(new PhotoRepository(_db), _thumbnailService, _providerFactory, _configuration, NullLogger<PhotoService>.Instance);
 
         await Task.CompletedTask;
     }
@@ -308,7 +309,7 @@ public class PhotoServiceIntegrationTests
     private PhotoService CreateService(IStorageProviderFactory? providerFactory = null)
     {
         return new PhotoService(
-            _db,
+            new PhotoRepository(_db),
             _thumbnailService,
             providerFactory ?? _providerFactory,
             _configuration,

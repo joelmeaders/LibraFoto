@@ -1,7 +1,7 @@
 using FastEndpoints;
-using LibraFoto.Data;
 using LibraFoto.Data.Enums;
 using LibraFoto.Modules.Storage.Services;
+using LibraFoto.Modules.Storage.Services.Repositories;
 using LibraFoto.Shared.DTOs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -35,21 +35,21 @@ public sealed class GetGooglePhotosPickerThumbnailEndpoint : Endpoint<PickerThum
         PickerThumbnailRequest req,
         CancellationToken ct)
     {
-        var dbContext = Resolve<LibraFotoDbContext>();
+        var storageRepository = Resolve<IStoragePersistenceRepository>();
         var pickerService = Resolve<GooglePhotosPickerService>();
         var loggerFactory = Resolve<ILoggerFactory>();
-        return await HandleRequestAsync(req, dbContext, pickerService, loggerFactory, ct);
+        return await HandleRequestAsync(req, storageRepository, pickerService, loggerFactory, ct);
     }
 
     internal static async Task<Results<FileStreamHttpResult, NotFound<ApiError>, BadRequest<ApiError>>> HandleRequestAsync(
         PickerThumbnailRequest request,
-        LibraFotoDbContext dbContext,
+        IStoragePersistenceRepository storageRepository,
         GooglePhotosPickerService pickerService,
         ILoggerFactory loggerFactory,
         CancellationToken cancellationToken)
     {
         var logger = loggerFactory.CreateLogger(LoggerCategory);
-        var provider = await dbContext.StorageProviders.FindAsync([request.ProviderId], cancellationToken);
+        var provider = await storageRepository.GetProviderByIdAsync(request.ProviderId, cancellationToken);
 
         if (provider == null || provider.Type != StorageProviderType.GooglePhotos)
         {
@@ -68,7 +68,7 @@ public sealed class GetGooglePhotosPickerThumbnailEndpoint : Endpoint<PickerThum
             return TypedResults.BadRequest(new ApiError(OAuthFailedCode, OAuthFailedMessage));
         }
 
-        await GooglePhotosPickerHelper.PersistConfigAsync(provider, config!, dbContext, cancellationToken);
+        await GooglePhotosPickerHelper.PersistConfigAsync(provider, config!, storageRepository, cancellationToken);
 
         var items = await pickerService.ListMediaItemsAsync(request.SessionId, accessToken, cancellationToken);
         var item = items.FirstOrDefault(i => string.Equals(i.Id, request.ItemId, StringComparison.OrdinalIgnoreCase));

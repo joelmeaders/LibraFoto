@@ -1,5 +1,5 @@
 using LibraFoto.Modules.Display.Services;
-using Microsoft.AspNetCore.Routing;
+using LibraFoto.Modules.Display.Services.Repositories;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace LibraFoto.Modules.Display;
@@ -15,6 +15,9 @@ public static class DisplayModule
     /// </summary>
     public static IServiceCollection AddDisplayModule(this IServiceCollection services)
     {
+        services.AddScoped<IDisplaySettingsRepository, DisplaySettingsRepository>();
+        services.AddScoped<ISlideshowRepository, SlideshowRepository>();
+
         // Register display settings service (scoped for per-request database context)
         services.AddScoped<IDisplaySettingsService, DisplaySettingsService>();
 

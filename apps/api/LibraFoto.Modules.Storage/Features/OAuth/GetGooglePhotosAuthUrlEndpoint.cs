@@ -3,9 +3,8 @@ using FastEndpoints;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Auth.OAuth2.Flows;
 using Google.Apis.Auth.OAuth2.Requests;
-using LibraFoto.Data;
 using LibraFoto.Data.Enums;
-using LibraFoto.Modules.Storage.Features.Shared;
+using LibraFoto.Modules.Storage.Services.Repositories;
 using LibraFoto.Modules.Storage.Services.Shared;
 using LibraFoto.Shared.DTOs;
 using Microsoft.AspNetCore.Http;
@@ -38,18 +37,18 @@ public sealed class GetGooglePhotosAuthUrlEndpoint : Endpoint<GetGooglePhotosAut
         GetGooglePhotosAuthUrlRequest req,
         CancellationToken ct)
     {
-        var dbContext = Resolve<LibraFotoDbContext>();
+        var storageRepository = Resolve<IStoragePersistenceRepository>();
         var configuration = Resolve<IConfiguration>();
-        return await HandleRequestAsync(req.ProviderId, dbContext, configuration, ct);
+        return await HandleRequestAsync(req.ProviderId, storageRepository, configuration, ct);
     }
 
     internal static async Task<Results<Ok<GooglePhotosAuthUrlResponse>, NotFound<ApiError>>> HandleRequestAsync(
         long providerId,
-        LibraFotoDbContext dbContext,
+        IStoragePersistenceRepository storageRepository,
         IConfiguration configuration,
         CancellationToken cancellationToken)
     {
-        var provider = await dbContext.StorageProviders.FindAsync([providerId], cancellationToken);
+        var provider = await storageRepository.GetProviderByIdAsync(providerId, cancellationToken);
 
         if (provider == null || provider.Type != StorageProviderType.GooglePhotos)
         {

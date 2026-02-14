@@ -3,14 +3,13 @@ using FastEndpoints;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Auth.OAuth2.Flows;
 using Google.Apis.Auth.OAuth2.Responses;
-using LibraFoto.Data;
 using LibraFoto.Data.Enums;
 using LibraFoto.Modules.Storage.Features.Shared;
+using LibraFoto.Modules.Storage.Services.Repositories;
 using LibraFoto.Modules.Storage.Services.Shared;
 using LibraFoto.Shared.DTOs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -40,16 +39,16 @@ public sealed class GooglePhotosOAuthCallbackEndpoint : Endpoint<GooglePhotosCal
         GooglePhotosCallbackRequest req,
         CancellationToken ct)
     {
-        var dbContext = Resolve<LibraFotoDbContext>();
+        var storageRepository = Resolve<IStoragePersistenceRepository>();
         var configuration = Resolve<IConfiguration>();
         var loggerFactory = Resolve<ILoggerFactory>();
-        return await HandleRequestAsync(req.ProviderId, req.AuthorizationCode, dbContext, configuration, loggerFactory, ct);
+        return await HandleRequestAsync(req.ProviderId, req.AuthorizationCode, storageRepository, configuration, loggerFactory, ct);
     }
 
     internal static async Task<Results<Ok<StorageProviderDto>, BadRequest<ApiError>, NotFound<ApiError>>> HandleRequestAsync(
         long providerId,
         string authorizationCode,
-        LibraFotoDbContext dbContext,
+        IStoragePersistenceRepository storageRepository,
         IConfiguration configuration,
         ILoggerFactory loggerFactory,
         CancellationToken cancellationToken)
@@ -57,7 +56,7 @@ public sealed class GooglePhotosOAuthCallbackEndpoint : Endpoint<GooglePhotosCal
         var logger = loggerFactory.CreateLogger("GooglePhotosOAuth");
         try
         {
-            var provider = await dbContext.StorageProviders.FindAsync([providerId], cancellationToken);
+            var provider = await storageRepository.GetProviderByIdAsync(providerId, cancellationToken);
 
             if (provider == null || provider.Type != StorageProviderType.GooglePhotos)
             {
@@ -175,7 +174,7 @@ public sealed class GooglePhotosOAuthCallbackEndpoint : Endpoint<GooglePhotosCal
             provider.Configuration = JsonSerializer.Serialize(config);
             provider.IsEnabled = true;
 
-            await dbContext.SaveChangesAsync(cancellationToken);
+            await storageRepository.SaveChangesAsync(cancellationToken);
 
             logger.LogInformation("Updated Google Photos provider {ProviderId} with OAuth tokens", provider.Id);
 
@@ -188,7 +187,7 @@ public sealed class GooglePhotosOAuthCallbackEndpoint : Endpoint<GooglePhotosCal
                 SupportsUpload = false,
                 SupportsWatch = false,
                 LastSyncDate = provider.LastSyncDate,
-                PhotoCount = await dbContext.Photos.CountAsync(p => p.ProviderId == provider.Id, cancellationToken),
+                PhotoCount = await storageRepository.CountPhotosByProviderAsync(provider.Id, cancellationToken),
                 IsConnected = true,
                 StatusMessage = "Connected to Google Photos"
             });

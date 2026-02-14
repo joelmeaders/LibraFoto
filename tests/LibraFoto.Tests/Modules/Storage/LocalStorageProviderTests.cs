@@ -1,9 +1,8 @@
 using System.Text.Json;
 using LibraFoto.Data.Enums;
 using LibraFoto.Modules.Storage.Interfaces;
-using LibraFoto.Modules.Storage.Features.Shared;
-using LibraFoto.Modules.Storage.Services.Shared;
 using LibraFoto.Modules.Storage.Providers;
+using LibraFoto.Modules.Storage.Services.Shared;
 using LibraFoto.Tests.Helpers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;

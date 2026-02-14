@@ -2,6 +2,7 @@ using LibraFoto.Data;
 using LibraFoto.Data.Entities;
 using LibraFoto.Data.Enums;
 using LibraFoto.Modules.Auth.Services;
+using LibraFoto.Modules.Auth.Services.Repositories;
 using LibraFoto.Modules.Auth.Services.Shared;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
@@ -35,7 +36,7 @@ public class GuestLinkServiceTests
     }
 
     private GuestLinkService CreateService() =>
-        new(_db, NullLogger<GuestLinkService>.Instance);
+        new(new GuestLinkRepository(_db), NullLogger<GuestLinkService>.Instance);
 
     private async Task<User> CreateTestUser(long id = 1, string email = "test@example.com")
     {

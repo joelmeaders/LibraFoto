@@ -637,10 +637,19 @@ public class MediaScannerServiceTests
         using var cts = new CancellationTokenSource();
         await cts.CancelAsync();
 
-        // Act & Assert
-        await Assert.That(async () =>
-            await _scanner.ScanDirectoryAsync(_testDirectory, cancellationToken: cts.Token))
-            .Throws<OperationCanceledException>();
+        // Act
+        var threw = false;
+        try
+        {
+            _ = await _scanner.ScanDirectoryAsync(_testDirectory, cancellationToken: cts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            threw = true;
+        }
+
+        // Assert
+        await Assert.That(threw).IsTrue();
     }
 
     [Test]

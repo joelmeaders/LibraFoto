@@ -2,9 +2,8 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using LibraFoto.Data;
+using LibraFoto.Modules.Auth.Services.Repositories;
 using LibraFoto.Modules.Auth.Services.Shared;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -39,11 +38,10 @@ public class AuthService : IAuthService
     public async Task<LoginResponse?> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default)
     {
         using var scope = _scopeFactory.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<LibraFotoDbContext>();
+        var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
 
         // Get user from database for validation
-        var user = await dbContext.Users
-            .FirstOrDefaultAsync(u => u.Email.ToLower() == request.Email.ToLower(), cancellationToken);
+        var user = await userRepository.GetUserEntityByEmailAsync(request.Email, cancellationToken);
 
         if (user == null)
         {
@@ -60,7 +58,7 @@ public class AuthService : IAuthService
 
         // Update last login time
         user.LastLogin = DateTime.UtcNow;
-        await dbContext.SaveChangesAsync(cancellationToken);
+        await userRepository.SaveChangesAsync(cancellationToken);
 
         // Generate tokens
         var userDto = new UserDto(

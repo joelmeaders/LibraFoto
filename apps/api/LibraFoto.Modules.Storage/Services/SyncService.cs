@@ -1,11 +1,8 @@
 using System.Collections.Concurrent;
-using LibraFoto.Data;
 using LibraFoto.Data.Entities;
 using LibraFoto.Modules.Storage.Interfaces;
-using LibraFoto.Modules.Storage.Features.Shared;
+using LibraFoto.Modules.Storage.Services.Repositories;
 using LibraFoto.Modules.Storage.Services.Shared;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace LibraFoto.Modules.Storage.Services;
@@ -16,7 +13,7 @@ namespace LibraFoto.Modules.Storage.Services;
 public class SyncService : ISyncService
 {
     private readonly IStorageProviderFactory _providerFactory;
-    private readonly IServiceProvider _serviceProvider;
+    private readonly IStoragePersistenceRepository _storageRepository;
     private readonly ILogger<SyncService> _logger;
 
     // Track active syncs and their cancellation tokens
@@ -26,11 +23,11 @@ public class SyncService : ISyncService
 
     public SyncService(
         IStorageProviderFactory providerFactory,
-        IServiceProvider serviceProvider,
+        IStoragePersistenceRepository storageRepository,
         ILogger<SyncService> logger)
     {
         _providerFactory = providerFactory;
-        _serviceProvider = serviceProvider;
+        _storageRepository = storageRepository;
         _logger = logger;
     }
 
@@ -95,14 +92,8 @@ public class SyncService : ISyncService
             var skipped = 0;
             var errors = new List<string>();
 
-            using var scope = _serviceProvider.CreateScope();
-            var dbContext = scope.ServiceProvider.GetRequiredService<LibraFotoDbContext>();
-
             // Get existing file IDs for this provider
-            var existingFileIds = await dbContext.Photos
-                .Where(p => p.ProviderId == providerId)
-                .Select(p => p.ProviderFileId)
-                .ToHashSetAsync(cts.Token);
+            var existingFileIds = await _storageRepository.GetProviderPhotoFileIdsAsync(providerId, cts.Token);
 
             var processedFileIds = new HashSet<string>();
             var processed = 0;
@@ -113,6 +104,15 @@ public class SyncService : ISyncService
 
                 try
                 {
+                    if (string.IsNullOrWhiteSpace(file.FileId) || string.IsNullOrWhiteSpace(file.FileName))
+                    {
+                        errors.Add("Error processing file: missing required file identifier or name");
+                        _logger.LogWarning(
+                            "Skipping file during sync for provider {ProviderId} due to missing FileId or FileName",
+                            providerId);
+                        continue;
+                    }
+
                     processedFileIds.Add(file.FileId);
 
                     if (existingFileIds.Contains(file.FileId))
@@ -124,8 +124,7 @@ public class SyncService : ISyncService
                         else
                         {
                             // Update existing record
-                            var existingPhoto = await dbContext.Photos
-                                .FirstOrDefaultAsync(p => p.ProviderId == providerId && p.ProviderFileId == file.FileId, cts.Token);
+                            var existingPhoto = await _storageRepository.GetPhotoByProviderFileIdAsync(providerId, file.FileId, cts.Token);
 
                             if (existingPhoto != null)
                             {
@@ -155,7 +154,7 @@ public class SyncService : ISyncService
                             ProviderFileId = file.FileId
                         };
 
-                        dbContext.Photos.Add(photo);
+                        await _storageRepository.AddPhotoAsync(photo, cts.Token);
                         added++;
                     }
 
@@ -177,7 +176,7 @@ public class SyncService : ISyncService
                         });
 
                         // Save in batches
-                        await dbContext.SaveChangesAsync(cts.Token);
+                        await _storageRepository.SaveChangesAsync(cts.Token);
                     }
 
                     // Limit files if requested
@@ -210,24 +209,21 @@ public class SyncService : ISyncService
                 var deletedFileIds = existingFileIds.Except(processedFileIds).ToList();
                 if (deletedFileIds.Count > 0)
                 {
-                    var photosToRemove = await dbContext.Photos
-                        .Where(p => p.ProviderId == providerId && deletedFileIds.Contains(p.ProviderFileId))
-                        .ToListAsync(cts.Token);
-
-                    dbContext.Photos.RemoveRange(photosToRemove);
+                    var photosToRemove = await _storageRepository.GetPhotosByProviderAndFileIdsAsync(providerId, deletedFileIds, cts.Token);
+                    await _storageRepository.RemovePhotosAsync(photosToRemove);
                     removed = photosToRemove.Count;
                 }
             }
 
             // Final save
-            await dbContext.SaveChangesAsync(cts.Token);
+            await _storageRepository.SaveChangesAsync(cts.Token);
 
             // Update provider's last sync date
-            var providerEntity = await dbContext.StorageProviders.FindAsync([providerId], cts.Token);
+            var providerEntity = await _storageRepository.GetProviderByIdAsync(providerId, cts.Token);
             if (providerEntity != null)
             {
                 providerEntity.LastSyncDate = DateTime.UtcNow;
-                await dbContext.SaveChangesAsync(cts.Token);
+                await _storageRepository.SaveChangesAsync(cts.Token);
             }
 
             var result = SyncResult.Successful(providerId, provider.DisplayName, added, updated, removed, skipped, totalFiles, startTime);
@@ -337,13 +333,7 @@ public class SyncService : ISyncService
             var files = await provider.GetFilesAsync(null, cancellationToken);
             var fileList = files.Where(f => !f.IsFolder).ToList();
 
-            using var scope = _serviceProvider.CreateScope();
-            var dbContext = scope.ServiceProvider.GetRequiredService<LibraFotoDbContext>();
-
-            var existingFileIds = await dbContext.Photos
-                .Where(p => p.ProviderId == providerId)
-                .Select(p => p.ProviderFileId)
-                .ToHashSetAsync(cancellationToken);
+            var existingFileIds = await _storageRepository.GetProviderPhotoFileIdsAsync(providerId, cancellationToken);
 
             var newFiles = fileList.Where(f => !existingFileIds.Contains(f.FileId)).ToList();
             var newTotalSize = newFiles.Sum(f => f.FileSize);

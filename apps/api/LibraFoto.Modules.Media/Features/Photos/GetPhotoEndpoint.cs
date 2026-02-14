@@ -1,6 +1,6 @@
 using FastEndpoints;
-using LibraFoto.Data;
 using LibraFoto.Data.Enums;
+using LibraFoto.Modules.Media.Services.Repositories;
 using LibraFoto.Shared.Configuration;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -26,11 +26,11 @@ public sealed class GetPhotoEndpoint : EndpointWithoutRequest<Results<FileStream
 
     public override async Task<Results<FileStreamHttpResult, NotFound>> ExecuteAsync(CancellationToken ct)
     {
-        var dbContext = Resolve<LibraFotoDbContext>();
+        var mediaPhotoRepository = Resolve<IMediaPhotoRepository>();
         var configuration = Resolve<IConfiguration>();
         var photoId = Route<long>("photoId");
 
-        var photo = await dbContext.Photos.FindAsync([photoId], ct);
+        var photo = await mediaPhotoRepository.GetPhotoByIdAsync(photoId, ct);
         if (photo is null)
         {
             return TypedResults.NotFound();

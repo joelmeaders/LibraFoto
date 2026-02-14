@@ -2,6 +2,7 @@ using LibraFoto.Data;
 using LibraFoto.Data.Entities;
 using LibraFoto.Data.Enums;
 using LibraFoto.Modules.Auth.Services;
+using LibraFoto.Modules.Auth.Services.Repositories;
 using LibraFoto.Modules.Auth.Services.Shared;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
@@ -33,7 +34,7 @@ public class UserServiceTests
         _db = new LibraFotoDbContext(options);
         await _db.Database.EnsureCreatedAsync();
 
-        _service = new UserService(_db, NullLogger<UserService>.Instance);
+        _service = new UserService(new UserRepository(_db), NullLogger<UserService>.Instance);
     }
 
     [After(Test)]

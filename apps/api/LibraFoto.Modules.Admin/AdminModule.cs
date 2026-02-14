@@ -1,5 +1,5 @@
 using LibraFoto.Modules.Admin.Services;
-using Microsoft.AspNetCore.Routing;
+using LibraFoto.Modules.Admin.Services.Repositories;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace LibraFoto.Modules.Admin;
@@ -19,6 +19,9 @@ public static class AdminModule
         services.AddMemoryCache();
 
         // Register module services
+        services.AddScoped<IPhotoRepository, PhotoRepository>();
+        services.AddScoped<IAlbumRepository, AlbumRepository>();
+        services.AddScoped<ITagRepository, TagRepository>();
         services.AddScoped<IPhotoService, PhotoService>();
         services.AddScoped<IAlbumService, AlbumService>();
         services.AddScoped<ITagService, TagService>();

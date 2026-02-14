@@ -1,9 +1,8 @@
 using FastEndpoints;
-using LibraFoto.Data;
 using LibraFoto.Data.Enums;
-using LibraFoto.Modules.Storage.Interfaces;
 using LibraFoto.Modules.Storage.Features.Shared;
-using LibraFoto.Modules.Storage.Services.Shared;
+using LibraFoto.Modules.Storage.Interfaces;
+using LibraFoto.Modules.Storage.Services.Repositories;
 using LibraFoto.Shared.DTOs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -30,14 +29,14 @@ public sealed class CreateStorageProviderEndpoint : Endpoint<CreateStorageProvid
         CreateStorageProviderRequest req,
         CancellationToken ct)
     {
-        var dbContext = Resolve<LibraFotoDbContext>();
+        var storageRepository = Resolve<IStoragePersistenceRepository>();
         var factory = Resolve<IStorageProviderFactory>();
-        return await HandleRequestAsync(req, dbContext, factory, ct);
+        return await HandleRequestAsync(req, storageRepository, factory, ct);
     }
 
     internal static async Task<Results<Created<StorageProviderDto>, BadRequest<ApiError>>> HandleRequestAsync(
         CreateStorageProviderRequest request,
-        LibraFotoDbContext dbContext,
+        IStoragePersistenceRepository storageRepository,
         IStorageProviderFactory factory,
         CancellationToken cancellationToken)
     {
@@ -64,8 +63,8 @@ public sealed class CreateStorageProviderEndpoint : Endpoint<CreateStorageProvid
             Configuration = request.Configuration
         };
 
-        dbContext.StorageProviders.Add(entity);
-        await dbContext.SaveChangesAsync(cancellationToken);
+        await storageRepository.AddProviderAsync(entity, cancellationToken);
+        await storageRepository.SaveChangesAsync(cancellationToken);
 
         factory.ClearCache();
 

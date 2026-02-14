@@ -1,9 +1,6 @@
 using System.Collections.Concurrent;
-using LibraFoto.Data;
-using LibraFoto.Data.Entities;
-using LibraFoto.Data.Enums;
+using LibraFoto.Modules.Display.Services.Repositories;
 using LibraFoto.Modules.Display.Services.Shared;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -35,6 +32,7 @@ public class SlideshowService : ISlideshowService
     {
         using var scope = _scopeFactory.CreateScope();
         var settingsService = scope.ServiceProvider.GetRequiredService<IDisplaySettingsService>();
+        var slideshowRepository = scope.ServiceProvider.GetRequiredService<ISlideshowRepository>();
 
         var settings = await GetSettingsAsync(settingsService, settingsId, cancellationToken);
         if (settings == null)
@@ -43,7 +41,7 @@ public class SlideshowService : ISlideshowService
         }
 
         var state = GetOrCreateState(settings.Id);
-        var photos = await GetFilteredPhotoIdsAsync(scope, settings, cancellationToken);
+        var photos = await slideshowRepository.GetFilteredPhotoIdsAsync(settings, cancellationToken);
 
         if (photos.Count == 0)
         {
@@ -71,7 +69,7 @@ public class SlideshowService : ISlideshowService
         state.CurrentPhotoId = photoId;
 
         // Fetch full photo data
-        return await GetPhotoDtoByIdAsync(scope, photoId, cancellationToken);
+        return await slideshowRepository.GetPhotoDtoByIdAsync(photoId, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -79,6 +77,7 @@ public class SlideshowService : ISlideshowService
     {
         using var scope = _scopeFactory.CreateScope();
         var settingsService = scope.ServiceProvider.GetRequiredService<IDisplaySettingsService>();
+        var slideshowRepository = scope.ServiceProvider.GetRequiredService<ISlideshowRepository>();
 
         var settings = await GetSettingsAsync(settingsService, settingsId, cancellationToken);
         if (settings == null)
@@ -94,7 +93,7 @@ public class SlideshowService : ISlideshowService
             return await GetNextPhotoAsync(settingsId, cancellationToken);
         }
 
-        return await GetPhotoDtoByIdAsync(scope, state.CurrentPhotoId.Value, cancellationToken);
+        return await slideshowRepository.GetPhotoDtoByIdAsync(state.CurrentPhotoId.Value, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -102,6 +101,7 @@ public class SlideshowService : ISlideshowService
     {
         using var scope = _scopeFactory.CreateScope();
         var settingsService = scope.ServiceProvider.GetRequiredService<IDisplaySettingsService>();
+        var slideshowRepository = scope.ServiceProvider.GetRequiredService<ISlideshowRepository>();
 
         var settings = await GetSettingsAsync(settingsService, settingsId, cancellationToken);
         if (settings == null)
@@ -110,7 +110,7 @@ public class SlideshowService : ISlideshowService
         }
 
         var state = GetOrCreateState(settings.Id);
-        var photos = await GetFilteredPhotoIdsAsync(scope, settings, cancellationToken);
+        var photos = await slideshowRepository.GetFilteredPhotoIdsAsync(settings, cancellationToken);
 
         if (photos.Count == 0)
         {
@@ -140,7 +140,7 @@ public class SlideshowService : ISlideshowService
         var result = new List<PhotoDto>();
         foreach (var id in preloadIds.Take(count))
         {
-            var dto = await GetPhotoDtoByIdAsync(scope, id, cancellationToken);
+            var dto = await slideshowRepository.GetPhotoDtoByIdAsync(id, cancellationToken);
             if (dto != null)
             {
                 result.Add(dto);
@@ -167,6 +167,7 @@ public class SlideshowService : ISlideshowService
     {
         using var scope = _scopeFactory.CreateScope();
         var settingsService = scope.ServiceProvider.GetRequiredService<IDisplaySettingsService>();
+        var slideshowRepository = scope.ServiceProvider.GetRequiredService<ISlideshowRepository>();
 
         var settings = await GetSettingsAsync(settingsService, settingsId, cancellationToken);
         if (settings == null)
@@ -174,12 +175,10 @@ public class SlideshowService : ISlideshowService
             return 0;
         }
 
-        var dbContext = scope.ServiceProvider.GetRequiredService<LibraFotoDbContext>();
-        var query = BuildPhotoQuery(dbContext, settings);
-        return await query.CountAsync(cancellationToken);
+        return await slideshowRepository.GetPhotoCountAsync(settings, cancellationToken);
     }
 
-    private async Task<DisplaySettingsDto?> GetSettingsAsync(IDisplaySettingsService settingsService, long? settingsId, CancellationToken cancellationToken)
+    private static async Task<DisplaySettingsDto?> GetSettingsAsync(IDisplaySettingsService settingsService, long? settingsId, CancellationToken cancellationToken)
     {
         if (settingsId.HasValue)
         {
@@ -189,39 +188,9 @@ public class SlideshowService : ISlideshowService
         return await settingsService.GetActiveSettingsAsync(cancellationToken);
     }
 
-    private SlideshowState GetOrCreateState(long settingsId)
+    private static SlideshowState GetOrCreateState(long settingsId)
     {
         return _states.GetOrAdd(settingsId, _ => new SlideshowState());
-    }
-
-    private async Task<List<long>> GetFilteredPhotoIdsAsync(IServiceScope scope, DisplaySettingsDto settings, CancellationToken cancellationToken)
-    {
-        var dbContext = scope.ServiceProvider.GetRequiredService<LibraFotoDbContext>();
-        var query = BuildPhotoQuery(dbContext, settings);
-        return await query.Select(p => p.Id).ToListAsync(cancellationToken);
-    }
-
-    private IQueryable<Photo> BuildPhotoQuery(LibraFotoDbContext dbContext, DisplaySettingsDto settings)
-    {
-        IQueryable<Photo> query = dbContext.Photos.AsNoTracking();
-
-        switch (settings.SourceType)
-        {
-            case SourceType.Album when settings.SourceId.HasValue:
-                query = query.Where(p => p.PhotoAlbums.Any(pa => pa.AlbumId == settings.SourceId.Value));
-                break;
-
-            case SourceType.Tag when settings.SourceId.HasValue:
-                query = query.Where(p => p.PhotoTags.Any(pt => pt.TagId == settings.SourceId.Value));
-                break;
-
-            case SourceType.All:
-            default:
-                // No filter, show all photos
-                break;
-        }
-
-        return query;
     }
 
     private void RebuildQueue(SlideshowState state, List<long> photoIds, bool shuffle)
@@ -241,41 +210,10 @@ public class SlideshowService : ISlideshowService
         _logger.LogDebug("Rebuilt slideshow queue with {Count} photos, shuffle={Shuffle}", orderedIds.Count, shuffle);
     }
 
-    private async Task<PhotoDto?> GetPhotoDtoByIdAsync(IServiceScope scope, long id, CancellationToken cancellationToken)
-    {
-        var dbContext = scope.ServiceProvider.GetRequiredService<LibraFotoDbContext>();
-        var photo = await dbContext.Photos
-            .AsNoTracking()
-            .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
-
-        if (photo == null)
-        {
-            return null;
-        }
-
-        return MapToDto(photo);
-    }
-
-    private static PhotoDto MapToDto(Photo photo)
-    {
-        return new PhotoDto
-        {
-            Id = photo.Id,
-            Url = $"/api/media/photos/{photo.Id}",
-            ThumbnailUrl = photo.ThumbnailPath != null ? $"/api/media/photos/{photo.Id}/thumbnail" : null,
-            DateTaken = photo.DateTaken,
-            Location = photo.Location,
-            MediaType = photo.MediaType,
-            Duration = photo.Duration,
-            Width = photo.Width,
-            Height = photo.Height
-        };
-    }
-
     /// <summary>
     /// Internal state for tracking slideshow progress.
     /// </summary>
-    private class SlideshowState
+    private sealed class SlideshowState
     {
         public Queue<long> PhotoQueue { get; } = new();
         public long? CurrentPhotoId { get; set; }

@@ -1,5 +1,5 @@
 using LibraFoto.Modules.Auth.Services;
-using Microsoft.AspNetCore.Routing;
+using LibraFoto.Modules.Auth.Services.Repositories;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace LibraFoto.Modules.Auth;
@@ -19,6 +19,8 @@ public static class AuthModule
         services.AddSingleton<ITokenStore, InMemoryTokenStore>();
 
         // Register auth services (singleton for AuthService to maintain token state, scoped for others)
+        services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IGuestLinkRepository, GuestLinkRepository>();
         services.AddSingleton<IAuthService, AuthService>();
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<ISetupService, SetupService>();

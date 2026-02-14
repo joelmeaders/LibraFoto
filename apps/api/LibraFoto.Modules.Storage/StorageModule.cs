@@ -1,6 +1,6 @@
 using LibraFoto.Modules.Storage.Interfaces;
 using LibraFoto.Modules.Storage.Services;
-using Microsoft.AspNetCore.Routing;
+using LibraFoto.Modules.Storage.Services.Repositories;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace LibraFoto.Modules.Storage;
@@ -18,6 +18,7 @@ public static class StorageModule
     {
         // Register media scanner (singleton for efficiency)
         services.AddSingleton<IMediaScannerService, MediaScannerService>();
+        services.AddScoped<IStoragePersistenceRepository, StoragePersistenceRepository>();
 
         // Register storage provider factory (scoped to allow scoped dependencies)
         services.AddScoped<IStorageProviderFactory, StorageProviderFactory>();

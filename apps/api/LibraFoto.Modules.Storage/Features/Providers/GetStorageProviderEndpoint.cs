@@ -1,13 +1,12 @@
 using FastEndpoints;
-using LibraFoto.Data;
 using LibraFoto.Data.Enums;
-using LibraFoto.Modules.Storage.Interfaces;
 using LibraFoto.Modules.Storage.Features.Shared;
+using LibraFoto.Modules.Storage.Interfaces;
+using LibraFoto.Modules.Storage.Services.Repositories;
 using LibraFoto.Modules.Storage.Services.Shared;
 using LibraFoto.Shared.DTOs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.EntityFrameworkCore;
 
 namespace LibraFoto.Modules.Storage.Features.Providers;
 
@@ -37,20 +36,18 @@ public sealed class GetStorageProviderEndpoint : Endpoint<GetStorageProviderRequ
         GetStorageProviderRequest req,
         CancellationToken ct)
     {
-        var dbContext = Resolve<LibraFotoDbContext>();
+        var storageRepository = Resolve<IStoragePersistenceRepository>();
         var factory = Resolve<IStorageProviderFactory>();
-        return await HandleRequestAsync(req.Id, dbContext, factory, ct);
+        return await HandleRequestAsync(req.Id, storageRepository, factory, ct);
     }
 
     internal static async Task<Results<Ok<StorageProviderDto>, NotFound<ApiError>>> HandleRequestAsync(
         long id,
-        LibraFotoDbContext dbContext,
+        IStoragePersistenceRepository storageRepository,
         IStorageProviderFactory factory,
         CancellationToken cancellationToken)
     {
-        var entity = await dbContext.StorageProviders
-            .AsNoTracking()
-            .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
+        var entity = await storageRepository.GetProviderByIdAsync(id, cancellationToken);
 
         if (entity == null)
         {
@@ -74,7 +71,7 @@ public sealed class GetStorageProviderEndpoint : Endpoint<GetStorageProviderRequ
             }
         }
 
-        var photoCount = await dbContext.Photos.CountAsync(p => p.ProviderId == id, cancellationToken);
+        var photoCount = await storageRepository.CountPhotosByProviderAsync(id, cancellationToken);
 
         var dto = new StorageProviderDto
         {

@@ -1,13 +1,12 @@
 using FastEndpoints;
-using LibraFoto.Data;
 using LibraFoto.Data.Enums;
-using LibraFoto.Modules.Storage.Interfaces;
 using LibraFoto.Modules.Storage.Features.Shared;
+using LibraFoto.Modules.Storage.Interfaces;
+using LibraFoto.Modules.Storage.Services.Repositories;
 using LibraFoto.Modules.Storage.Services.Shared;
 using LibraFoto.Shared.DTOs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.EntityFrameworkCore;
 
 namespace LibraFoto.Modules.Storage.Features.Providers;
 
@@ -37,18 +36,18 @@ public sealed class UpdateStorageProviderEndpoint : Endpoint<UpdateStorageProvid
         UpdateStorageProviderRequestWrapper req,
         CancellationToken ct)
     {
-        var dbContext = Resolve<LibraFotoDbContext>();
+        var storageRepository = Resolve<IStoragePersistenceRepository>();
         var factory = Resolve<IStorageProviderFactory>();
-        return await HandleRequestAsync(req, dbContext, factory, ct);
+        return await HandleRequestAsync(req, storageRepository, factory, ct);
     }
 
     internal static async Task<Results<Ok<StorageProviderDto>, NotFound<ApiError>, BadRequest<ApiError>>> HandleRequestAsync(
         UpdateStorageProviderRequestWrapper request,
-        LibraFotoDbContext dbContext,
+        IStoragePersistenceRepository storageRepository,
         IStorageProviderFactory factory,
         CancellationToken cancellationToken)
     {
-        var entity = await dbContext.StorageProviders.FindAsync([request.Id], cancellationToken);
+        var entity = await storageRepository.GetProviderByIdAsync(request.Id, cancellationToken);
 
         if (entity == null)
         {
@@ -80,10 +79,10 @@ public sealed class UpdateStorageProviderEndpoint : Endpoint<UpdateStorageProvid
             entity.IsEnabled = request.IsEnabled.Value;
         }
 
-        await dbContext.SaveChangesAsync(cancellationToken);
+        await storageRepository.SaveChangesAsync(cancellationToken);
         factory.ClearCache();
 
-        var photoCount = await dbContext.Photos.CountAsync(p => p.ProviderId == request.Id, cancellationToken);
+        var photoCount = await storageRepository.CountPhotosByProviderAsync(request.Id, cancellationToken);
 
         bool? isConnected = null;
         if (entity.Type != StorageProviderType.Local)

@@ -1,13 +1,11 @@
 using FastEndpoints;
-using LibraFoto.Data;
 using LibraFoto.Data.Enums;
-using LibraFoto.Modules.Storage.Interfaces;
 using LibraFoto.Modules.Storage.Features.Shared;
-using LibraFoto.Modules.Storage.Services.Shared;
+using LibraFoto.Modules.Storage.Interfaces;
+using LibraFoto.Modules.Storage.Services.Repositories;
 using LibraFoto.Shared.DTOs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace LibraFoto.Modules.Storage.Features.Providers;
@@ -35,21 +33,21 @@ public sealed class DisconnectStorageProviderEndpoint : Endpoint<DisconnectStora
         DisconnectStorageProviderRequest req,
         CancellationToken ct)
     {
-        var dbContext = Resolve<LibraFotoDbContext>();
+        var storageRepository = Resolve<IStoragePersistenceRepository>();
         var factory = Resolve<IStorageProviderFactory>();
         var loggerFactory = Resolve<ILoggerFactory>();
-        return await HandleRequestAsync(req.Id, dbContext, factory, loggerFactory, ct);
+        return await HandleRequestAsync(req.Id, storageRepository, factory, loggerFactory, ct);
     }
 
     internal static async Task<Results<Ok<StorageProviderDto>, NotFound<ApiError>, BadRequest<ApiError>>> HandleRequestAsync(
         long id,
-        LibraFotoDbContext dbContext,
+        IStoragePersistenceRepository storageRepository,
         IStorageProviderFactory factory,
         ILoggerFactory loggerFactory,
         CancellationToken cancellationToken)
     {
         var logger = loggerFactory.CreateLogger(LoggerCategory);
-        var entity = await dbContext.StorageProviders.FindAsync([id], cancellationToken);
+        var entity = await storageRepository.GetProviderByIdAsync(id, cancellationToken);
 
         if (entity == null)
         {
@@ -68,10 +66,10 @@ public sealed class DisconnectStorageProviderEndpoint : Endpoint<DisconnectStora
             logger.LogWarning("OAuth disconnect reported failure for provider {ProviderId}", id);
         }
 
-        await dbContext.SaveChangesAsync(cancellationToken);
+        await storageRepository.SaveChangesAsync(cancellationToken);
         factory.ClearCache();
 
-        var photoCount = await dbContext.Photos.CountAsync(p => p.ProviderId == id, cancellationToken);
+        var photoCount = await storageRepository.CountPhotosByProviderAsync(id, cancellationToken);
 
         var dto = new StorageProviderDto
         {

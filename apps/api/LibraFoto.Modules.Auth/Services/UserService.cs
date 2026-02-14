@@ -1,7 +1,6 @@
-using LibraFoto.Data;
 using LibraFoto.Data.Entities;
+using LibraFoto.Modules.Auth.Services.Repositories;
 using LibraFoto.Modules.Auth.Services.Shared;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace LibraFoto.Modules.Auth.Services;
@@ -11,14 +10,14 @@ namespace LibraFoto.Modules.Auth.Services;
 /// </summary>
 public class UserService : IUserService
 {
-    private readonly LibraFotoDbContext _dbContext;
+    private readonly IUserRepository _userRepository;
     private readonly ILogger<UserService> _logger;
 
     public UserService(
-        LibraFotoDbContext dbContext,
+        IUserRepository userRepository,
         ILogger<UserService> logger)
     {
-        _dbContext = dbContext;
+        _userRepository = userRepository;
         _logger = logger;
     }
 
@@ -28,67 +27,25 @@ public class UserService : IUserService
         int pageSize = 20,
         CancellationToken cancellationToken = default)
     {
-        var totalCount = await _dbContext.Users.CountAsync(cancellationToken);
-
-        var users = await _dbContext.Users
-            .OrderBy(u => u.Email)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .Select(u => new UserDto(
-                u.Id,
-                u.Email,
-                u.Role,
-                u.DateCreated,
-                u.LastLogin))
-            .ToListAsync(cancellationToken);
-
-        return (users.AsEnumerable(), totalCount);
+        return await _userRepository.GetUsersAsync(page, pageSize, cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task<UserDto?> GetUserByIdAsync(long id, CancellationToken cancellationToken = default)
     {
-        // TODO: Consider security implications of exposing sequential user IDs
-        var user = await _dbContext.Users.FindAsync(new object[] { id }, cancellationToken);
-
-        if (user == null)
-        {
-            return null;
-        }
-
-        return new UserDto(
-            user.Id,
-            user.Email,
-            user.Role,
-            user.DateCreated,
-            user.LastLogin);
+        return await _userRepository.GetUserByIdAsync(id, cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task<UserDto?> GetUserByEmailAsync(string email, CancellationToken cancellationToken = default)
     {
-        var user = await _dbContext.Users
-            .FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower(), cancellationToken);
-
-        if (user == null)
-        {
-            return null;
-        }
-
-        return new UserDto(
-            user.Id,
-            user.Email,
-            user.Role,
-            user.DateCreated,
-            user.LastLogin);
+        return await _userRepository.GetUserByEmailAsync(email, cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task<UserDto> CreateUserAsync(CreateUserRequest request, CancellationToken cancellationToken = default)
     {
-        // Check if email already exists
-        var exists = await _dbContext.Users
-            .AnyAsync(u => u.Email.ToLower() == request.Email.ToLower(), cancellationToken);
+        var exists = await _userRepository.EmailExistsAsync(request.Email, cancellationToken);
 
         if (exists)
         {
@@ -105,8 +62,8 @@ public class UserService : IUserService
             DateCreated = DateTime.UtcNow
         };
 
-        _dbContext.Users.Add(user);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _userRepository.AddUserAsync(user, cancellationToken);
+        await _userRepository.SaveChangesAsync(cancellationToken);
 
         _logger.LogInformation("Created user: {Email} with role {Role}", request.Email, request.Role);
 
@@ -121,7 +78,7 @@ public class UserService : IUserService
     /// <inheritdoc />
     public async Task<UserDto?> UpdateUserAsync(long id, UpdateUserRequest request, CancellationToken cancellationToken = default)
     {
-        var user = await _dbContext.Users.FindAsync(new object[] { id }, cancellationToken);
+        var user = await _userRepository.GetUserEntityByIdAsync(id, cancellationToken);
 
         if (user == null)
         {
@@ -131,8 +88,7 @@ public class UserService : IUserService
         // Check email availability if changing
         if (request.Email != null && request.Email != user.Email)
         {
-            var exists = await _dbContext.Users
-                .AnyAsync(u => u.Email.ToLower() == request.Email.ToLower(), cancellationToken);
+            var exists = await _userRepository.EmailExistsExcludingUserAsync(request.Email, id, cancellationToken);
             if (exists)
             {
                 throw new InvalidOperationException($"Email '{request.Email}' is already registered.");
@@ -150,7 +106,7 @@ public class UserService : IUserService
             user.Role = request.Role.Value;
         }
 
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _userRepository.SaveChangesAsync(cancellationToken);
 
         _logger.LogInformation("Updated user: {Email}", user.Email);
 
@@ -165,15 +121,15 @@ public class UserService : IUserService
     /// <inheritdoc />
     public async Task<bool> DeleteUserAsync(long id, CancellationToken cancellationToken = default)
     {
-        var user = await _dbContext.Users.FindAsync(new object[] { id }, cancellationToken);
+        var user = await _userRepository.GetUserEntityByIdAsync(id, cancellationToken);
 
         if (user == null)
         {
             return false;
         }
 
-        _dbContext.Users.Remove(user);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _userRepository.RemoveUserAsync(user, cancellationToken);
+        await _userRepository.SaveChangesAsync(cancellationToken);
 
         _logger.LogInformation("Deleted user: {Email}", user.Email);
         return true;
@@ -182,6 +138,6 @@ public class UserService : IUserService
     /// <inheritdoc />
     public async Task<int> GetUserCountAsync(CancellationToken cancellationToken = default)
     {
-        return await _dbContext.Users.CountAsync(cancellationToken);
+        return await _userRepository.GetUserCountAsync(cancellationToken);
     }
 }

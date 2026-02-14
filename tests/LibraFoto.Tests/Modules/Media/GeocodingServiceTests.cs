@@ -1,7 +1,7 @@
 using System.Net;
 using System.Text.Json;
-using LibraFoto.Modules.Media.Services.Shared;
 using LibraFoto.Modules.Media.Services;
+using LibraFoto.Modules.Media.Services.Shared;
 
 namespace LibraFoto.Tests.Modules.Media;
 

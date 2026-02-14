@@ -2,6 +2,7 @@ using LibraFoto.Data;
 using LibraFoto.Data.Entities;
 using LibraFoto.Data.Enums;
 using LibraFoto.Modules.Display.Services;
+using LibraFoto.Modules.Display.Services.Repositories;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -38,6 +39,8 @@ public class SlideshowServiceTests
                 .UseSqlite(_connection).Options;
             return new LibraFotoDbContext(opts);
         });
+        services.AddScoped<IDisplaySettingsRepository, DisplaySettingsRepository>();
+        services.AddScoped<ISlideshowRepository, SlideshowRepository>();
         services.AddScoped<IDisplaySettingsService, DisplaySettingsService>();
         services.AddSingleton<ISlideshowService, SlideshowService>();
         services.AddSingleton(typeof(ILogger<>), typeof(NullLogger<>));

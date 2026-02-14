@@ -1,11 +1,9 @@
 using System.Text.Json;
-using LibraFoto.Data;
 using LibraFoto.Data.Entities;
 using LibraFoto.Data.Enums;
 using LibraFoto.Modules.Storage.Interfaces;
-using LibraFoto.Modules.Storage.Features.Shared;
+using LibraFoto.Modules.Storage.Services.Repositories;
 using LibraFoto.Modules.Storage.Services.Shared;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace LibraFoto.Modules.Storage.Providers;
@@ -24,7 +22,7 @@ public class GooglePhotosProvider : IStorageProvider, IOAuthProvider
 
     private readonly ILogger<GooglePhotosProvider> _logger;
     private readonly HttpClient _httpClient;
-    private readonly LibraFotoDbContext _dbContext;
+    private readonly IStoragePersistenceRepository _storageRepository;
 
     private long _providerId;
     private string _displayName = "Google Photos";
@@ -33,11 +31,11 @@ public class GooglePhotosProvider : IStorageProvider, IOAuthProvider
     public GooglePhotosProvider(
         ILogger<GooglePhotosProvider> logger,
         IHttpClientFactory httpClientFactory,
-        LibraFotoDbContext dbContext)
+        IStoragePersistenceRepository storageRepository)
     {
         _logger = logger;
         _httpClient = httpClientFactory.CreateClient();
-        _dbContext = dbContext;
+        _storageRepository = storageRepository;
     }
 
     /// <inheritdoc />
@@ -81,10 +79,7 @@ public class GooglePhotosProvider : IStorageProvider, IOAuthProvider
         CancellationToken cancellationToken = default)
     {
         // Query photos imported from this provider via the Picker flow
-        var photos = await _dbContext.Photos
-            .Where(p => p.ProviderId == _providerId)
-            .OrderByDescending(p => p.DateTaken ?? p.DateAdded)
-            .ToListAsync(cancellationToken);
+        var photos = await _storageRepository.GetPhotosByProviderAsync(_providerId, cancellationToken);
 
         _logger.LogDebug("Found {Count} photos imported from Google Photos provider {ProviderId}", photos.Count, _providerId);
 
@@ -126,8 +121,7 @@ public class GooglePhotosProvider : IStorageProvider, IOAuthProvider
     /// <inheritdoc />
     public async Task<Stream> GetFileStreamAsync(string fileId, CancellationToken cancellationToken = default)
     {
-        var photo = await _dbContext.Photos
-            .FirstOrDefaultAsync(p => p.ProviderId == _providerId && p.ProviderFileId == fileId, cancellationToken);
+        var photo = await _storageRepository.GetPhotoByProviderFileIdAsync(_providerId, fileId, cancellationToken);
 
         if (photo == null)
         {
@@ -164,9 +158,7 @@ public class GooglePhotosProvider : IStorageProvider, IOAuthProvider
     /// <inheritdoc />
     public async Task<bool> FileExistsAsync(string fileId, CancellationToken cancellationToken = default)
     {
-        // Check if the photo exists in our database (imported via Picker)
-        return await _dbContext.Photos
-            .AnyAsync(p => p.ProviderId == _providerId && p.ProviderFileId == fileId, cancellationToken);
+        return await _storageRepository.GetPhotoByProviderFileIdAsync(_providerId, fileId, cancellationToken) != null;
     }
 
     /// <inheritdoc />

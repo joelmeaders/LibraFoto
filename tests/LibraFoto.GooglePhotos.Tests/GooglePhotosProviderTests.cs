@@ -3,9 +3,9 @@ using LibraFoto.Data;
 using LibraFoto.Data.Entities;
 using LibraFoto.Data.Enums;
 using LibraFoto.Modules.Storage.Interfaces;
-using LibraFoto.Modules.Storage.Features.Shared;
-using LibraFoto.Modules.Storage.Services.Shared;
 using LibraFoto.Modules.Storage.Providers;
+using LibraFoto.Modules.Storage.Services.Repositories;
+using LibraFoto.Modules.Storage.Services.Shared;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -33,7 +33,9 @@ public class GooglePhotosProviderTests
         var dbContext = new LibraFotoDbContext(options);
         await dbContext.Database.EnsureCreatedAsync();
 
-        var provider = new GooglePhotosProvider(logger, httpClientFactory, dbContext);
+        var storageRepository = new StoragePersistenceRepository(dbContext);
+
+        var provider = new GooglePhotosProvider(logger, httpClientFactory, storageRepository);
         return (provider, dbContext);
     }
 

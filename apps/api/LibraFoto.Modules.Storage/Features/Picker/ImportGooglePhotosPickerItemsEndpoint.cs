@@ -1,15 +1,13 @@
 using FastEndpoints;
-using LibraFoto.Data;
 using LibraFoto.Data.Entities;
 using LibraFoto.Data.Enums;
-using LibraFoto.Modules.Storage.Features.Shared;
-using LibraFoto.Modules.Storage.Services.Shared;
 using LibraFoto.Modules.Storage.Services;
+using LibraFoto.Modules.Storage.Services.Repositories;
+using LibraFoto.Modules.Storage.Services.Shared;
 using LibraFoto.Shared.Configuration;
 using LibraFoto.Shared.DTOs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using SixLabors.ImageSharp;
@@ -44,18 +42,18 @@ public sealed class ImportGooglePhotosPickerItemsEndpoint : Endpoint<ImportGoogl
         ImportGooglePhotosPickerItemsRequest req,
         CancellationToken ct)
     {
-        var dbContext = Resolve<LibraFotoDbContext>();
+        var storageRepository = Resolve<IStoragePersistenceRepository>();
         var pickerService = Resolve<GooglePhotosPickerService>();
         var imageImport = Resolve<IImageImportService>();
         var configuration = Resolve<IConfiguration>();
         var loggerFactory = Resolve<ILoggerFactory>();
-        return await HandleRequestAsync(req.ProviderId, req.SessionId, dbContext, pickerService, imageImport, configuration, loggerFactory, ct);
+        return await HandleRequestAsync(req.ProviderId, req.SessionId, storageRepository, pickerService, imageImport, configuration, loggerFactory, ct);
     }
 
     internal static async Task<Results<Ok<ImportPickerItemsResponse>, NotFound<ApiError>, BadRequest<ApiError>>> HandleRequestAsync(
         long providerId,
         string sessionId,
-        LibraFotoDbContext dbContext,
+        IStoragePersistenceRepository storageRepository,
         GooglePhotosPickerService pickerService,
         IImageImportService imageImport,
         IConfiguration configuration,
@@ -63,7 +61,7 @@ public sealed class ImportGooglePhotosPickerItemsEndpoint : Endpoint<ImportGoogl
         CancellationToken cancellationToken)
     {
         var logger = loggerFactory.CreateLogger(LoggerCategory);
-        var provider = await dbContext.StorageProviders.FindAsync([providerId], cancellationToken);
+        var provider = await storageRepository.GetProviderByIdAsync(providerId, cancellationToken);
 
         if (provider == null || provider.Type != StorageProviderType.GooglePhotos)
         {
@@ -82,7 +80,7 @@ public sealed class ImportGooglePhotosPickerItemsEndpoint : Endpoint<ImportGoogl
             return TypedResults.BadRequest(new ApiError(OAuthFailedCode, OAuthFailedMessage));
         }
 
-        await GooglePhotosPickerHelper.PersistConfigAsync(provider, config!, dbContext, cancellationToken);
+        await GooglePhotosPickerHelper.PersistConfigAsync(provider, config!, storageRepository, cancellationToken);
 
         var items = await pickerService.ListMediaItemsAsync(sessionId, accessToken, cancellationToken);
         var imported = 0;
@@ -95,7 +93,7 @@ public sealed class ImportGooglePhotosPickerItemsEndpoint : Endpoint<ImportGoogl
             pickerService,
             imageImport,
             configuration,
-            dbContext,
+            storageRepository,
             logger);
 
         foreach (var item in items)
@@ -115,7 +113,7 @@ public sealed class ImportGooglePhotosPickerItemsEndpoint : Endpoint<ImportGoogl
             }
         }
 
-        await dbContext.SaveChangesAsync(cancellationToken);
+        await storageRepository.SaveChangesAsync(cancellationToken);
 
         return TypedResults.Ok(new ImportPickerItemsResponse
         {
@@ -156,8 +154,8 @@ public sealed class ImportGooglePhotosPickerItemsEndpoint : Endpoint<ImportGoogl
 
         try
         {
-            var existingPhoto = await context.DbContext.Photos
-                .FirstOrDefaultAsync(p => p.ProviderId == context.ProviderId && p.ProviderFileId == item.Id, cancellationToken);
+            var existingPhoto = await context.StorageRepository
+                .GetPhotoByProviderFileIdAsync(context.ProviderId, item.Id, cancellationToken);
 
             var fileName = item.MediaFile.Filename ?? item.Id;
             var width = item.MediaFile.MediaFileMetadata?.Width ?? 0;
@@ -195,8 +193,8 @@ public sealed class ImportGooglePhotosPickerItemsEndpoint : Endpoint<ImportGoogl
                     ProviderFileId = item.Id
                 };
 
-                context.DbContext.Photos.Add(photo);
-                await context.DbContext.SaveChangesAsync(cancellationToken);
+                await context.StorageRepository.AddPhotoAsync(photo, cancellationToken);
+                await context.StorageRepository.SaveChangesAsync(cancellationToken);
             }
 
             var idFilename = $"{photo.Id}{extension}";
@@ -262,7 +260,7 @@ public sealed class ImportGooglePhotosPickerItemsEndpoint : Endpoint<ImportGoogl
             photo.ProviderFileId = item.Id;
             photo.ProviderId = context.ProviderId;
 
-            await context.DbContext.SaveChangesAsync(cancellationToken);
+            await context.StorageRepository.SaveChangesAsync(cancellationToken);
 
             return true;
         }
@@ -296,8 +294,8 @@ public sealed class ImportGooglePhotosPickerItemsEndpoint : Endpoint<ImportGoogl
                 {
                     if (string.IsNullOrEmpty(photo.FilePath))
                     {
-                        context.DbContext.Photos.Remove(photo);
-                        await context.DbContext.SaveChangesAsync(CancellationToken.None);
+                        await context.StorageRepository.RemovePhotoAsync(photo, CancellationToken.None);
+                        await context.StorageRepository.SaveChangesAsync(CancellationToken.None);
                     }
                 }
                 catch (Exception deleteEx)
@@ -333,5 +331,5 @@ internal record PickerImportContext(
     GooglePhotosPickerService PickerService,
     IImageImportService ImageImport,
     IConfiguration Configuration,
-    LibraFotoDbContext DbContext,
+    IStoragePersistenceRepository StorageRepository,
     ILogger Logger);

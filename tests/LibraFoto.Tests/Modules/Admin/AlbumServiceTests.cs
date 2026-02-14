@@ -1,8 +1,8 @@
 using LibraFoto.Data;
 using LibraFoto.Data.Entities;
-using LibraFoto.Modules.Admin.Features.Shared;
-using LibraFoto.Modules.Admin.Services.Shared;
 using LibraFoto.Modules.Admin.Services;
+using LibraFoto.Modules.Admin.Services.Repositories;
+using LibraFoto.Modules.Admin.Services.Shared;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
@@ -32,7 +32,7 @@ public class AlbumServiceTests
         _db = new LibraFotoDbContext(options);
         await _db.Database.EnsureCreatedAsync();
 
-        _service = new AlbumService(_db);
+        _service = new AlbumService(new AlbumRepository(_db));
     }
 
     [After(Test)]

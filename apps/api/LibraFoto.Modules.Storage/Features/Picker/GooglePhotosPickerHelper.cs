@@ -2,8 +2,8 @@ using System.Text.Json;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Auth.OAuth2.Flows;
 using Google.Apis.Auth.OAuth2.Responses;
-using LibraFoto.Data;
 using LibraFoto.Modules.Storage.Features.Shared;
+using LibraFoto.Modules.Storage.Services.Repositories;
 using LibraFoto.Modules.Storage.Services.Shared;
 using Microsoft.Extensions.Logging;
 
@@ -103,11 +103,11 @@ internal static class GooglePhotosPickerHelper
     internal static async Task PersistConfigAsync(
         Data.Entities.StorageProvider provider,
         GooglePhotosConfiguration config,
-        LibraFotoDbContext dbContext,
+        IStoragePersistenceRepository storageRepository,
         CancellationToken cancellationToken)
     {
         provider.Configuration = JsonSerializer.Serialize(config);
-        await dbContext.SaveChangesAsync(cancellationToken);
+        await storageRepository.SaveChangesAsync(cancellationToken);
     }
 
     internal static async Task<string?> EnsureAccessTokenAsync(

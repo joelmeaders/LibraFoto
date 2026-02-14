@@ -3,10 +3,10 @@ using LibraFoto.Data;
 using LibraFoto.Data.Entities;
 using LibraFoto.Data.Enums;
 using LibraFoto.Modules.Storage.Interfaces;
-using LibraFoto.Modules.Storage.Features.Shared;
-using LibraFoto.Modules.Storage.Services.Shared;
 using LibraFoto.Modules.Storage.Providers;
 using LibraFoto.Modules.Storage.Services;
+using LibraFoto.Modules.Storage.Services.Repositories;
+using LibraFoto.Modules.Storage.Services.Shared;
 using LibraFoto.Tests.Helpers;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
@@ -30,6 +30,7 @@ public class StorageProviderFactoryTests
     private StorageProviderFactory _factory = null!;
     private IConfiguration _configuration = null!;
     private string _testDirectory = null!;
+    private IStoragePersistenceRepository _storageRepository = null!;
 
     [Before(Test)]
     public async Task Setup()
@@ -77,10 +78,12 @@ public class StorageProviderFactoryTests
         services.AddSingleton(typeof(ILogger<>), typeof(NullLogger<>));
 
         _serviceProvider = services.BuildServiceProvider();
+        _storageRepository = new StoragePersistenceRepository(_db);
 
         // Create factory instance
         _factory = new StorageProviderFactory(
             _serviceProvider,
+            _storageRepository,
             _configuration,
             NullLogger<StorageProviderFactory>.Instance);
     }
@@ -572,6 +575,7 @@ public class StorageProviderFactoryTests
 
         var factory = new StorageProviderFactory(
             _serviceProvider,
+            _storageRepository,
             emptyConfig,
             NullLogger<StorageProviderFactory>.Instance);
 

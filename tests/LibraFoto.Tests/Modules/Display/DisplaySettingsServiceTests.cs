@@ -1,8 +1,9 @@
 using LibraFoto.Data;
 using LibraFoto.Data.Entities;
 using LibraFoto.Data.Enums;
-using LibraFoto.Modules.Display.Services.Shared;
 using LibraFoto.Modules.Display.Services;
+using LibraFoto.Modules.Display.Services.Repositories;
+using LibraFoto.Modules.Display.Services.Shared;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -24,7 +25,7 @@ public class DisplaySettingsServiceTests
             .UseSqlite(_connection).Options;
         _db = new LibraFotoDbContext(options);
         await _db.Database.EnsureCreatedAsync();
-        _service = new DisplaySettingsService(_db, NullLogger<DisplaySettingsService>.Instance);
+        _service = new DisplaySettingsService(new DisplaySettingsRepository(_db), NullLogger<DisplaySettingsService>.Instance);
     }
 
     [After(Test)]

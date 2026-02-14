@@ -1,8 +1,5 @@
-using LibraFoto.Data;
-using LibraFoto.Data.Entities;
-using LibraFoto.Data.Enums;
+using LibraFoto.Api.Repositories;
 using LibraFoto.Shared.Configuration;
-using Microsoft.EntityFrameworkCore;
 
 namespace LibraFoto.Api.Endpoints;
 
@@ -47,7 +44,7 @@ public static class TestEndpoints
     /// - Resets the setup completed flag
     /// </summary>
     private static async Task<IResult> ResetDatabase(
-        LibraFotoDbContext db,
+        ITestDataResetRepository testDataResetRepository,
         IWebHostEnvironment env,
         IConfiguration configuration,
         ILogger<Program> logger)
@@ -61,66 +58,12 @@ public static class TestEndpoints
 
         try
         {
-            // Ensure database exists (creates schema if missing)
-            // This is safe because we're in Development environment only
-            await db.Database.EnsureCreatedAsync();
-
-            // Delete all data in correct order (respecting foreign keys)
-            // 1. Delete junction tables first
-            await db.PhotoAlbums.ExecuteDeleteAsync();
-            await db.PhotoTags.ExecuteDeleteAsync();
-
-            // 2. Delete guest links (depends on users and albums)
-            await db.GuestLinks.ExecuteDeleteAsync();
-
-            // 3. Delete main entities
-            await db.Photos.ExecuteDeleteAsync();
-            await db.Albums.ExecuteDeleteAsync();
-            await db.Tags.ExecuteDeleteAsync();
-            await db.Users.ExecuteDeleteAsync();
-
-            // 4. Reset display settings to defaults
-            await db.DisplaySettings.ExecuteDeleteAsync();
-
-            // Create default display settings
-            var defaultSettings = new DisplaySettings
-            {
-                Name = "Default",
-                SlideDuration = 10,
-                Transition = TransitionType.Fade,
-                TransitionDuration = 1000,
-                Shuffle = false,
-                SourceType = SourceType.All,
-                SourceId = null,
-                IsActive = true
-            };
-            db.DisplaySettings.Add(defaultSettings);
-
-            // 5. Reset storage providers - delete all except recreate default local provider
-            await db.StorageProviders.ExecuteDeleteAsync();
-
             var storagePath = configuration["Storage:LocalPath"] ?? LibraFotoDefaults.GetDefaultPhotosPath();
-            var localProvider = new StorageProvider
-            {
-                Name = "Local Storage",
-                Type = StorageProviderType.Local,
-                IsEnabled = true,
-                Configuration = $"{{\"basePath\": \"{storagePath.Replace("\\", "\\\\")}\"}}",
-                LastSyncDate = null
-            };
-            db.StorageProviders.Add(localProvider);
 
-            // 6. Create test admin user with hashed password
-            var testAdmin = new User
-            {
-                Email = TestAdminEmail,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(TestAdminPassword),
-                Role = LibraFoto.Data.Enums.UserRole.Admin,
-                DateCreated = DateTime.UtcNow
-            };
-            db.Users.Add(testAdmin);
-
-            await db.SaveChangesAsync();
+            await testDataResetRepository.ResetDatabaseAsync(
+                storagePath,
+                TestAdminEmail,
+                TestAdminPassword);
 
             // 7. Clean up photo files on disk (optional - preserves disk space)
             var photosPath = configuration["Storage:LocalPath"] ?? LibraFotoDefaults.GetDefaultPhotosPath();
