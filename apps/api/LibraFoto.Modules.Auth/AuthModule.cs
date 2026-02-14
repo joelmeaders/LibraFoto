@@ -1,5 +1,6 @@
 using LibraFoto.Modules.Auth.Services;
 using LibraFoto.Modules.Auth.Services.Repositories;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace LibraFoto.Modules.Auth;
@@ -30,6 +31,9 @@ public static class AuthModule
         services.AddAuthorization(options =>
         {
             options.AddPolicy("Authenticated", policy => policy.RequireAuthenticatedUser());
+            options.FallbackPolicy = new AuthorizationPolicyBuilder()
+                .RequireAuthenticatedUser()
+                .Build();
         });
 
         return services;

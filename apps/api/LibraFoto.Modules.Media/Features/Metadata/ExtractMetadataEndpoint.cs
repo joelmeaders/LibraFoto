@@ -14,7 +14,7 @@ public sealed class ExtractMetadataEndpoint : Endpoint<ExtractMetadataRequest, R
     public override void Configure()
     {
         Post("/api/media/metadata/extract");
-        AllowAnonymous();
+        Policies("Authenticated");
         AllowFileUploads();
         Tags("Metadata");
         Summary(s =>

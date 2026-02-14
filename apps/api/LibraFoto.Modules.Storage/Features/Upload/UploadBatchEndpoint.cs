@@ -19,6 +19,7 @@ public sealed class UploadBatchEndpoint : Endpoint<UploadBatchRequest, Results<O
     public override void Configure()
     {
         Post("/api/admin/upload/batch");
+        Policies("Authenticated");
         AllowFileUploads();
         Tags("Upload");
         Summary(s =>
@@ -26,7 +27,6 @@ public sealed class UploadBatchEndpoint : Endpoint<UploadBatchRequest, Results<O
             s.Summary = "Upload multiple files";
             s.Description = "Uploads multiple photo or video files to local storage.";
         });
-        // TODO: Re-enable authorization for /api/admin/upload when auth enforcement is ready.
     }
 
     public override async Task<Results<Ok<BatchUploadResult>, BadRequest<ApiError>>> ExecuteAsync(

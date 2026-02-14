@@ -15,7 +15,7 @@ public sealed class ActivateDisplaySettingsEndpoint : EndpointWithoutRequest<Res
     public override void Configure()
     {
         Post("/api/display/settings/{id:long}/activate");
-        AllowAnonymous();
+        Policies("Authenticated");
         Tags("Display Settings");
         Summary(s =>
         {

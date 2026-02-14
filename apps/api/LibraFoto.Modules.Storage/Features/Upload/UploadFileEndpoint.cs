@@ -19,6 +19,7 @@ public sealed class UploadFileEndpoint : Endpoint<UploadFileRequest, Results<Ok<
     public override void Configure()
     {
         Post("/api/admin/upload");
+        Policies("Authenticated");
         AllowFileUploads();
         Tags("Upload");
         Summary(s =>
@@ -26,7 +27,6 @@ public sealed class UploadFileEndpoint : Endpoint<UploadFileRequest, Results<Ok<
             s.Summary = "Upload a file";
             s.Description = "Uploads a photo or video file to local storage.";
         });
-        // TODO: Re-enable authorization for /api/admin/upload when auth enforcement is ready.
     }
 
     public override async Task<Results<Ok<UploadResult>, BadRequest<ApiError>>> ExecuteAsync(

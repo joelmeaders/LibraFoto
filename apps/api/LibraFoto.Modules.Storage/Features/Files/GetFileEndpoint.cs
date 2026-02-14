@@ -14,7 +14,7 @@ public sealed class GetFileEndpoint : Endpoint<GetFileRequest, Results<FileStrea
     public override void Configure()
     {
         Get("/api/files/{providerId:long}/{**fileId}");
-        AllowAnonymous();
+        Policies("Authenticated");
         Tags("Files");
         Summary(s =>
         {
