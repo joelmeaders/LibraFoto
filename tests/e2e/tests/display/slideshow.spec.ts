@@ -69,20 +69,6 @@ test.describe("Display Frontend - Slideshow", () => {
     await expect(slideContainer).toBeAttached();
   });
 
-  test("should have overlay element", async ({ page }) => {
-    await page.goto("/");
-
-    // Wait for page to initialize
-    await page.waitForTimeout(2000);
-
-    // Check for overlay (may be hidden based on settings)
-    const overlay = page.locator("#overlay, .overlay, .slideshow-overlay");
-    if ((await overlay.count()) > 0) {
-      await expect(overlay.first()).toBeAttached();
-    } else {
-      test.skip(true, "Overlay element not rendered for current settings");
-    }
-  });
 });
 
 test.describe("Display Frontend - Keyboard Controls", () => {

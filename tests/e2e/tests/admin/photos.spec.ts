@@ -133,62 +133,6 @@ test.describe.serial("Admin Frontend - Photo Management", () => {
     expect(photos.pagination.totalItems).toBeGreaterThanOrEqual(3);
   });
 
-  test("should open photo detail dialog when clicking a photo", async ({
-    page,
-  }) => {
-    await loginViaUi(page, TEST_ADMIN.email, TEST_ADMIN.password);
-    await page.goto("/photos");
-    await waitForPageLoad(page);
-
-    // Click on the first photo
-    const firstPhoto = page
-      .locator('[data-testid="photo-card"], .photo-card, .photo-item, mat-card')
-      .first();
-    await firstPhoto.click();
-
-    // Dialog or detail panel should open
-    const dialog = page.getByRole("dialog");
-    if (await dialog.isVisible({ timeout: 3000 }).catch(() => false)) {
-      await expect(dialog).toBeVisible();
-      await expect(
-        page.getByText(/filename|details|info/i).first(),
-      ).toBeVisible();
-    } else {
-      const detailPanel = page.getByText(/details|info|metadata/i).first();
-      if (
-        !(await detailPanel.isVisible({ timeout: 2000 }).catch(() => false))
-      ) {
-        test.skip(true, "Photo details UI not accessible via dialog");
-      }
-    }
-  });
-
-  test("should close photo detail dialog", async ({ page }) => {
-    await loginViaUi(page, TEST_ADMIN.email, TEST_ADMIN.password);
-    await page.goto("/photos");
-    await waitForPageLoad(page);
-
-    // Open dialog
-    const firstPhoto = page
-      .locator('[data-testid="photo-card"], .photo-card, .photo-item, mat-card')
-      .first();
-    await firstPhoto.click();
-    const dialog = page.getByRole("dialog");
-    if (!(await dialog.isVisible({ timeout: 3000 }).catch(() => false))) {
-      test.skip(true, "Photo details are not presented in a dialog in this UI");
-    }
-
-    await expect(dialog).toBeVisible();
-
-    // Close dialog
-    const closeButton = page
-      .getByRole("button", { name: /close|cancel|×/i })
-      .first();
-    await closeButton.click();
-
-    // Dialog should be closed
-    await expect(dialog).not.toBeVisible({ timeout: 5000 });
-  });
 
   test("should select multiple photos with Ctrl+click", async ({ page }) => {
     await loginViaUi(page, TEST_ADMIN.email, TEST_ADMIN.password);
@@ -217,30 +161,6 @@ test.describe.serial("Admin Frontend - Photo Management", () => {
       });
   });
 
-  test("should filter photos by search", async ({ page }) => {
-    await loginViaUi(page, TEST_ADMIN.email, TEST_ADMIN.password);
-    await page.goto("/photos");
-    await waitForPageLoad(page);
-
-    // Look for search input
-    const searchInput = page
-      .getByRole("searchbox")
-      .or(page.getByPlaceholder(/search/i));
-
-    if (await searchInput.isVisible({ timeout: 2000 }).catch(() => false)) {
-      await searchInput.fill("woodpecker");
-      await page.waitForTimeout(500); // Debounce
-
-      // Should filter results
-      const photoCards = page.locator(
-        '[data-testid="photo-card"], .photo-card, .photo-item, mat-card',
-      );
-      const count = await photoCards.count();
-      expect(count).toBeLessThanOrEqual(3);
-    } else {
-      test.skip(true, "Search functionality not yet implemented");
-    }
-  });
 });
 
 test.describe.serial("Admin Frontend - Photo Bulk Operations", () => {

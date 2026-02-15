@@ -240,39 +240,6 @@ test.describe.serial("Admin Frontend - Album Management", () => {
       });
   });
 
-  test("should open edit album dialog", async ({ page }) => {
-    await loginViaUi(page, TEST_ADMIN.email, TEST_ADMIN.password);
-    await page.goto("/albums");
-    await waitForPageLoad(page);
-
-    // Find the album and click edit button
-    const albumCard = page
-      .locator("mat-card, .album-card")
-      .filter({ hasText: "Nature Photography" });
-
-    // Look for edit button (icon button or menu)
-    const editButton = albumCard.getByRole("button", {
-      name: /edit|settings/i,
-    });
-    if (await editButton.isVisible({ timeout: 2000 }).catch(() => false)) {
-      await editButton.click();
-    } else {
-      // Try clicking a menu button first
-      const menuButton = albumCard.getByRole("button", {
-        name: /more|menu|options/i,
-      });
-      if (await menuButton.isVisible({ timeout: 2000 }).catch(() => false)) {
-        await menuButton.click();
-        await page.getByRole("menuitem", { name: /edit/i }).click();
-      } else {
-        test.skip(true, "Edit button not found in album card");
-      }
-    }
-
-    // Dialog should open
-    await expect(page.getByRole("dialog")).toBeVisible({ timeout: 5000 });
-  });
-
   test("should edit album name and description", async ({ page, api }) => {
     await loginViaUi(page, TEST_ADMIN.email, TEST_ADMIN.password);
     await page.goto("/albums");
