@@ -24,7 +24,8 @@ public static class TestEndpoints
         }
 
         var group = app.MapGroup("/api/test")
-            .WithTags("Test");
+            .WithTags("Test")
+            .AllowAnonymous();
 
         group.MapPost("/reset", ResetDatabase)
             .WithName("ResetDatabase")

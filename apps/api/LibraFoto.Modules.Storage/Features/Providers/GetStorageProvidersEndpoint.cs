@@ -12,7 +12,7 @@ namespace LibraFoto.Modules.Storage.Features.Providers;
 /// <summary>
 /// List all storage providers.
 /// </summary>
-public sealed class GetStorageProvidersEndpoint : Endpoint<GetStorageProvidersRequest, Ok<StorageProviderDto[]>>
+public sealed class GetStorageProvidersEndpoint : EndpointWithoutRequest<Ok<StorageProviderDto[]>>
 {
     private static readonly string[] _googlePhotosRequiredScopes =
     [
@@ -30,7 +30,7 @@ public sealed class GetStorageProvidersEndpoint : Endpoint<GetStorageProvidersRe
         });
     }
 
-    public override async Task<Ok<StorageProviderDto[]>> ExecuteAsync(GetStorageProvidersRequest req, CancellationToken ct)
+    public override async Task<Ok<StorageProviderDto[]>> ExecuteAsync(CancellationToken ct)
     {
         var storageRepository = Resolve<IStoragePersistenceRepository>();
         var factory = Resolve<IStorageProviderFactory>();
@@ -127,8 +127,4 @@ public sealed class GetStorageProvidersEndpoint : Endpoint<GetStorageProvidersRe
         var lastSlash = scope.LastIndexOf('/');
         return lastSlash >= 0 ? scope[(lastSlash + 1)..] : scope;
     }
-}
-
-public sealed class GetStorageProvidersRequest
-{
 }

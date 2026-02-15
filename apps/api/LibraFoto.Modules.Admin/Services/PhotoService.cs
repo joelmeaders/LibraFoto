@@ -65,6 +65,7 @@ public class PhotoService : IPhotoService
 
         // Start explicit transaction for database operations
         using var transaction = await _repository.BeginTransactionAsync(ct);
+        var transactionCommitted = false;
 
         try
         {
@@ -76,8 +77,7 @@ public class PhotoService : IPhotoService
                 return false;
             }
 
-            // Step 2: Delete physical files (AFTER database commit)
-            var deletionFailed = false;
+            // Step 2: Delete physical files (best-effort; DB deletion remains source of truth)
 
             // Delete main file from storage provider
             if (providerId.HasValue && !string.IsNullOrEmpty(providerFileId))
@@ -90,15 +90,13 @@ public class PhotoService : IPhotoService
                         var fileDeleted = await provider.DeleteFileAsync(providerFileId, ct);
                         if (!fileDeleted)
                         {
-                            _logger.LogError("Storage provider failed to delete file for photo {PhotoId}: {FileId}", id, providerFileId);
-                            deletionFailed = true;
+                            _logger.LogWarning("Storage provider could not delete file for photo {PhotoId}: {FileId}", id, providerFileId);
                         }
                     }
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Exception deleting file from storage provider for photo {PhotoId}", id);
-                    deletionFailed = true;
+                    _logger.LogWarning(ex, "Exception deleting file from storage provider for photo {PhotoId}", id);
                 }
             }
             else if (!string.IsNullOrEmpty(filePath))
@@ -119,8 +117,7 @@ public class PhotoService : IPhotoService
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Exception deleting local file for photo {PhotoId}", id);
-                    deletionFailed = true;
+                    _logger.LogWarning(ex, "Exception deleting local file for photo {PhotoId}", id);
                 }
             }
 
@@ -141,16 +138,9 @@ public class PhotoService : IPhotoService
                 }
             }
 
-            // If main file deletion failed, rollback
-            if (deletionFailed)
-            {
-                await transaction.RollbackAsync(ct);
-                _logger.LogError("Photo {PhotoId} file deletion failed, rolling back database changes", id);
-                throw new InvalidOperationException($"Failed to delete photo files for photo {id}");
-            }
-
             // Commit transaction
             await transaction.CommitAsync(ct);
+            transactionCommitted = true;
             _logger.LogInformation("Successfully deleted photo {PhotoId} with files", id);
 
             return true;
@@ -158,7 +148,10 @@ public class PhotoService : IPhotoService
         catch (Exception)
         {
             // Ensure rollback on any other failure
-            await transaction.RollbackAsync(ct);
+            if (!transactionCommitted)
+            {
+                await transaction.RollbackAsync(ct);
+            }
             throw;
         }
     }

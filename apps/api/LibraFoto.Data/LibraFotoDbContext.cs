@@ -13,6 +13,16 @@ namespace LibraFoto.Data;
 /// </summary>
 public class LibraFotoDbContext : DbContext
 {
+    private static readonly bool HasEntityTypeConfigurations = typeof(LibraFotoDbContext)
+        .Assembly
+        .DefinedTypes
+        .Any(type =>
+            !type.IsAbstract
+            && !type.IsGenericTypeDefinition
+            && type.ImplementedInterfaces.Any(i =>
+                i.IsGenericType
+                && i.GetGenericTypeDefinition() == typeof(IEntityTypeConfiguration<>)));
+
     public LibraFotoDbContext(DbContextOptions<LibraFotoDbContext> options)
         : base(options)
     {
@@ -189,7 +199,11 @@ public class LibraFotoDbContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade);
         });
 
-        // Apply all additional configurations from the Data assembly
-        modelBuilder.ApplyConfigurationsFromAssembly(typeof(LibraFotoDbContext).Assembly);
+        // Apply additional IEntityTypeConfiguration<T> classes only when present.
+        // Prevents noisy EF messages when this assembly uses only inline configuration.
+        if (HasEntityTypeConfigurations)
+        {
+            modelBuilder.ApplyConfigurationsFromAssembly(typeof(LibraFotoDbContext).Assembly);
+        }
     }
 }

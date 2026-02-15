@@ -55,7 +55,7 @@ async function globalSetup(config: FullConfig) {
 
     for (let i = 0; i < maxAttempts; i++) {
       try {
-        const response = await apiContext.get("/health");
+        const response = await apiContext.get("/api/setup/status");
         if (response.ok()) {
           apiReady = true;
           break;

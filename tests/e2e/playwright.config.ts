@@ -84,7 +84,7 @@ export default defineConfig({
           command:
             "node -e \"const fs=require('fs');const path=require('path');const bases=[path.join(process.cwd(),'test-data'),path.join(process.cwd(),'..','..','apps','api','LibraFoto.Api','test-data')];for(const base of bases){if(fs.existsSync(base)){fs.rmSync(base,{recursive:true,force:true});}}\" && dotnet run --project ../../apps/api/LibraFoto.Api",
           cwd: configDir,
-          url: "http://localhost:5179/health",
+          url: "http://localhost:5179/api/setup/status",
           reuseExistingServer: false,
           timeout: 120000,
           stdout: "pipe",
@@ -97,14 +97,14 @@ export default defineConfig({
         },
         {
           command: "npm run dev",
-          cwd: "../display",
+          cwd: "../../apps/display",
           url: "http://localhost:3000",
           reuseExistingServer: true,
           timeout: 120000,
         },
         {
           command: "npm start",
-          cwd: "../admin",
+          cwd: "../../apps/admin",
           url: "http://localhost:4200",
           reuseExistingServer: true,
           timeout: 120000,
