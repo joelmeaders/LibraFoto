@@ -68,7 +68,6 @@ test.describe("Display Frontend - Slideshow", () => {
     const slideContainer = page.locator("#slide-container");
     await expect(slideContainer).toBeAttached();
   });
-
 });
 
 test.describe("Display Frontend - Keyboard Controls", () => {
@@ -179,7 +178,7 @@ test.describe("Display Frontend - API Integration", () => {
     // Navigate and verify the API is being called
     const responsePromise = page.waitForResponse(
       (response) => response.url().includes("/api/display/settings"),
-      { timeout: 10000 }
+      { timeout: 10000 },
     );
 
     await page.goto("/");

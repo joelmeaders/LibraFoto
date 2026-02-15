@@ -133,7 +133,6 @@ test.describe.serial("Admin Frontend - Photo Management", () => {
     expect(photos.pagination.totalItems).toBeGreaterThanOrEqual(3);
   });
 
-
   test("should select multiple photos with Ctrl+click", async ({ page }) => {
     await loginViaUi(page, TEST_ADMIN.email, TEST_ADMIN.password);
     await page.goto("/photos");
@@ -160,7 +159,6 @@ test.describe.serial("Admin Frontend - Photo Management", () => {
         ).toBeVisible();
       });
   });
-
 });
 
 test.describe.serial("Admin Frontend - Photo Bulk Operations", () => {
