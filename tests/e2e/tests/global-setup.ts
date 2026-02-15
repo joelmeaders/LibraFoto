@@ -99,7 +99,7 @@ async function globalSetup(config: FullConfig) {
               email: TEST_ADMIN.email,
               password: TEST_ADMIN.password,
             },
-          }
+          },
         );
 
         if (setupCompleteResponse.ok()) {
@@ -122,10 +122,10 @@ async function globalSetup(config: FullConfig) {
           console.log(`✅ Test admin user verified!\n`);
         } else {
           console.log(
-            "⚠️  Test admin login failed - tests may need manual setup"
+            "⚠️  Test admin login failed - tests may need manual setup",
           );
           console.log(
-            "   If this is a fresh database, delete librafoto.db and restart the API\n"
+            "   If this is a fresh database, delete librafoto.db and restart the API\n",
           );
         }
       }
