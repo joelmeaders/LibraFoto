@@ -67,6 +67,19 @@ test.describe("Admin Frontend - Navigation", () => {
       timeout: 10000,
     });
   });
+
+  test("should preserve query state when navigating back to photos", async ({
+    page,
+  }) => {
+    await page.goto("/photos?search=sample");
+    await expect(page).toHaveURL(/\/photos\?search=sample/);
+
+    await page.getByRole("link", { name: /albums/i }).click();
+    await expect(page).toHaveURL(/\/albums/);
+
+    await page.goBack();
+    await expect(page).toHaveURL(/\/photos\?search=sample/);
+  });
 });
 
 test.describe("Admin Frontend - Dashboard", () => {

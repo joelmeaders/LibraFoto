@@ -4,10 +4,13 @@ import {
   TEST_ADMIN,
   TEST_EDITOR,
   TEST_GUEST,
+  TEST_IMAGES,
   loginViaUi,
   fillMaterialInput,
+  getTestAssetPath,
   waitForPageLoad,
 } from "../fixtures";
+import * as fs from "fs";
 
 /**
  * Admin Frontend - User Management Integration Tests
@@ -409,6 +412,121 @@ test.describe.serial("Admin Frontend - Guest Links Management", () => {
   test("should reject invalid guest link code", async ({ api }) => {
     const validation = await api.validateGuestLink("invalid-code-12345");
     expect(validation?.isValid).toBeFalsy();
+  });
+
+  test("should allow guest upload via public link and increment usage", async ({
+    api,
+    page,
+  }) => {
+    await api.login(TEST_ADMIN.email, TEST_ADMIN.password);
+
+    const uploadAlbum = await api.createAlbum(
+      `Guest Upload E2E ${Date.now()}`,
+      "Album for guest public upload flow",
+    );
+    expect(uploadAlbum).not.toBeNull();
+
+    const guestUploadLink = await api.createGuestLink({
+      name: "Public Upload Flow",
+      targetAlbumId: uploadAlbum!.id,
+      maxUploads: 2,
+    });
+    expect(guestUploadLink).not.toBeNull();
+
+    const imagePath = getTestAssetPath(TEST_IMAGES.woodpecker);
+    const uploadResponse = await page.request.post(
+      `http://localhost:5179/api/guest/upload/${guestUploadLink!.id}`,
+      {
+        multipart: {
+          file: {
+            name: TEST_IMAGES.woodpecker,
+            mimeType: "image/jpeg",
+            buffer: fs.readFileSync(imagePath),
+          },
+        },
+      },
+    );
+
+    expect(uploadResponse.ok()).toBe(true);
+    const uploadResult = await uploadResponse.json();
+    expect(uploadResult.successfulUploads).toBe(1);
+    expect(uploadResult.failedUploads).toBe(0);
+
+    const links = await api.getGuestLinks();
+    const updatedLink = links.find((l) => l.id === guestUploadLink!.id);
+    expect(updatedLink).toBeDefined();
+    expect(updatedLink!.currentUploads).toBeGreaterThanOrEqual(1);
+
+    let album = await api.getAlbum(uploadAlbum!.id);
+    for (
+      let attempt = 0;
+      attempt < 5 && (album?.photoCount ?? 0) < 1;
+      attempt++
+    ) {
+      await page.waitForTimeout(500);
+      album = await api.getAlbum(uploadAlbum!.id);
+    }
+    expect(album?.photoCount).toBeGreaterThanOrEqual(1);
+
+    const uploadedPhotoIds = (uploadResult.results ?? [])
+      .filter((r: { success?: boolean; photoId?: number }) => r.success)
+      .map((r: { photoId?: number }) => r.photoId)
+      .filter((id: number | undefined): id is number => typeof id === "number");
+
+    if (uploadedPhotoIds.length > 0) {
+      await api.bulkDeletePhotos(uploadedPhotoIds);
+    }
+
+    await api.deleteGuestLink(guestUploadLink!.id);
+    await api.deleteAlbum(uploadAlbum!.id);
+  });
+
+  test("should reject guest upload when max uploads reached", async ({
+    api,
+    page,
+  }) => {
+    await api.login(TEST_ADMIN.email, TEST_ADMIN.password);
+
+    const limitedLink = await api.createGuestLink({
+      name: "One Upload Limit",
+      maxUploads: 1,
+    });
+    expect(limitedLink).not.toBeNull();
+
+    const imagePath = getTestAssetPath(TEST_IMAGES.desert);
+    const firstUpload = await page.request.post(
+      `http://localhost:5179/api/guest/upload/${limitedLink!.id}`,
+      {
+        multipart: {
+          file: {
+            name: TEST_IMAGES.desert,
+            mimeType: "image/jpeg",
+            buffer: fs.readFileSync(imagePath),
+          },
+        },
+      },
+    );
+
+    expect(firstUpload.ok()).toBe(true);
+
+    const secondUpload = await page.request.post(
+      `http://localhost:5179/api/guest/upload/${limitedLink!.id}`,
+      {
+        multipart: {
+          file: {
+            name: TEST_IMAGES.aerial,
+            mimeType: "image/jpeg",
+            buffer: fs.readFileSync(getTestAssetPath(TEST_IMAGES.aerial)),
+          },
+        },
+      },
+    );
+
+    expect(secondUpload.status()).toBe(400);
+    const error = await secondUpload.json();
+    expect(error.code).toBe("LINK_EXHAUSTED");
+
+    await api.deleteGuestLink(limitedLink!.id);
   });
 
   test("should delete guest link", async ({ api }) => {

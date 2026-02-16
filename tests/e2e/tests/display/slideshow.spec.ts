@@ -1,4 +1,4 @@
-import { test, expect } from "../fixtures";
+import { test, expect, TEST_ADMIN } from "../fixtures";
 
 /**
  * Display Frontend - Slideshow Integration Tests
@@ -189,6 +189,78 @@ test.describe("Display Frontend - API Integration", () => {
     // Response should have been made (may return settings or default)
     if (response) {
       expect(response.status()).toBeLessThan(500);
+    }
+  });
+});
+
+test.describe.serial("Display Frontend - Settings Propagation", () => {
+  test("should reflect admin-updated display settings on load", async ({
+    page,
+    api,
+  }) => {
+    await api.login(TEST_ADMIN.email, TEST_ADMIN.password);
+    const original = await api.getDisplaySettings();
+    expect(original).not.toBeNull();
+
+    const updatedDuration = (original!.slideDuration ?? 10) + 1;
+    const update = await api.updateDisplaySettings({
+      slideDuration: updatedDuration,
+    });
+    expect(update).not.toBeNull();
+
+    try {
+      const settingsResponsePromise = page.waitForResponse(
+        (response) =>
+          response.url().includes("/api/display/settings") && response.ok(),
+        { timeout: 10000 },
+      );
+
+      await page.goto("/");
+      const settingsResponse = await settingsResponsePromise;
+      const settingsBody = await settingsResponse.json();
+      expect(settingsBody.slideDuration).toBe(updatedDuration);
+    } finally {
+      await api.updateDisplaySettings({
+        slideDuration: original!.slideDuration,
+      });
+    }
+  });
+
+  test("should detect updated settings through polling", async ({
+    page,
+    api,
+  }) => {
+    await api.login(TEST_ADMIN.email, TEST_ADMIN.password);
+    const original = await api.getDisplaySettings();
+    expect(original).not.toBeNull();
+
+    await page.goto("/");
+
+    const nextDuration = (original!.slideDuration ?? 10) + 2;
+    await api.updateDisplaySettings({
+      slideDuration: nextDuration,
+    });
+
+    try {
+      const polledResponse = await page.waitForResponse(
+        async (response) => {
+          if (
+            !response.url().includes("/api/display/settings") ||
+            !response.ok()
+          ) {
+            return false;
+          }
+          const body = await response.json().catch(() => null);
+          return body?.slideDuration === nextDuration;
+        },
+        { timeout: 20000 },
+      );
+
+      expect(polledResponse.ok()).toBe(true);
+    } finally {
+      await api.updateDisplaySettings({
+        slideDuration: original!.slideDuration,
+      });
     }
   });
 });

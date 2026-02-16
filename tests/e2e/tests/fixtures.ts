@@ -899,15 +899,31 @@ export class ApiClient {
   async updateDisplaySettings(
     settings: Partial<DisplaySettings>,
   ): Promise<DisplaySettings | null> {
-    const response = await this.request.put(
+    // Current API contract updates by settings ID: PUT /api/display/settings/{id}
+    // Keep a fallback to legacy admin route for compatibility with older branches.
+    const activeSettings = await this.getDisplaySettings();
+    if (activeSettings?.id) {
+      const response = await this.request.put(
+        `${API_BASE_URL}/api/display/settings/${activeSettings.id}`,
+        {
+          headers: this.getAuthHeaders(),
+          data: settings,
+        },
+      );
+      if (response.ok()) {
+        return response.json();
+      }
+    }
+
+    const legacyResponse = await this.request.put(
       `${API_BASE_URL}/api/admin/display/settings`,
       {
         headers: this.getAuthHeaders(),
         data: settings,
       },
     );
-    if (response.ok()) {
-      return response.json();
+    if (legacyResponse.ok()) {
+      return legacyResponse.json();
     }
     return null;
   }

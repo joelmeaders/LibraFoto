@@ -75,7 +75,7 @@ test.describe("Admin Frontend - Admin Role Access", () => {
     await waitForPageLoad(page);
     await expect(page).toHaveURL(/\/dashboard/);
     await expect(
-      page.getByText(/dashboard|welcome|overview/i).first()
+      page.getByText(/dashboard|welcome|overview/i).first(),
     ).toBeVisible();
   });
 
@@ -171,14 +171,14 @@ test.describe("Admin Frontend - Editor Role Access", () => {
     if (isOnUsersPage) {
       // If they're on users page, check for access denied message
       const accessDenied = page.getByText(
-        /access denied|unauthorized|forbidden|not allowed/i
+        /access denied|unauthorized|forbidden|not allowed/i,
       );
       await expect(accessDenied)
         .toBeVisible({ timeout: 5000 })
         .catch(() => {
           // If no access denied message, the test fails
           throw new Error(
-            "Editor was able to access users page without restriction"
+            "Editor was able to access users page without restriction",
           );
         });
     } else {
@@ -214,13 +214,13 @@ test.describe("Admin Frontend - Guest Role Access", () => {
 
     if (isOnUsersPage) {
       const accessDenied = page.getByText(
-        /access denied|unauthorized|forbidden|not allowed/i
+        /access denied|unauthorized|forbidden|not allowed/i,
       );
       await expect(accessDenied)
         .toBeVisible({ timeout: 5000 })
         .catch(() => {
           throw new Error(
-            "Guest was able to access users page without restriction"
+            "Guest was able to access users page without restriction",
           );
         });
     } else {
@@ -237,7 +237,7 @@ test.describe("Admin Frontend - Guest Role Access", () => {
 
     if (isOnStoragePage) {
       const accessDenied = page.getByText(
-        /access denied|unauthorized|forbidden|not allowed/i
+        /access denied|unauthorized|forbidden|not allowed/i,
       );
       await expect(accessDenied)
         .toBeVisible({ timeout: 5000 })
@@ -258,7 +258,7 @@ test.describe("Admin Frontend - Guest Role Access", () => {
 
     if (isOnDisplayPage) {
       const accessDenied = page.getByText(
-        /access denied|unauthorized|forbidden|not allowed/i
+        /access denied|unauthorized|forbidden|not allowed/i,
       );
       await expect(accessDenied)
         .toBeVisible({ timeout: 5000 })
@@ -307,5 +307,64 @@ test.describe("Admin Frontend - Navigation Visibility by Role", () => {
     await expect(usersLink)
       .not.toBeVisible({ timeout: 5000 })
       .catch(() => true);
+  });
+});
+
+test.describe("Admin Frontend - Action-Level Authorization", () => {
+  test("admin can call users management API", async ({ api, page }) => {
+    await api.login(TEST_ADMIN.email, TEST_ADMIN.password);
+    const token = api.getAuthState().token;
+    expect(token).not.toBeNull();
+
+    const response = await page.request.get(
+      "http://localhost:5179/api/admin/users?page=1&pageSize=10",
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+
+    expect(response.ok()).toBe(true);
+  });
+
+  test("editor is forbidden from users management API", async ({
+    api,
+    page,
+  }) => {
+    await api.login(TEST_EDITOR.email, TEST_EDITOR.password);
+    const token = api.getAuthState().token;
+    expect(token).not.toBeNull();
+
+    const response = await page.request.get(
+      "http://localhost:5179/api/admin/users?page=1&pageSize=10",
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+
+    expect([401, 403]).toContain(response.status());
+  });
+
+  test("guest is forbidden from users management API", async ({
+    api,
+    page,
+  }) => {
+    await api.login(TEST_GUEST.email, TEST_GUEST.password);
+    const token = api.getAuthState().token;
+    expect(token).not.toBeNull();
+
+    const response = await page.request.get(
+      "http://localhost:5179/api/admin/users?page=1&pageSize=10",
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+
+    expect([401, 403]).toContain(response.status());
   });
 });

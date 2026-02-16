@@ -9,6 +9,7 @@ import {
   getTestAssetPath,
   waitForPageLoad,
 } from "../fixtures";
+import * as fs from "fs";
 
 /**
  * Admin Frontend - Photo Management Integration Tests
@@ -306,6 +307,173 @@ test.describe.serial("Admin Frontend - Photo Bulk Operations", () => {
     // Verify
     const tag = await api.getTag(testTagId);
     expect(tag?.photoCount).toBe(0);
+  });
+});
+
+test.describe.serial("Admin Frontend - Photo Upload Validation", () => {
+  test("should reject non-image upload and preserve photo count", async ({
+    api,
+    page,
+  }) => {
+    await api.login(TEST_ADMIN.email, TEST_ADMIN.password);
+    const token = api.getAuthState().token;
+    expect(token).not.toBeNull();
+
+    const before = await api.getPhotos();
+
+    const invalidUpload = await page.request.post(
+      "http://localhost:5179/api/admin/upload",
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        multipart: {
+          file: {
+            name: "not-an-image.txt",
+            mimeType: "text/plain",
+            buffer: Buffer.from("this should be rejected", "utf-8"),
+          },
+        },
+      },
+    );
+
+    expect(invalidUpload.status()).toBe(400);
+
+    const after = await api.getPhotos();
+    expect(after.pagination.totalItems).toBe(before.pagination.totalItems);
+  });
+
+  test("should handle mixed valid and invalid files in batch upload", async ({
+    api,
+    page,
+  }) => {
+    await api.login(TEST_ADMIN.email, TEST_ADMIN.password);
+    const token = api.getAuthState().token;
+    expect(token).not.toBeNull();
+
+    const validImagePath = getTestAssetPath(TEST_IMAGES.woodpecker);
+    const batchResponse = await page.request.post(
+      "http://localhost:5179/api/admin/upload/batch",
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        multipart: {
+          file1: {
+            name: TEST_IMAGES.woodpecker,
+            mimeType: "image/jpeg",
+            buffer: fs.readFileSync(validImagePath),
+          },
+          file2: {
+            name: "invalid.bin",
+            mimeType: "application/octet-stream",
+            buffer: Buffer.from([0xde, 0xad, 0xbe, 0xef]),
+          },
+        },
+      },
+    );
+
+    expect(batchResponse.ok()).toBe(true);
+    const batchResult = await batchResponse.json();
+    expect(batchResult.totalFiles).toBe(2);
+    expect(batchResult.successfulUploads).toBe(1);
+    expect(batchResult.failedUploads).toBe(1);
+
+    const createdPhotoIds = (batchResult.results ?? [])
+      .filter((r: { success?: boolean; photoId?: number }) => r.success)
+      .map((r: { photoId?: number }) => r.photoId)
+      .filter((id: number | undefined): id is number => typeof id === "number");
+
+    if (createdPhotoIds.length > 0) {
+      await api.bulkDeletePhotos(createdPhotoIds);
+    }
+  });
+});
+
+test.describe.serial("Admin Frontend - Photo UI Bulk Actions", () => {
+  test.beforeEach(async ({ api }) => {
+    await api.login(TEST_ADMIN.email, TEST_ADMIN.password);
+    const photos = await api.getPhotos();
+
+    if (photos.pagination.totalItems < 2) {
+      await api.uploadPhoto(TEST_IMAGES.woodpecker);
+      await api.uploadPhoto(TEST_IMAGES.desert);
+    }
+  });
+
+  test("should show bulk action toolbar after selecting multiple photos", async ({
+    page,
+  }) => {
+    await loginViaUi(page, TEST_ADMIN.email, TEST_ADMIN.password);
+    await page.goto("/photos");
+    await waitForPageLoad(page);
+
+    const photoCards = page.locator(".photo-card");
+    await expect(photoCards.first()).toBeVisible({ timeout: 10000 });
+
+    await photoCards.first().click();
+    await photoCards.nth(1).click();
+
+    await expect(
+      page.getByRole("button", { name: /more actions/i }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: /delete \(2\)|delete/i }),
+    ).toBeVisible();
+  });
+
+  test("should regenerate thumbnails from bulk actions menu", async ({
+    page,
+  }) => {
+    await loginViaUi(page, TEST_ADMIN.email, TEST_ADMIN.password);
+    await page.goto("/photos");
+    await waitForPageLoad(page);
+
+    const photoCards = page.locator(".photo-card");
+    await expect(photoCards.first()).toBeVisible({ timeout: 10000 });
+
+    await photoCards.first().click();
+    await photoCards.nth(1).click();
+
+    await page.getByRole("button", { name: /more actions/i }).click();
+    await page
+      .getByRole("menuitem", { name: /regenerate thumbnails/i })
+      .click();
+
+    await waitForSnackbar(page, /regenerat/i);
+  });
+
+  test("should delete selected photos from bulk delete button", async ({
+    page,
+    api,
+  }) => {
+    await api.login(TEST_ADMIN.email, TEST_ADMIN.password);
+    const before = await api.getPhotos();
+
+    await loginViaUi(page, TEST_ADMIN.email, TEST_ADMIN.password);
+    await page.goto("/photos");
+    await waitForPageLoad(page);
+
+    const photoCards = page.locator(".photo-card");
+    await expect(photoCards.first()).toBeVisible({ timeout: 10000 });
+
+    await photoCards.first().click();
+    await photoCards.nth(1).click();
+
+    page.once("dialog", async (dialog) => {
+      await dialog.accept();
+    });
+
+    await page
+      .getByRole("button", { name: /delete/i })
+      .first()
+      .click();
+    await waitForSnackbar(page, /deleted|failed to delete/i);
+
+    const after = await api.getPhotos();
+    expect(after.pagination.totalItems).toBeLessThan(
+      before.pagination.totalItems,
+    );
   });
 });
 

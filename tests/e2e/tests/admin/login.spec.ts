@@ -150,4 +150,29 @@ test.describe("Admin Frontend - Login", () => {
     // Should still be on an authenticated page (not redirected to login)
     await expect(page).not.toHaveURL(/\/login/);
   });
+
+  test("should redirect to login when session tokens are removed mid-session", async ({
+    page,
+  }) => {
+    // Arrange: log in successfully
+    await page.goto("/login");
+    await page.getByRole("textbox", { name: "Email" }).fill(TEST_ADMIN.email);
+    await page
+      .getByRole("textbox", { name: "Password" })
+      .fill(TEST_ADMIN.password);
+    await page.getByRole("button", { name: "Sign In" }).click();
+    await expect(page).toHaveURL(/\/(dashboard|photos)/, { timeout: 15000 });
+
+    // Act: simulate expiry/logout by clearing persisted auth tokens
+    await page.evaluate(() => {
+      localStorage.removeItem("librafoto_token");
+      localStorage.removeItem("librafoto_refresh_token");
+      localStorage.removeItem("librafoto_user");
+    });
+
+    await page.goto("/photos");
+
+    // Assert: protected route should require re-authentication
+    await expect(page).toHaveURL(/\/login/, { timeout: 10000 });
+  });
 });
