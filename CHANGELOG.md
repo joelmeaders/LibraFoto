@@ -7,17 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-
 ### Changed
 
-### Deprecated
+- Migrated from Minimal APIs to FastEndpoints for improved API routing and documentation
 
-### Removed
+### Added
 
-### Fixed
-
-### Security
+- Repository pattern implementations for Album and Photo services
+- Test data reset functionality for integration testing
 
 ## [0.1.2] - 2026-02-08
 
