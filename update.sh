@@ -27,7 +27,6 @@ set -euo pipefail
 # =============================================================================
 
 readonly SCRIPT_VERSION="1.0.0"
-readonly LOG_FILE="/tmp/librafoto-update.log"
 readonly BACKUP_DIR="${BACKUP_DIR:-./backups}"
 readonly HEALTH_CHECK_TIMEOUT=120
 readonly HEALTH_CHECK_INTERVAL=5
@@ -35,6 +34,10 @@ readonly HEALTH_CHECK_INTERVAL=5
 # Cache the script directory at startup (must be done before any cd commands)
 # This ensures get_script_dir returns the correct path even after directory changes
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export LIBRAFOTO_DIR="$SCRIPT_DIR"
+
+# Log file location (use script directory instead of /tmp/ for reliability)
+readonly LOG_FILE="$SCRIPT_DIR/librafoto-update.log"
 
 # =============================================================================
 # Source Common Helpers

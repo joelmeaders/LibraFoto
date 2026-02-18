@@ -28,7 +28,6 @@ set -euo pipefail
 # =============================================================================
 
 readonly SCRIPT_VERSION="1.0.0"
-readonly LOG_FILE="/tmp/librafoto-install.log"
 readonly DISPLAY_URL="http://localhost/display/"
 readonly MIN_RAM_MB=1800  # ~2GB with some tolerance
 readonly REQUIRED_PI_MODELS="BCM2711|BCM2712"  # Pi 4 and Pi 5
@@ -36,6 +35,9 @@ readonly REQUIRED_PI_MODELS="BCM2711|BCM2712"  # Pi 4 and Pi 5
 # Get the directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export LIBRAFOTO_DIR="$SCRIPT_DIR"
+
+# Log file location (use script directory instead of /tmp/ for reliability)
+readonly LOG_FILE="$SCRIPT_DIR/librafoto-install.log"
 
 # =============================================================================
 # Source Common Helpers
