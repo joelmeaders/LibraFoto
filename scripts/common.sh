@@ -309,7 +309,7 @@ find_librafoto_root() {
 # =============================================================================
 
 # GitHub repository for release downloads
-readonly GITHUB_REPO="librafoto/librafoto"
+readonly GITHUB_REPO="joelmeaders/LibraFoto"
 
 # Read a variable from docker/.env file
 # Usage: read_env_var "DEPLOY_MODE" "/path/to/librafoto"
@@ -466,11 +466,21 @@ get_github_latest_release() {
 
     local response
     response=$(curl -fsSL --connect-timeout 10 "$api_url" 2>/dev/null) || {
-        echo "RELEASE_VERSION=\"\""
-        echo "RELEASE_DOWNLOAD_URL=\"\""
-        echo "RELEASE_BODY=\"\""
+        echo "RELEASE_VERSION=''"
+        echo "RELEASE_DOWNLOAD_URL=''"
+        echo "RELEASE_BODY=''"
         return 1
     }
+
+    # Check if we got a valid response (not an error page)
+    if echo "$response" | grep -q '"tag_name"'; then
+        : # Valid response
+    else
+        echo "RELEASE_VERSION=''"
+        echo "RELEASE_DOWNLOAD_URL=''"
+        echo "RELEASE_BODY=''"
+        return 1
+    fi
 
     # Extract tag name (remove leading 'v')
     local tag
@@ -481,13 +491,67 @@ get_github_latest_release() {
     local download_url
     download_url=$(echo "$response" | grep '"browser_download_url"' | grep "${arch}.zip" | head -1 | sed 's/.*"browser_download_url"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
 
-    # Extract release body (first 500 chars for changelog preview)
+    # Extract release body safely - use a temp file to avoid shell escaping issues
     local body
-    body=$(echo "$response" | grep '"body"' | head -1 | sed 's/.*"body"[[:space:]]*:[[:space:]]*"\(.*\)".*/\1/' | head -c 500)
+    body=$(echo "$response" | grep '"body"' | head -1 | sed 's/.*"body"[[:space:]]*:[[:space:]]*//' | tr -d '"' | head -c 500)
 
-    echo "RELEASE_VERSION=\"$version\""
-    echo "RELEASE_DOWNLOAD_URL=\"$download_url\""
-    echo "RELEASE_BODY=\"$body\""
+    # Use printf to safely output the values (handles special characters)
+    printf "RELEASE_VERSION='%s'\n" "$version"
+    printf "RELEASE_DOWNLOAD_URL='%s'\n" "$download_url"
+    printf "RELEASE_BODY='%s'\n" "$body"
+}
+
+# Query GitHub Releases API for latest stable and prerelease separately
+# Outputs: STABLE_VERSION, STABLE_URL, PRERELEASE_VERSION, PRERELEASE_URL
+# Usage: eval "$(get_github_release_options)"
+get_github_release_options() {
+    local arch
+    arch=$(detect_architecture)
+
+    # Get latest stable release (using /releases/latest)
+    local stable_version stable_url
+    local stable_response
+    stable_response=$(curl -fsSL --connect-timeout 10 "https://api.github.com/repos/${GITHUB_REPO}/releases/latest" 2>/dev/null)
+
+    if echo "$stable_response" | grep -q '"tag_name"'; then
+        # Check if it's actually stable
+        if echo "$stable_response" | grep -q '"prerelease":[[:space:]]*false'; then
+            stable_version=$(echo "$stable_response" | grep -o '"tag_name"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/' | sed 's/^v//')
+            stable_url=$(echo "$stable_response" | grep -o '"browser_download_url"[[:space:]]*:[[:space:]]*"[^"]*'"${arch}"'\.zip"' | sed 's/.*"browser_download_url"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
+        fi
+    fi
+
+    # Get latest prerelease (need to query all releases and find first prerelease)
+    local prerelease_version prerelease_url
+    local all_response
+    all_response=$(curl -fsSL --connect-timeout 10 "https://api.github.com/repos/${GITHUB_REPO}/releases?per_page=30" 2>/dev/null)
+
+    # Check for valid response - look for "id" anywhere in the response
+    if echo "$all_response" | grep -q '"id"'; then
+        # Find first prerelease in the list - tag_name comes BEFORE prerelease
+        local prerelease_line
+        prerelease_line=$(echo "$all_response" | grep -n '"prerelease":[[:space:]]*true' | head -1 | cut -d: -f1)
+
+        if [[ -n "$prerelease_line" ]]; then
+            # Get block from tag_name line to well after the assets (need more lines for download URL)
+            local release_block
+            release_block=$(echo "$all_response" | sed -n "${prerelease_line},$((prerelease_line+50))p" | tr '\n' ' ')
+
+            # Find the tag_name in the block (might be before or at the prerelease line)
+            prerelease_version=$(echo "$all_response" | grep -n '"tag_name"' | head -1 | cut -d: -f1)
+            if [[ -n "$prerelease_version" && "$prerelease_version" -lt "$prerelease_line" ]]; then
+                prerelease_version=$(echo "$all_response" | sed -n "${prerelease_version}p" | sed 's/.*"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/' | sed 's/^v//')
+            fi
+            
+            # Find download URL - look for the correct architecture in the whole response
+            prerelease_url=$(echo "$all_response" | grep "browser_download_url" | grep "${arch}.zip" | head -1 | sed 's/.*"browser_download_url"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
+        fi
+    fi
+
+    printf "STABLE_VERSION='%s'\n" "${stable_version:-}"
+    printf "STABLE_URL='%s'\n" "${stable_url:-}"
+    printf "PRERELEASE_VERSION='%s'\n" "${prerelease_version:-}"
+    printf "PRERELEASE_URL='%s'\n" "${prerelease_url:-}"
 }
 
 # Download and extract a release zip to a temporary directory
@@ -527,6 +591,10 @@ download_release_zip() {
 # Compare two semver version strings
 # Returns: 0 if v1 < v2, 1 if v1 >= v2
 # Usage: is_version_newer "1.0.0" "1.1.0" && echo "update available"
+#
+# Special handling for prereleases:
+# - A stable release is considered newer than a prerelease with the same base version
+# - e.g., 0.1.0 is newer than 0.1.0-beta.1
 is_version_newer() {
     local current="$1"
     local remote="$2"
@@ -535,7 +603,48 @@ is_version_newer() {
         return 1
     fi
 
-    # Use sort -V for version comparison
+    # Extract base version (without prerelease suffix like -alpha, -beta, -rc)
+    local current_base="${current%%-*}"
+    local remote_base="${remote%%-*}"
+
+    # If base versions differ, use sort -V for comparison
+    if [[ "$current_base" != "$remote_base" ]]; then
+        local oldest
+        oldest=$(printf '%s\n%s' "$current" "$remote" | sort -V | head -1)
+
+        if [[ "$oldest" == "$current" ]]; then
+            return 0  # current is older, update available
+        fi
+        return 1  # current is same or newer
+    fi
+
+    # Base versions are the same - compare prerelease status
+    # Stable (no suffix) is always newer than prerelease
+    local current_prerelease="${current#*-}"
+    local remote_prerelease="${remote#*-}"
+
+    # Check if versions are stable (no hyphen in original)
+    local current_is_stable=false
+    local remote_is_stable=false
+
+    if [[ "$current" == "$current_base" ]]; then
+        current_is_stable=true
+    fi
+    if [[ "$remote" == "$remote_base" ]]; then
+        remote_is_stable=true
+    fi
+
+    # If remote is stable and current is prerelease → remote is newer
+    if [[ "$current_is_stable" == false && "$remote_is_stable" == true ]]; then
+        return 0  # update available
+    fi
+
+    # If current is stable and remote is prerelease → current is newer
+    if [[ "$current_is_stable" == true && "$remote_is_stable" == false ]]; then
+        return 1  # no update
+    fi
+
+    # Both have same stability - use normal version comparison
     local oldest
     oldest=$(printf '%s\n%s' "$current" "$remote" | sort -V | head -1)
 
@@ -813,4 +922,55 @@ reset_operation_tracking() {
     TRACKED_OPERATIONS=()
     TRACKED_RESULTS=()
     TRACKED_ERRORS=()
+}
+
+# =============================================================================
+# Kiosk/Browser Management
+# =============================================================================
+
+# Restart the browser/kiosk display
+# This kills any running browser processes and restarts the kiosk mode
+# Usage: restart_browser
+restart_browser() {
+    log_info "Restarting browser/kiosk..."
+
+    # Kill existing browser processes (chromium, firefox, midori, etc.)
+    local killed=false
+
+    # Common browser processes on Raspberry Pi
+    for proc in chromium chromium-browser firefox midori epiphany; do
+        if pgrep -x "$proc" >/dev/null 2>&1; then
+            log_info "Killing $proc..."
+            pkill -x "$proc" 2>/dev/null || true
+            killed=true
+        fi
+    done
+
+    # Also kill any process running the display URL
+    if pgrep -f "librafoto|display" >/dev/null 2>&1; then
+        log_info "Killing LibraFoto display processes..."
+        pkill -f "librafoto|display" 2>/dev/null || true
+        killed=true
+    fi
+
+    # Wait a moment for processes to terminate
+    sleep 2
+
+    # Start the kiosk/browser if the start-kiosk script exists
+    local pi_home
+    pi_home=$(get_pi_home)
+
+    if [[ -f "$pi_home/start-kiosk.sh" ]]; then
+        log_info "Starting kiosk..."
+        # Start in background to not block the script
+        nohup "$pi_home/start-kiosk.sh" > /dev/null 2>&1 &
+        sleep 3
+        log_success "Browser/kiosk restarted"
+    else
+        if [[ "$killed" == true ]]; then
+            log_info "Browser processes killed. Restart manually or set up kiosk mode."
+        else
+            log_info "No active browser processes found to restart."
+        fi
+    fi
 }

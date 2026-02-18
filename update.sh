@@ -245,9 +245,9 @@ check_for_updates_release() {
     local current_version
     current_version=$(get_current_version "$script_dir")
 
-    # Query GitHub releases API
+    # Query GitHub releases API for both stable and prerelease
     local release_info
-    if ! release_info=$(get_github_latest_release); then
+    if ! release_info=$(get_github_release_options); then
         log_error "Failed to query GitHub Releases API"
         log_info "Check your internet connection or try again later"
         return 1
@@ -255,38 +255,104 @@ check_for_updates_release() {
 
     eval "$release_info"
 
-    if [[ -z "$RELEASE_VERSION" ]]; then
-        log_error "Could not determine latest release version"
-        return 1
+    # Determine which versions are newer than current
+    local has_stable_update=false
+    local has_prerelease_update=false
+
+    if [[ -n "$STABLE_VERSION" ]] && is_version_newer "$current_version" "$STABLE_VERSION"; then
+        has_stable_update=true
     fi
 
-    # Compare versions
-    if ! is_version_newer "$current_version" "$RELEASE_VERSION"; then
-        log_success "Already up to date"
-        echo ""
-        echo -e "Current version: ${BOLD}$current_version${NC}"
-        echo -e "Latest release:  ${BOLD}$RELEASE_VERSION${NC}"
-        return 1
+    if [[ -n "$PRERELEASE_VERSION" ]] && is_version_newer "$current_version" "$PRERELEASE_VERSION"; then
+        has_prerelease_update=true
     fi
 
+    # Show current version
     echo ""
+    echo -e "Current version: ${BOLD}$current_version${NC}"
+    echo ""
+
+    # No updates available
+    if [[ "$has_stable_update" == false && "$has_prerelease_update" == false ]]; then
+        log_success "Already up to date"
+        if [[ -n "$STABLE_VERSION" ]]; then
+            echo -e "Latest stable:    ${BOLD}$STABLE_VERSION${NC}"
+        fi
+        if [[ -n "$PRERELEASE_VERSION" ]]; then
+            echo -e "Latest prerelease: ${BOLD}$PRERELEASE_VERSION${NC}"
+        fi
+        return 1
+    fi
+
+    # Show available updates
     echo -e "${GREEN}${BOLD}Update available!${NC}"
     echo ""
-    echo -e "Current version:  ${BOLD}$current_version${NC}"
-    echo -e "Latest release:   ${BOLD}$RELEASE_VERSION${NC}"
-    echo ""
 
-    # Check if download URL is available for this platform
-    local arch
-    arch=$(detect_architecture)
-    if [[ -z "$RELEASE_DOWNLOAD_URL" ]]; then
-        log_warn "No release zip found for architecture: $arch"
-        log_info "You may need to update manually"
-        return 1
+    local options=()
+    local option=1
+
+    if [[ "$has_stable_update" == true ]]; then
+        echo -e "${option}) Stable release: ${BOLD}$STABLE_VERSION${NC}"
+        options+=("stable")
+        ((option++))
     fi
 
-    echo -e "${BOLD}Download:${NC} $RELEASE_DOWNLOAD_URL"
+    if [[ "$has_prerelease_update" == true ]]; then
+        echo -e "${option}) Prerelease: ${BOLD}$PRERELEASE_VERSION${NC}"
+        options+=("prerelease")
+        ((option++))
+    fi
+
     echo ""
+
+    # If only one option, auto-select it
+    if [[ ${#options[@]} -eq 1 ]]; then
+        local choice="${options[0]}"
+        echo -e "Only one update option available, selecting: ${BOLD}$choice${NC}"
+        echo ""
+
+        if [[ "$choice" == "stable" ]]; then
+            SELECTED_VERSION="$STABLE_VERSION"
+            SELECTED_URL="$STABLE_URL"
+        else
+            SELECTED_VERSION="$PRERELEASE_VERSION"
+            SELECTED_URL="$PRERELEASE_URL"
+        fi
+    else
+        # Multiple options - let user choose
+        echo -n "Select version to install: "
+        read -r choice
+
+        if [[ -z "$choice" ]]; then
+            log_error "No selection made"
+            return 1
+        fi
+
+        if [[ "$choice" -ge 1 && "$choice" -le ${#options[@]} ]]; then
+            local selected_idx=$((choice - 1))
+            local selected_type="${options[$selected_idx]}"
+
+            if [[ "$selected_type" == "stable" ]]; then
+                SELECTED_VERSION="$STABLE_VERSION"
+                SELECTED_URL="$STABLE_URL"
+                echo -e "Selected: ${BOLD}$SELECTED_VERSION (stable)${NC}"
+            else
+                SELECTED_VERSION="$PRERELEASE_VERSION"
+                SELECTED_URL="$PRERELEASE_URL"
+                echo -e "Selected: ${BOLD}$SELECTED_VERSION (prerelease)${NC}"
+            fi
+        else
+            log_error "Invalid selection"
+            return 1
+        fi
+    fi
+
+    echo ""
+    echo -e "${BOLD}Download:${NC} $SELECTED_URL"
+
+    # Export for use by download functions
+    export SELECTED_VERSION
+    export SELECTED_URL
 
     return 0
 }
@@ -538,8 +604,14 @@ download_update() {
     script_dir=$(get_script_dir)
     local temp_dir="/tmp/librafoto-update-$$"
 
+    # Use the selected version from check_for_updates_release
+    if [[ -z "$SELECTED_URL" ]]; then
+        log_error "No release URL selected. Run update check first."
+        return 1
+    fi
+
     # Download and extract the release zip
-    if ! download_release_zip "$RELEASE_DOWNLOAD_URL" "$temp_dir"; then
+    if ! download_release_zip "$SELECTED_URL" "$temp_dir"; then
         log_error "Failed to download release"
         rm -rf "$temp_dir"
         return 1
@@ -595,9 +667,7 @@ apply_release_files() {
     fi
 
     # Update VERSION in .env
-    local new_version
-    new_version=$(cat "$script_dir/.version")
-    set_env_var "VERSION" "$new_version" "$script_dir"
+    set_env_var "VERSION" "$SELECTED_VERSION" "$script_dir"
 
     log_success "Scripts and configuration updated"
 }
@@ -1220,6 +1290,15 @@ main() {
     # Prune old images
     log_info "Cleaning up old Docker images..."
     docker image prune -f >> "$LOG_FILE" 2>&1 || true
+
+    # Ask about restarting browser/kiosk
+    echo ""
+    echo -e "${BOLD}Browser Restart:${NC}"
+    echo "The update is complete. Would you like to restart the browser/kiosk display?"
+    echo ""
+    if confirm_prompt "Restart browser now?" "Y"; then
+        restart_browser
+    fi
 
     # Success
     show_post_update "$backup_path"
