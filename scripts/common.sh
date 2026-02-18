@@ -50,7 +50,7 @@ log_init() {
     local script_name="${1:-LibraFoto}"
     local log_file="${LOG_FILE:-/tmp/librafoto.log}"
     local version="${SCRIPT_VERSION:-1.0.0}"
-    
+
     {
         echo "$script_name Log - $(date)"
         echo "Script Version: $version"
@@ -138,20 +138,20 @@ confirm_prompt() {
     local default="${2:-Y}"
     local prompt
     local response
-    
+
     if [[ "$default" == "Y" ]]; then
         prompt="[Y/n]"
     else
         prompt="[y/N]"
     fi
-    
+
     echo -en "${BOLD}$message $prompt${NC} "
     read -r response
-    
+
     if [[ -z "$response" ]]; then
         response="$default"
     fi
-    
+
     [[ "$response" =~ ^[Yy]$ ]]
 }
 
@@ -162,7 +162,7 @@ show_spinner() {
     local message="$2"
     local spin='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'
     local i=0
-    
+
     while kill -0 "$pid" 2>/dev/null; do
         printf "\r${BLUE}[%s]${NC} %s" "${spin:i++%${#spin}:1}" "$message"
         sleep 0.1
@@ -189,19 +189,19 @@ check_docker() {
         log_warn "Docker not found"
         return 1
     fi
-    
+
     if ! docker info &>/dev/null; then
         log_warn "Docker daemon not running or insufficient permissions"
         return 1
     fi
-    
+
     return 0
 }
 
 # Get the current version from .version file
 get_current_version() {
     local script_dir="${1:-.}"
-    
+
     if [[ -f "$script_dir/.version" ]]; then
         cat "$script_dir/.version"
     else
@@ -223,19 +223,19 @@ get_current_commit() {
 show_banner() {
     local subtitle="${1:-}"
     local version="${SCRIPT_VERSION:-1.0.0}"
-    
+
     echo -e "${CYAN}"
     cat << 'EOF'
-  _      _ _               _____    _        
- | |    (_) |             |  ___|  | |       
- | |     _| |__  _ __ __ _| |_ ___ | |_ ___  
- | |    | | '_ \| '__/ _` |  _/ _ \| __/ _ \ 
+  _      _ _               _____    _
+ | |    (_) |             |  ___|  | |
+ | |     _| |__  _ __ __ _| |_ ___ | |_ ___
+ | |    | | '_ \| '__/ _` |  _/ _ \| __/ _ \
  | |____| | |_) | | | (_| | || (_) | || (_) |
- |______|_|_.__/|_|  \__,_\_| \___/ \__\___/ 
-                                              
+ |______|_|_.__/|_|  \__,_\_| \___/ \__\___/
+
 EOF
     echo -e "${NC}"
-    
+
     if [[ -n "$subtitle" ]]; then
         echo -e "${BOLD}${subtitle} v${version}${NC}"
     else
@@ -253,7 +253,7 @@ is_raspberry_pi() {
     if [[ ! -f /proc/cpuinfo ]]; then
         return 1
     fi
-    
+
     grep -qiE "Raspberry Pi|BCM2711|BCM2712" /proc/cpuinfo 2>/dev/null
 }
 
@@ -292,7 +292,7 @@ get_available_disk_gb() {
 find_librafoto_root() {
     local start_path="${1:-$(pwd)}"
     local current="$start_path"
-    
+
     while [[ "$current" != "/" ]]; do
         if [[ -f "$current/docker/docker-compose.yml" ]]; then
             echo "$current"
@@ -300,7 +300,7 @@ find_librafoto_root() {
         fi
         current="$(dirname "$current")"
     done
-    
+
     return 1
 }
 
@@ -542,7 +542,7 @@ get_github_release_options() {
             if [[ -n "$prerelease_version" && "$prerelease_version" -lt "$prerelease_line" ]]; then
                 prerelease_version=$(echo "$all_response" | sed -n "${prerelease_version}p" | sed 's/.*"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/' | sed 's/^v//')
             fi
-            
+
             # Find download URL - look for the correct architecture in the whole response
             prerelease_url=$(echo "$all_response" | grep "browser_download_url" | grep "${arch}.zip" | head -1 | sed 's/.*"browser_download_url"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
         fi
@@ -682,9 +682,9 @@ list_docker_resources() {
     local root_dir="${1:-.}"
     local compose_file
     compose_file=$(get_compose_file "$root_dir")
-    
+
     echo -e "\n${BOLD}Docker Resources:${NC}"
-    
+
     if check_docker && [[ -f "$compose_file" ]]; then
         echo -e "\n  ${CYAN}Containers:${NC}"
         if docker compose -f "$compose_file" ps --format "table {{.Name}}\t{{.Status}}" 2>/dev/null | tail -n +2 | grep -q .; then
@@ -692,21 +692,21 @@ list_docker_resources() {
         else
             echo "    (none running)"
         fi
-        
+
         echo -e "\n  ${CYAN}Volumes:${NC}"
         if docker volume ls --format "{{.Name}}" | grep -iE "librafoto|docker_" | grep -q .; then
             docker volume ls --format "{{.Name}}" | grep -iE "librafoto|docker_" | sed 's/^/    /'
         else
             echo "    (none found)"
         fi
-        
+
         echo -e "\n  ${CYAN}Networks:${NC}"
         if docker network ls --format "{{.Name}}" | grep -iE "librafoto|docker_" | grep -q .; then
             docker network ls --format "{{.Name}}" | grep -iE "librafoto|docker_" | sed 's/^/    /'
         else
             echo "    (none found)"
         fi
-        
+
         echo -e "\n  ${CYAN}Images:${NC}"
         if docker images --format "{{.Repository}}:{{.Tag}}" | grep -iE "librafoto|docker-" | grep -q .; then
             docker images --format "    {{.Repository}}:{{.Tag}} ({{.Size}})" | grep -iE "librafoto|docker-"
@@ -722,9 +722,9 @@ list_docker_resources() {
 list_kiosk_files() {
     local pi_home
     pi_home=$(get_pi_home)
-    
+
     echo -e "\n${BOLD}Kiosk Configuration:${NC}"
-    
+
     local files=(
         "$pi_home/start-kiosk.sh"
         "$pi_home/.config/autostart/librafoto-kiosk.desktop"
@@ -732,7 +732,7 @@ list_kiosk_files() {
         "$pi_home/.config/lxsession/LXDE-pi/autostart"
         "/etc/lightdm/lightdm.conf"
     )
-    
+
     local found_any=false
     for file in "${files[@]}"; do
         if [[ -f "$file" ]]; then
@@ -740,21 +740,21 @@ list_kiosk_files() {
             found_any=true
         fi
     done
-    
+
     # Check for autostart entries
     if grep -q "start-kiosk.sh\|LibraFoto" /etc/xdg/lxsession/LXDE-pi/autostart 2>/dev/null || \
        grep -q "start-kiosk.sh\|LibraFoto" "$pi_home/.config/lxsession/LXDE-pi/autostart" 2>/dev/null; then
         echo "    ✓ Autostart entries configured"
         found_any=true
     fi
-    
+
     # Check for systemd services
     if systemctl list-unit-files "librafoto*.service" 2>/dev/null | grep -q librafoto; then
         echo -e "\n  ${CYAN}Systemd Services:${NC}"
         systemctl list-unit-files "librafoto*.service" --no-pager 2>/dev/null | grep librafoto | sed 's/^/    /'
         found_any=true
     fi
-    
+
     if [[ "$found_any" == false ]]; then
         echo "    (no kiosk configuration found)"
     fi
@@ -764,15 +764,15 @@ list_kiosk_files() {
 # Usage: list_config_files "/path/to/librafoto"
 list_config_files() {
     local root_dir="${1:-.}"
-    
+
     echo -e "\n${BOLD}Configuration & Data:${NC}"
-    
+
     if [[ -f "$root_dir/docker/.env" ]]; then
         echo "    ✓ $root_dir/docker/.env"
     else
         echo "    ✗ $root_dir/docker/.env (not created yet)"
     fi
-    
+
     if [[ -d "$root_dir/data" ]]; then
         local size
         size=$(du -sh "$root_dir/data" 2>/dev/null | cut -f1 || echo "unknown")
@@ -780,7 +780,7 @@ list_config_files() {
     else
         echo "    ✗ $root_dir/data/ (not created yet)"
     fi
-    
+
     if [[ -d "$root_dir/backups" ]]; then
         local count
         count=$(find "$root_dir/backups" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l)
@@ -797,7 +797,7 @@ track_operation() {
     local description="$1"
     shift
     local command=("$@")
-    
+
     # Execute the command and capture result
     local output
     local exit_code
@@ -806,7 +806,7 @@ track_operation() {
     else
         exit_code=$?
     fi
-    
+
     # Store the operation
     TRACKED_OPERATIONS+=("$description")
     TRACKED_RESULTS+=("$exit_code")
@@ -815,7 +815,7 @@ track_operation() {
     else
         TRACKED_ERRORS+=("")
     fi
-    
+
     return $exit_code
 }
 
@@ -823,16 +823,16 @@ track_operation() {
 show_operation_summary() {
     local success_count=0
     local failure_count=0
-    
+
     echo -e "\n${BOLD}═══════════════════════════════════════════════════════${NC}"
     echo -e "${BOLD}Operation Summary${NC}"
     echo -e "${BOLD}═══════════════════════════════════════════════════════${NC}\n"
-    
+
     for i in "${!TRACKED_OPERATIONS[@]}"; do
         local description="${TRACKED_OPERATIONS[$i]}"
         local result="${TRACKED_RESULTS[$i]}"
         local error="${TRACKED_ERRORS[$i]}"
-        
+
         if [[ "$result" -eq 0 ]]; then
             echo -e "  ${GREEN}✓${NC} $description"
             ((success_count++))
@@ -844,9 +844,9 @@ show_operation_summary() {
             ((failure_count++))
         fi
     done
-    
+
     echo -e "\n${BOLD}Results:${NC} ${GREEN}${success_count} succeeded${NC}, ${RED}${failure_count} failed${NC}\n"
-    
+
     if [[ $failure_count -gt 0 ]]; then
         echo -e "${YELLOW}Some operations failed. Items may need manual cleanup.${NC}"
         return 1
@@ -860,7 +860,7 @@ validate_removal() {
     local root_dir
     root_dir=$(find_librafoto_root "$(pwd)") || root_dir="."
     local failed_validations=()
-    
+
     for resource_type in "$@"; do
         case "$resource_type" in
             containers)
@@ -907,7 +907,7 @@ validate_removal() {
                 ;;
         esac
     done
-    
+
     if [[ ${#failed_validations[@]} -gt 0 ]]; then
         for failure in "${failed_validations[@]}"; do
             echo "$failure"
